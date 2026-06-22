@@ -1,0 +1,3 @@
+# Dependencias de RUNTIME en la Raspberry Pi (solo sirve estáticos).
+fastapi>=0.110
+uvicorn[standard]>=0.29

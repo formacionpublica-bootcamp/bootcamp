@@ -1,0 +1,72 @@
+site_name: Formación Pública
+site_description: Bootcamp gratuito de datos para funcionarios públicos de Chile
+site_url: https://formacionpublica.cl/
+repo_url: https://github.com/formacionpublica-bootcamp/bootcamp
+repo_name: formacionpublica-bootcamp/bootcamp
+edit_uri: ""
+copyright: Contenido bajo licencia CC BY 4.0 · Formación Pública
+
+theme:
+  name: material
+  language: es
+  palette:
+    - scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Cambiar a modo oscuro
+    - scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Cambiar a modo claro
+  font:
+    text: Inter
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Inicio: index.md
+  - Prework: prework.md
+  - Capa A · Datos sin miedo: capa-a.md
+  - Capa B · Ciencia de datos: capa-b.md
+  - Capa C · IA aplicada: capa-c.md
+  - Recursos:
+    - Chuleta (Python + pandas): chuleta.md
+    - Glosario: glosario.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+exclude_docs: |
+  requirements.txt
+
+plugins:
+  - search:
+      lang: es
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/formacionpublica-bootcamp/bootcamp

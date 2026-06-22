@@ -1,0 +1,5 @@
+# Dependencias de BUILD (solo en la máquina de desarrollo, no en la Pi).
+mkdocs-material>=9.5
+jupyterlite-core>=0.4
+jupyterlite-pyodide-kernel>=0.4
+jupyter-server>=2.0   # requerido por jupyterlite para inyectar contenidos custom
