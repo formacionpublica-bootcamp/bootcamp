@@ -1,367 +1,422 @@
 # Guía de Aprendizaje — R1-03 · Cruzar y resumir tablas
 
-> **Rama:** R1 · Análisis y Visualización | **Módulo:** R1-03 | **Nivel:** Introductorio-Intermedio
-> **Duración estimada:** 3–4 horas | **Prerrequisitos:** R1-02 · Exploración con pandas
-> **Competencia de salida:** Cruzar dos tablas por su llave con `merge`, detectar filas huérfanas, y resumir el resultado con `groupby` para responder preguntas reales de gestión pública.
+**Bootcamp de Datos para Funcionarios Públicos — Formación Pública**
+**Pista:** R1 · Análisis y Visualización
+**Módulo:** R1-03 (M3B)
+**Duración estimada:** 90–120 minutos
+**Nivel:** Básico–Intermedio
+**Prerrequisitos:** Haber completado R1-02 · Exploración con pandas (saber cargar un CSV, usar `head`, `shape`, `value_counts`)
+**Competencia de salida:** Cruzar dos tablas por su llave común (`merge`), elegir el tipo de cruce correcto y detectar filas huérfanas; resumir el resultado con `groupby` para responder una pregunta real de gestión pública.
 
 ---
 
-## 1. ¿Para qué me sirve esto como funcionario/a público/a?
+## 1. ¿Para qué me sirve esto como funcionario público?
 
-En el trabajo del Estado, la información casi nunca vive en un solo archivo. Los **montos** de las órdenes de compra están en una tabla; el **nombre del organismo y su región** en otra. Para responder *"¿qué región concentró más gasto en compras públicas?"* necesitas combinar ambas.
+En R1-02 aprendiste a explorar **una** tabla. Pero en el Estado casi nunca la información vive junta: los **montos** de compra están en una tabla de órdenes, y el **nombre del organismo y su región** en otra. Para responder *"¿qué región concentra más gasto?"* necesitas **cruzar** ambas.
 
-Eso es exactamente lo que aprenderás aquí: **cruzar tablas** (como el `BUSCARV` de Excel, pero para toda la tabla de una vez) y **resumir por grupos** (como una tabla dinámica completa). Son las dos habilidades que convierten "sé abrir un CSV" en "puedo responder una pregunta real a mi jefatura".
+Este módulo te enseña la habilidad que transforma *"sé abrir un Excel"* en *"puedo responder una pregunta real de política pública"*: relacionar tablas por una llave y resumir el resultado.
 
-En este módulo trabajarás con **órdenes de compra reales de ChileCompra** — el portal de compras públicas del Estado chileno. Dos tablas, relacionadas por un código de organismo, igual que en cualquier base de datos del sector público.
+### Ejemplos reales en el sector público chileno
+
+| Pregunta de gestión | Tabla 1 | Tabla 2 | Llave |
+|---|---|---|---|
+| ¿Qué región concentra más gasto en licitaciones? | Órdenes de compra (monto, entcode) | Catálogo de organismos (entcode, región) | `entcode` |
+| ¿Cuántos funcionarios tiene cada ministerio? | Dotación (RUT, código ministerio) | Catálogo de ministerios (código, nombre) | código ministerio |
+| ¿Qué comunas tienen más denuncias? | Denuncias (ID, código comuna) | Catálogo de comunas (código, nombre, región) | código comuna |
+
+En este módulo trabajamos con **órdenes de compra reales de ChileCompra / MercadoPúblico** para responder la primera pregunta de la tabla.
 
 ---
 
 ## 2. Mapa conceptual del módulo
 
-| Concepto pandas | Equivalente en tu trabajo | Para qué sirve |
-|---|---|---|
-| `pd.merge()` | BUSCARV / VLOOKUP en Excel | Unir dos tablas por una columna en común |
-| `llave` (`entcode`) | El RUT o código del organismo | La columna que identifica de forma única cada entidad |
-| `how="inner"` | Solo filas que coinciden en ambas tablas | Cruce estricto; puede perder datos |
-| `how="left"` | Conservar todas las filas de la tabla izquierda | Cruce seguro; revela datos faltantes |
-| `NaN` en el cruce | Celda en blanco tras el BUSCARV | Indica que no se encontró pareja en el catálogo |
-| `groupby()` | Tabla dinámica de Excel | Agrupar por categoría y calcular suma/promedio |
-| `.sum()` / `.mean()` | SUMA / PROMEDIO en tabla dinámica | Agregar valores dentro de cada grupo |
+```
+Dos tablas separadas
+     │                    │
+  ordenes.csv         organismos.csv
+ (monto, entcode)   (entcode, organismo, region)
+     │                    │
+     └─────── merge() ────┘
+              (por entcode)
+                   │
+            Tabla combinada
+         (monto + organismo + region)
+                   │
+               groupby()
+                   │
+         Gasto total por región
+                   │
+             Decisión informada
+```
+
+### Analogías con el trabajo del Estado
+
+| Concepto pandas | Equivalente en Excel / administración pública |
+|---|---|
+| `pd.merge()` | BUSCARV / VLOOKUP que trae datos de otra hoja |
+| `on="entcode"` | La columna que usas en el BUSCARV para buscar |
+| `how="inner"` | Solo filas que calzan en ambas tablas |
+| `how="left"` | Todas las filas de la tabla principal, aunque no calzen |
+| `groupby()` | Tabla dinámica (pivot) de Excel |
+| `sum()` | Campo de valor "Suma" en la tabla dinámica |
+| Fila huérfana | Una fila sin pareja en el BUSCARV (devuelve #N/A) |
 
 ---
 
 ## 3. Antes de empezar: Verificación de prerrequisitos
 
-Este módulo construye directamente sobre R1-02. Marca cada punto honestamente:
+### Conocimientos necesarios del módulo R1-02
 
-- [ ] Puedo cargar un CSV con `pd.read_csv()` y obtener un DataFrame
-- [ ] Sé usar `.shape`, `.columns` e `.info()` para inspeccionar una tabla
-- [ ] Sé filtrar filas con una condición: `df[df["columna"] == "valor"]`
-- [ ] Sé usar `.value_counts()` para contar por categoría
-- [ ] Entiendo qué es `NaN` (valor vacío/faltante)
+- [ ] Sé cargar un CSV con `pd.read_csv("archivo.csv")`
+- [ ] Sé ver las primeras filas con `.head()`
+- [ ] Sé conocer el tamaño de una tabla con `.shape` o `len(df)`
+- [ ] Sé ver los nombres de columnas con `.columns`
+- [ ] Entiendo qué es un DataFrame y qué es una columna
 
-Si tienes dudas en alguno, repasa **R1-02 · Exploración con pandas** antes de continuar.
+> 💡 Si marcaste menos de 4, te recomiendo repasar R1-02 antes de continuar.
+
+### Dataset de este módulo
+
+Trabajarás con **dos archivos CSV** de datos reales de ChileCompra:
+
+- `ordenes.csv` — órdenes de compra (columnas: `codigo_oc`, `entcode`, `rubro`, `monto`)
+- `organismos.csv` — catálogo de organismos (columnas: `entcode`, `organismo`, `region`)
+
+Ambos se cargan automáticamente en la primera celda del notebook si estás en Google Colab.
 
 ---
 
 ## 4. Guía paso a paso por sección del notebook
 
-### Sección 1 · ¿Por qué dos tablas? La llave que las une
+### Sección de carga: Cargar los datos
 
-**🎯 Objetivo:** Entender por qué los datos del Estado viven separados y qué es una llave.
+🎯 **Objetivo:** Tener dos DataFrames listos en memoria y verificar que se cargaron bien.
 
-**💡 Concepto clave:** Guardar el nombre completo de cada organismo en cada una de las millones de órdenes de compra sería repetir lo mismo infinitas veces — y arrastrar errores de tipeo en cada copia. Por eso las bases de datos del Estado guardan las órdenes con un **código** (`entcode`) y tienen un **catálogo aparte** que dice qué organismo es cada código.
+💡 **Concepto clave:** A diferencia de R1-02 donde cargabas *una* tabla, ahora cargas *dos* tablas separadas. Esto refleja cómo los datos reales del Estado están organizados: en bases de datos relacionales, los datos se guardan separados para no repetir información.
 
-Es exactamente como en Recursos Humanos: la planilla de pagos no repite el nombre del funcionario en cada línea — usa su RUT, y el RUT apunta al registro del funcionario.
-
-**🔍 Estructura del dataset:**
-
-`ordenes.csv` — 21 órdenes de compra reales de ChileCompra:
+🔍 **Qué hace el código:**
+```python
+df_ordenes = pd.read_csv("ordenes.csv")
+df_organismos = pd.read_csv("organismos.csv")
+print(f"Órdenes: {len(df_ordenes)} filas  |  Organismos: {len(df_organismos)} filas")
 ```
-codigo_oc | entcode | rubro                    | monto
-1         | 6919    | Servicios de transporte  | 1,584,900
-2         | 6919    | Servicios agrícolas...   | 1,134,900
-...
-```
+- Línea 1: carga las órdenes de compra en un DataFrame
+- Línea 2: carga el catálogo de organismos en otro DataFrame
+- Línea 3: imprime cuántas filas tiene cada uno para verificar
 
-`organismos.csv` — catálogo de 6 organismos:
-```
-entcode | organismo                    | region
-6919    | Servicio Agrícola y Ganadero | Region del Nuble
-6924    | Corp Nacional Forestal       | Region de Antofagasta
-...
-```
+⚠️ **Error frecuente:** Si ves `FileNotFoundError`, el archivo no está en la carpeta correcta. En Colab, la celda de descarga automática lo resuelve; si falla, sube el archivo manualmente con el botón de archivos de Colab.
 
-⚠️ **Dato clave para los ejercicios:** El dataset tiene **un organismo huérfano a propósito** — el `entcode` 6956 aparece en 3 órdenes de `ordenes.csv` pero **no existe** en `organismos.csv`. Esto simula una situación real: códigos que aún no están en el catálogo.
-
-**✅ Sabes esta sección cuando puedes:** Explicar qué es `entcode` y por qué existe en ambas tablas.
+✅ **Sabes esta sección cuando puedes:** decir cuántas órdenes hay y cuántos organismos hay en el catálogo, mirando el output del `print`.
 
 ---
 
-### Sección 2 · El cruce: `pd.merge()`
+### Sección 1: ¿Por qué dos tablas? La llave que las une
 
-**🎯 Objetivo:** Unir las dos tablas para que cada orden tenga el nombre y región de su organismo.
+🎯 **Objetivo:** Entender por qué los datos están separados y qué es una llave.
 
-**💡 Concepto clave:** `pd.merge()` es el BUSCARV de pandas, pero mejor: no arrastras fórmulas, no te equivocas de columna, y funciona con millones de filas en un segundo.
+💡 **Concepto clave — La analogía del BUSCARV:** ¿Alguna vez usaste `BUSCARV` para traer, desde otra hoja, el nombre del ministerio que corresponde a un código? `merge` hace exactamente eso, pero para **toda la tabla de una vez** y sin arrastrar fórmulas fila por fila.
 
-```python
-df_cruce = pd.merge(df_ordenes, df_organismos, on="entcode")
-```
+La razón por la que los datos están separados es eficiencia: guardar el nombre completo del organismo en cada una de las 1,8 millones de órdenes de ChileCompra significaría repetir "Ministerio de Salud" cientos de miles de veces. Y si alguien escribe mal el nombre en una fila, el error se propaga. Por eso los sistemas guardan solo el **código** en las órdenes, y el catálogo aparte dice qué significa ese código.
 
-**🔍 ¿Qué hace cada parte?**
-- `df_ordenes` → la tabla **izquierda** (tus órdenes de compra)
-- `df_organismos` → la tabla **derecha** (el catálogo)
-- `on="entcode"` → la **llave**: la columna que existe en ambas tablas y permite emparejarlas
-- El resultado: una tabla ancha donde cada orden tiene su `organismo` y `region` al lado
+La columna que está en **ambas tablas** y permite unirlas se llama la **llave** (aquí, `entcode`).
 
-**⚠️ Error frecuente:** `KeyError: 'entcode'` — significa que la llave no se llama igual en ambas tablas. Usa `df.columns` en cada una para verificar. Si los nombres difieren, usa `left_on="nombre_en_izquierda"` y `right_on="nombre_en_derecha"`.
+⚠️ **Error frecuente:** Asumir que la llave se llama igual en ambas tablas. Siempre revisa `df.columns` en cada una antes de cruzar.
 
-**✅ Sabes esta sección cuando puedes:** Ejecutar el merge y ver las columnas `organismo` y `region` en el resultado.
+✅ **Sabes esta sección cuando puedes:** identificar cuál columna es la llave mirando las columnas de ambas tablas, y explicar en tus palabras por qué los datos están separados.
 
 ---
 
-### Sección 3 · Tipos de cruce: `inner` vs `left` (la fila huérfana)
+### Sección 2: El cruce — `pd.merge()`
 
-**🎯 Objetivo:** Entender qué pasa con las órdenes cuyo organismo no está en el catálogo.
+🎯 **Objetivo:** Ejecutar el cruce básico y verificar que el resultado tiene las columnas de ambas tablas.
 
-**💡 Concepto clave:** El tipo de cruce define qué se hace con las filas que no encontraron pareja.
+💡 **Concepto clave:** `pd.merge()` es la operación de pegar dos tablas por una columna en común. El resultado es una **tabla ancha**: cada orden, ahora con su nombre de organismo y región al lado.
 
 ```python
-# inner (defecto): solo conserva las filas con pareja en ambas tablas
-inner = pd.merge(df_ordenes, df_organismos, on="entcode", how="inner")
-
-# left: conserva TODAS las órdenes; las huérfanas quedan con NaN
-left = pd.merge(df_ordenes, df_organismos, on="entcode", how="left")
+pd.merge(df_ordenes, df_organismos, on="entcode")
 ```
 
-**🔍 Con los datos reales del módulo:**
+🔍 **Qué hace el código, línea por línea:**
+- `df_ordenes` → la tabla **izquierda** (la principal, la que manda)
+- `df_organismos` → la tabla **derecha** (la que trae información adicional)
+- `on="entcode"` → la columna llave por la que se emparejan las filas
+- El resultado: una fila por cada orden, ahora con las columnas de organismos pegadas al lado
 
-| Cruce | Filas resultado | ¿Qué pasó? |
+⚠️ **Error frecuente:** Poner los argumentos al revés. Aunque en este caso el resultado es similar, la convención es: la tabla con todos los datos que quieres conservar va **a la izquierda** (`df_ordenes`).
+
+✅ **Sabes esta sección cuando puedes:** verificar con `.columns` que el resultado tiene columnas de las dos tablas originales (`monto` de órdenes y `region` del catálogo).
+
+---
+
+### Sección 3: Tipos de cruce — `inner` vs `left`
+
+🎯 **Objetivo:** Entender qué filas se pierden con `inner` y cómo recuperarlas con `left`.
+
+💡 **Concepto clave — La fila huérfana:** Imagina que tienes una lista de proveedores y haces BUSCARV para traer su nombre. Si el RUT del proveedor no está en el catálogo, esa fila devuelve `#N/A`. En pandas, el comportamiento depende del tipo de cruce:
+
+| Tipo | ¿Qué conserva? | Equivalente en Excel |
 |---|---|---|
-| `inner` (defecto) | 18 | Se perdieron 3 órdenes (el organismo 6956 no está en el catálogo) |
-| `left` | 21 | Se conservaron todas; las 3 de 6956 quedaron con `region = NaN` |
+| `how="inner"` (defecto) | Solo filas con pareja en **ambas** tablas | BUSCARV que elimina los #N/A |
+| `how="left"` | **Todas** las filas de la tabla izquierda | BUSCARV que deja los #N/A como NaN |
 
-> **Regla práctica para el sector público:** Si la tabla izquierda es tu universo completo (todas las órdenes), usa siempre `how="left"` y luego revisa cuántas quedaron huérfanas. El cruce `inner` descarta datos **en silencio** — es la causa #1 de "me faltan registros y no sé por qué".
+> ⚠️ El `inner` es **el defecto** y el **error más silencioso de datos**: si usas `inner` y hay órdenes cuyo `entcode` no está en el catálogo, esas órdenes desaparecen sin ningún aviso. Compara siempre `len()` antes y después del cruce.
 
-**⚠️ Error frecuente:** Usar `inner` sin darse cuenta de que se perdieron filas. Siempre compara `len(df_ordenes)` vs `len(resultado)` después de un merge.
+🔍 **Qué hace el código:**
+```python
+inner = pd.merge(df_ordenes, df_organismos, on="entcode", how="inner")
+left  = pd.merge(df_ordenes, df_organismos, on="entcode", how="left")
 
-**✅ Sabes esta sección cuando puedes:** Explicar por qué el cruce inner perdió 3 filas y dónde aparecen esas 3 filas en el cruce left.
+print(f"Órdenes originales:  {len(df_ordenes)}")
+print(f"Tras cruce inner:    {len(inner)}  (perdidas: {len(df_ordenes) - len(inner)})")
+print(f"Tras cruce left:     {len(left)}")
+
+print(left[left["region"].isna()])  # muestra las filas huérfanas
+```
+- Compara los tamaños de los tres DataFrames
+- Las filas donde `region` es vacía (`NaN`) son las órdenes sin organismo en el catálogo
+
+✅ **Sabes esta sección cuando puedes:** explicar cuántas filas se pierden con `inner` y por qué, y saber cuándo usar `left` en tu trabajo.
 
 ---
 
-### Sección 4 · Unir y resumir: la pregunta real (`groupby`)
+### Sección 4: Unir y resumir con `groupby()`
 
-**🎯 Objetivo:** Responder "¿qué región concentra más gasto?" con una sola operación.
+🎯 **Objetivo:** Usar `groupby` para sumar el monto de compras por región y responder la pregunta de gestión.
 
-**💡 Concepto clave:** En R1-02 usaste `value_counts()` para **contar** cuántas veces aparecía cada valor. Para **sumar** una columna numérica por categoría, se usa `groupby()`.
+💡 **Concepto clave — La tabla dinámica real:** En R1-02 usaste `value_counts()` para **contar** cuántas filas hay por categoría. Cuando necesitas **sumar** una columna numérica (como el monto) por categoría, usas `groupby`:
 
+```python
+df.groupby("region")["monto"].sum()
+```
+
+Esto es exactamente una **tabla dinámica de Excel**: agrupa las filas por región y suma el monto de cada grupo.
+
+🔍 **Qué hace el código:**
 ```python
 gasto_region = df_cruce.groupby("region")["monto"].sum().sort_values(ascending=False)
 ```
+- `.groupby("region")` → agrupa el DataFrame por los valores únicos de la columna `region`
+- `["monto"]` → dentro de cada grupo, trabaja con la columna `monto`
+- `.sum()` → suma todos los montos de cada grupo
+- `.sort_values(ascending=False)` → ordena de mayor a menor para ver quién lidera
 
-**🔍 ¿Qué hace cada parte?**
-- `.groupby("region")` → agrupa todas las filas que tienen la misma región
-- `["monto"]` → selecciona la columna que quieres agregar
-- `.sum()` → suma los montos de cada grupo
-- `.sort_values(ascending=False)` → ordena de mayor a menor
+⚠️ **Error frecuente:** Aplicar `groupby` antes del `merge`. Si lo haces sobre `df_ordenes` que no tiene `region`, obtendrás un `KeyError`.
 
-**Resultado real con los datos del módulo:**
-
-| Región | Gasto total |
-|---|---|
-| Region de Arica y Parinacota | $147,085,379 |
-| Region de Tarapaca | $62,445,305 |
-| Region de Coquimbo | $40,739,516 |
-| Region Metropolitana de Santiago | $38,914,000 |
-| Region de Antofagasta | $11,733,000 |
-| Region del Nuble | $7,719,800 |
-
-> **Nota de política pública:** Este resultado usa el cruce `inner`, que **descartó** $63,283,673 en órdenes del organismo huérfano (6956). Un analista riguroso informaría ese monto como "gasto no atribuido a región" antes de presentar el ranking.
-
-**⚠️ Error frecuente:** Aplicar `groupby` antes de hacer el merge. Necesitas la columna `region` en la tabla para poder agrupar por ella.
-
-**✅ Sabes esta sección cuando puedes:** Producir el ranking de gasto por región y explicar qué significa el primer lugar.
+✅ **Sabes esta sección cuando puedes:** leer el output del `groupby` e identificar qué región lidera el gasto, y explicarle a tu jefatura qué significa ese número.
 
 ---
 
-### Sección 5 · Errores típicos al cruzar
+### Errores típicos al cruzar (guía de referencia rápida)
 
-| Error | Mensaje | Causa | Solución |
-|---|---|---|---|
-| `KeyError: 'entcode'` | Llave no encontrada | La columna no se llama igual en ambas tablas | Verifica con `df.columns`; usa `left_on` / `right_on` |
-| Cruce devuelve 0 filas | DataFrame vacío | Los tipos de dato difieren (número vs texto) | Convierte al mismo tipo antes: `df["entcode"] = df["entcode"].astype(str)` |
-| Tabla creció más de lo esperado | Más filas que las originales | La llave está duplicada en la tabla derecha | Verifica con `df_organismos["entcode"].duplicated().sum()` |
-| Se perdieron filas | Menos filas que las originales | Se usó `inner` con huérfanas | Usa `how="left"` y revisa los `NaN` |
+| Error | Causa | Solución |
+|---|---|---|
+| `KeyError: 'entcode'` | La llave no existe o tiene distinto nombre en cada tabla | Revisar `.columns` en ambas; si difieren, usar `left_on=` y `right_on=` |
+| El cruce devuelve 0 filas | La llave existe pero con tipos distintos (número vs. texto) | Convertir a mismo tipo antes del merge: `df["entcode"] = df["entcode"].astype(str)` |
+| Se perdieron filas sin aviso | Se usó `inner` con filas huérfanas | Comparar `len()` antes y después; usar `how="left"` para no perder filas |
+| La tabla creció más de lo esperado | La llave está duplicada en la tabla derecha | Verificar que la llave sea única en el catálogo: `df.duplicated("entcode").sum()` |
 
 ---
 
-## 5. Guía de los 4 Ejercicios
+## 5. Guía de los 4 ejercicios
 
 ### Ejercicio 01 · Encontrar la llave
 
-**Habilidad que entrena:** Identificar la columna común entre dos tablas antes de cruzar.
+**Qué habilidad entrena:** Antes de cruzar, siempre hay que identificar la columna que es común a las dos tablas. Este ejercicio entrena ese hábito.
 
-**Pista suave 🟢:** Mira `df_ordenes.columns` y `df_organismos.columns`. ¿Qué nombre aparece en ambas listas?
+**Qué debes hacer:** Guardar en `llave` el nombre (como texto entre comillas) de la columna que está en ambas tablas; en `n_ordenes` la cantidad de filas de `df_ordenes`; y en `n_organismos` la cantidad de filas de `df_organismos`.
 
-**Pista media 🟡:** La llave es el código que identifica al organismo comprador. Es la misma columna que conecta las dos tablas.
+**Pistas progresivas:**
+- 🟢 *Pista suave:* Usa `.columns` en ambos DataFrames y busca el nombre que aparece en las dos listas.
+- 🟡 *Pista media:* La llave es siempre el código que conecta ambas tablas. En el ejemplo de la sección 1, ¿cuál columna aparece en la tabla de órdenes Y en el catálogo?
+- 🔴 *Pista directa:* Mira los encabezados de los datos del módulo: `ordenes.csv` tiene `codigo_oc, entcode, rubro, monto` y `organismos.csv` tiene `entcode, organismo, region`. ¿Cuál es la única columna común?
 
-**Pista directa 🔴:** La columna se llama `"entcode"`. Guárdala como texto: `llave = "entcode"`. Para `n_ordenes` y `n_organismos` usa `.shape[0]` o `len()`.
+**Lógica de la solución:** La llave es la columna `entcode` porque es la única que aparece en ambas tablas. Para los conteos, `len(df)` o `df.shape[0]` te dan la cantidad de filas.
 
-**Lógica de la solución:** Antes de cualquier merge, debes confirmar que la llave existe en ambas tablas. `n_ordenes = 21`, `n_organismos = 6`.
-
-**✅ El chequeo automático valida que:** `llave == "entcode"`, `n_ordenes == 21` y `n_organismos == 6`.
+**Qué significa el ✅:** Que identificaste correctamente la columna llave y tienes los conteos correctos de ambas tablas. Estás listo para cruzar.
 
 ---
 
 ### Ejercicio 02 · El primer cruce
 
-**Habilidad que entrena:** Ejecutar `pd.merge()` y entender que el tipo por defecto (`inner`) puede descartar filas.
+**Qué habilidad entrena:** Ejecutar el merge básico y verificar que el resultado tiene las columnas de ambas tablas.
 
-**Pista suave 🟢:** Usa `pd.merge()` con tres argumentos: la tabla izquierda, la tabla derecha y `on="entcode"`.
+**Qué debes hacer:** Cruzar `df_ordenes` con `df_organismos` por `entcode` usando el tipo de cruce por defecto (inner), guardar en `df_cruce` y en `n_cruce` la cantidad de filas.
 
-**Pista media 🟡:** No necesitas especificar `how=` para este ejercicio. El cruce por defecto es `inner`. Guarda el resultado en `df_cruce` y cuenta sus filas.
+**Pistas progresivas:**
+- 🟢 *Pista suave:* La sintaxis básica es `pd.merge(tabla_izquierda, tabla_derecha, on="llave")`.
+- 🟡 *Pista media:* El primer argumento es `df_ordenes`, el segundo es `df_organismos`, el tercer argumento es `on="entcode"`.
+- 🔴 *Pista directa:* `df_cruce = pd.merge(df_ordenes, df_organismos, on="entcode")` — sin especificar `how`, usa `inner` por defecto.
 
-**Pista directa 🔴:** `df_cruce = pd.merge(df_ordenes, df_organismos, on="entcode")`. El `n_cruce` será menor que 21.
+**Lógica de la solución:** Con `inner`, el resultado tendrá solo las órdenes cuyo `entcode` existe en el catálogo. Por eso `n_cruce` será *menor* que `n_ordenes`: las órdenes huérfanas desaparecen.
 
-**Lógica de la solución:** El cruce `inner` descarta las 3 órdenes del organismo 6956 (que no está en el catálogo). Resultado: `n_cruce = 18`.
-
-**✅ El chequeo automático valida que:** `df_cruce` tiene 18 filas, contiene las columnas `monto` y `region`, y `n_cruce < 21`.
+**Qué significa el ✅:** Que tu cruce tiene las columnas correctas (incluyendo `region` que viene del catálogo) y el número de filas esperado (menor que el original por las huérfanas).
 
 ---
 
 ### Ejercicio 03 · Inner vs left: cazar la fila huérfana
 
-**Habilidad que entrena:** Usar `how="left"` para no perder registros y detectar cuáles quedaron sin pareja.
+**Qué habilidad entrena:** Usar `how="left"` para no perder filas y detectar los registros sin pareja en el catálogo.
 
-**Pista suave 🟢:** El cruce `left` conserva todas las filas de la tabla izquierda. Las que no encontraron pareja tendrán `NaN` en las columnas del catálogo.
+**Qué debes hacer:** Guardar en `df_left` el cruce con `how="left"` y en `n_perdidas` cuántas filas quedaron con `region` vacía.
 
-**Pista media 🟡:** Para contar los huérfanos: `df_left["region"].isna().sum()`. Piensa: ¿cuántas órdenes tiene el organismo 6956?
+**Pistas progresivas:**
+- 🟢 *Pista suave:* Es igual al Ejercicio 02 pero agrega `how="left"` como cuarto argumento.
+- 🟡 *Pista media:* Para contar los valores nulos de la columna `region`, puedes usar `.isna()` que devuelve True/False para cada fila, y `.sum()` cuenta los True.
+- 🔴 *Pista directa:* `df_left = pd.merge(df_ordenes, df_organismos, on="entcode", how="left")` y luego `n_perdidas = df_left["region"].isna().sum()`.
 
-**Pista directa 🔴:** `df_left = pd.merge(df_ordenes, df_organismos, on="entcode", how="left")`. `n_perdidas = df_left["region"].isna().sum()`.
+**Lógica de la solución:** Con `how="left"`, el DataFrame resultante tiene **exactamente** las mismas filas que `df_ordenes`. Las órdenes sin organismo en el catálogo quedan con `NaN` en `organismo` y `region`. Contar esos `NaN` revela las filas huérfanas.
 
-**Lógica de la solución:** El organismo 6956 tiene 3 órdenes que no encuentran pareja en el catálogo. Con `how="left"` esas 3 filas se conservan con `region = NaN`. Resultado: `n_perdidas = 3`.
-
-**✅ El chequeo automático valida que:** `df_left` tiene 21 filas y `n_perdidas == 3`.
+**Qué significa el ✅:** Que `df_left` tiene el mismo número de filas que `df_ordenes` (ninguna fila se perdió) y que identificaste al menos 1 orden sin organismo en el catálogo. Esto es un hallazgo real: esa orden existe en MercadoPúblico pero no tiene organismo registrado en el catálogo.
 
 ---
 
 ### Ejercicio 04 · La pregunta real: ¿qué región concentra más gasto?
 
-**Habilidad que entrena:** Combinar `groupby` + `sum` + `sort_values` para producir un ranking de gestión pública.
+**Qué habilidad entrena:** Usar `groupby` para responder una pregunta de política pública concreta a partir de datos cruzados.
 
-**Pista suave 🟢:** Necesitas agrupar `df_cruce` por la columna `region` y sumar la columna `monto`. ¿Qué método de pandas hace eso?
+**Qué debes hacer:** Guardar en `gasto_por_region` el gasto total por región (ordenado de mayor a menor) y en `region_top` el nombre de la región que más gasta. Luego reflexionar en la celda de texto qué le dirías a tu jefatura.
 
-**Pista media 🟡:** `groupby("region")["monto"].sum()` te da la suma por región. Para ordenar de mayor a menor agrega `.sort_values(ascending=False)`.
+**Pistas progresivas:**
+- 🟢 *Pista suave:* Usa `df_cruce` (del Ejercicio 02, que ya tiene la columna `region`). Aplica `.groupby("region")` seguido de `["monto"].sum()`.
+- 🟡 *Pista media:* Para ordenar de mayor a menor agrega `.sort_values(ascending=False)`. Para obtener la primera región del resultado usa `.index[0]`.
+- 🔴 *Pista directa:* `gasto_por_region = df_cruce.groupby("region")["monto"].sum().sort_values(ascending=False)` y `region_top = gasto_por_region.index[0]`.
 
-**Pista directa 🔴:** `gasto_por_region = df_cruce.groupby("region")["monto"].sum().sort_values(ascending=False)`. `region_top = gasto_por_region.index[0]`.
+**Lógica de la solución:** `groupby` crea grupos de filas con el mismo valor en `region`, luego `sum()` suma el `monto` dentro de cada grupo. El resultado es una Serie indexada por nombre de región. `.index[0]` accede al nombre de la primera región (la de mayor gasto).
 
-**Lógica de la solución:** Al agrupar por región y sumar montos, la Región de Arica y Parinacota encabeza el ranking con $147,085,379. Esto se explica porque el Servicio de Cooperación Técnica (6950), que tiene las órdenes más grandes del dataset, tiene su sede registrada en esa región.
-
-**✅ El chequeo automático valida que:** `region_top == "Region de Arica y Parinacota"` y el monto del primer lugar coincide.
+**Qué significa el ✅:** Que calculaste correctamente el gasto por región y que identificaste la región líder. Completaste todo el módulo — ahora puedes responder una pregunta real de gestión pública con datos.
 
 ---
 
-## 6. El Ejercicio 04 en profundidad: Interpretar para decidir
+## 6. El ejercicio 04 en profundidad: Interpretar para decidir
 
-### Los números del ranking
+### ¿Qué nos dice la distribución del gasto por región?
 
-| Región | Gasto total | % del total |
-|---|---|---|
-| Arica y Parinacota | $147,085,379 | ~47% |
-| Tarapacá | $62,445,305 | ~20% |
-| Coquimbo | $40,739,516 | ~13% |
-| Metropolitana | $38,914,000 | ~12% |
-| Antofagasta | $11,733,000 | ~4% |
-| Ñuble | $7,719,800 | ~2% |
-| **Sin atribuir** (6956) | **$63,283,673** | **~17%** |
+Cuando el groupby muestra que una región concentra la mayor parte del gasto en compras públicas, ese dato tiene varias lecturas posibles:
+
+- **Puede ser esperado:** si es la Región Metropolitana, es donde está la mayoría de los organismos y la mayor cantidad de funcionarios, por lo que más gasto no es necesariamente un problema.
+- **Puede ser relevante para la gestión:** si una región periférica aparece con gasto desproporcionado en un rubro específico, merece investigación.
+- **Puede ser un artefacto del dato:** si la región con más gasto corresponde a organismos con `entcode` sin región identificada o con errores en el catálogo, el dato puede estar distorsionado.
 
 ### Reflexión guiada
 
-La Región de Arica y Parinacota lidera el ranking, pero no porque esa región tenga más organismos o población. Es porque el **Servicio de Cooperación Técnica**, que registra sede en esa región, concentra las órdenes de mayor valor unitario del dataset.
-
-Esto ilustra un problema clásico del análisis de compras públicas: **la región de la sede del organismo no es necesariamente donde se ejecuta el gasto**. Un organismo con sede en Arica puede estar comprando servicios que se prestan en todo el país.
-
-Además, hay **$63,283,673 (17% del gasto total) que no se puede atribuir a ninguna región** porque el organismo 6956 no está en el catálogo. Presentar el ranking sin mencionar ese dato sería un análisis incompleto.
+1. ¿La región con más gasto tiene proporción de organismos similar a su participación en el gasto? ¿O hay desproporción?
+2. ¿El resultado cambiaría si miraras por **rubro** en vez de por región? (Pista: cambia `"region"` por `"rubro"` en el groupby)
+3. ¿Qué pasaría si incluyeras las filas huérfanas del `df_left`? ¿Cuánto monto representan?
 
 ### Pregunta de debate
 
-> *¿Qué le dirías a tu jefatura con este resultado? ¿Qué pregunta nueva te abre este análisis?*
+> ¿Qué otro dato pedirías para decidir si la concentración de gasto en la región líder es un problema de política pública o es simplemente reflejo del tamaño de esa región?
 
-Algunas respuestas posibles:
-- ¿Cuál es el gasto por rubro dentro de la región líder?
-- ¿Qué organismo específico dentro de Metropolitana gasta más?
-- ¿Por qué el organismo 6956 no está en el catálogo? ¿Es un error de carga o un organismo nuevo?
-- ¿Cómo cambia el ranking si se excluyen los servicios de consultoría y se mira solo gasto en servicios directos a la ciudadanía?
+Algunas respuestas posibles: número de licitaciones (no solo monto), cantidad de organismos por región, población regional, presupuesto asignado por región.
 
 ---
 
-## 7. Autoevaluación Final
+## 7. Conexión con el módulo de profundización (`profundiza.ipynb`)
 
-**Pregunta 1.** ¿Qué hace `pd.merge(df_a, df_b, on="codigo")`?
-- A) Concatena las tablas una debajo de la otra
-- B) Une las tablas emparejando filas donde `codigo` tiene el mismo valor en ambas ✅
-- C) Multiplica los valores de la columna `codigo`
-- D) Elimina duplicados en la columna `codigo`
-
-*Explicación: `merge` es una unión horizontal (une columnas de dos tablas por una llave común), no vertical como `pd.concat`.*
-
----
-
-**Pregunta 2.** ¿Cuál es la diferencia clave entre `how="inner"` y `how="left"`?
-- A) `inner` es más rápido; `left` es más preciso
-- B) `inner` conserva solo filas con pareja en ambas tablas; `left` conserva todas las de la tabla izquierda ✅
-- C) `inner` une por la izquierda; `left` une por la derecha
-- D) No hay diferencia, son sinónimos
-
-*Explicación: El tipo de cruce define qué se hace con las filas que no tienen pareja. `inner` las descarta; `left` las conserva con NaN.*
-
----
-
-**Pregunta 3.** Tienes 21 órdenes y haces un `inner merge`. El resultado tiene 18 filas. ¿Qué significa?
-- A) Hay 3 filas duplicadas que se eliminaron
-- B) Hay un error en el código
-- C) 3 órdenes no encontraron pareja en el catálogo y se descartaron ✅
-- D) La tabla derecha solo tiene 18 registros
-
-*Explicación: El cruce `inner` descarta filas sin pareja. Si el resultado es menor que la tabla izquierda, hay filas huérfanas.*
-
----
-
-**Pregunta 4.** ¿Qué hace `df.groupby("region")["monto"].sum()`?
-- A) Filtra el DataFrame por región y suma todos los montos
-- B) Suma los montos de cada grupo de filas que comparten el mismo valor de `region` ✅
-- C) Cuenta cuántas filas hay por región
-- D) Calcula el promedio de monto para toda la tabla
-
-*Explicación: `groupby` divide la tabla en grupos y `.sum()` aplica la suma dentro de cada grupo, produciendo un valor por región.*
-
----
-
-**Pregunta 5.** Después de un `how="left"` merge, ves que `df_left["region"].isna().sum()` devuelve 3. ¿Qué significa?
-- A) Hay 3 filas con montos vacíos
-- B) 3 organismos tienen nombre vacío en el catálogo
-- C) 3 órdenes no encontraron su organismo en el catálogo ✅
-- D) La columna `region` tiene 3 valores únicos
-
-*Explicación: `NaN` en la columna `region` tras un `left merge` indica que esa orden no encontró pareja en el catálogo — es la "huella" de la fila huérfana.*
-
----
-
-## 8. Glosario del Módulo
-
-| Término | Definición simple | Equivalente en tu trabajo |
+| Tema | `leccion.ipynb` (nivel práctico) | `profundiza.ipynb` (nivel teórico) |
 |---|---|---|
-| **merge** | Operación que une dos tablas por una columna en común | BUSCARV / VLOOKUP en Excel |
-| **llave** | Columna que identifica de forma única cada registro y aparece en ambas tablas | RUT, código de organismo, número de licitación |
-| **inner join** | Cruce que conserva solo las filas con pareja en ambas tablas | BUSCARV que descarta los #N/A |
-| **left join** | Cruce que conserva todas las filas de la tabla izquierda | BUSCARV que deja el #N/A visible |
-| **fila huérfana** | Fila cuya llave no aparece en la tabla con la que se cruza | Código de organismo que no está en el catálogo |
-| **`NaN`** | Valor vacío o faltante en pandas | Celda en blanco en Excel |
-| **`groupby()`** | Agrupa filas por el valor de una columna para aplicar una operación | Tabla dinámica en Excel |
-| **`.sum()`** | Suma los valores de cada grupo | Función SUMA en tabla dinámica |
-| **`.mean()`** | Calcula el promedio de cada grupo | Función PROMEDIO en tabla dinámica |
-| **catálogo** | Tabla que traduce códigos a nombres legibles | Hoja auxiliar de referencia en Excel |
-| **`entcode`** | Código numérico que identifica a cada organismo comprador en ChileCompra | RUT del organismo |
-| **`.isna()`** | Devuelve True para cada celda vacía | Función `ESBLANCO()` en Excel |
+| Tipos de cruce | Inner y left con ejemplos concretos | Right, outer y full join; cuándo usar cada uno |
+| Llaves duplicadas | Mención en errores típicos | Análisis de cardinalidad (1:1, 1:N, N:M) |
+| groupby | sum() por una columna | agg() con múltiples funciones, transform(), apply() |
+| Datos faltantes tras merge | Detectar NaN con `.isna()` | Imputación, decisiones de diseño |
+| Rendimiento | Sin mención | merge con índices para grandes datasets |
+
+**¿Cuándo ir al profundiza?**
+- Si tienes datos reales con llaves duplicadas y no sabes cómo manejarlos
+- Si necesitas múltiples funciones de agregación a la vez (suma, promedio, conteo en una sola operación)
+- Si tu institución trabaja con tablas de más de 100.000 filas y el merge es lento
+
+**¿Para quién es?** Analistas de datos con experiencia previa en bases de datos o SQL, o participantes que quieran prepararse para R1-05 · SQL con más fundamentos conceptuales.
 
 ---
 
-## 9. Conexión con el siguiente módulo
+## 8. Autoevaluación Final
 
-Ya sabes cruzar dos tablas y resumir el resultado. Pero para que `merge` funcione bien, las llaves deben estar **limpias**: sin espacios extra, sin mezcla de mayúsculas y minúsculas, sin que un campo sea número en una tabla y texto en otra.
+Responde sin mirar el notebook:
 
-El próximo módulo es **R1-04 · Limpieza de datos**, donde aprenderás a:
-- Detectar y corregir valores nulos (`NaN`)
-- Estandarizar texto (mayúsculas, espacios, tildes)
-- Convertir tipos de datos antes de un merge
-- Documentar los supuestos que tomaste al limpiar
+**1. ¿Qué significa `on="entcode"` en `pd.merge()`?**
+- a) Que se deben usar solo las columnas llamadas `entcode` en el resultado
+- b) Que las filas se emparejarán comparando los valores de esa columna en ambas tablas ✅
+- c) Que se ordena el resultado por esa columna
+- d) Que se eliminan las filas donde `entcode` sea nulo
 
-Pregunta motivadora para que llegues con ganas:
-
-> *En los datos de ChileCompra, ¿qué pasaría si el mismo organismo aparece como `"Corp Nacional Forestal"` en algunas órdenes y como `"CONAF"` en otras? ¿Cómo detectarías ese problema antes de cruzar?*
-
-Eso es exactamente lo que resolverás en R1-04. ¡Nos vemos ahí!
+*Explicación:* `on=` indica la columna llave. pandas busca cada valor de `entcode` en la tabla izquierda y lo empareja con la fila de la tabla derecha que tiene el mismo valor. Es exactamente el mecanismo del BUSCARV.
 
 ---
 
-*Guía elaborada para el Bootcamp de Datos — Formación Pública Chile · Licencia CC BY 4.0*
+**2. ¿Qué diferencia hay entre `how="inner"` y `how="left"`?**
+- a) `inner` es más lento que `left`
+- b) `inner` solo conserva filas con pareja en ambas tablas; `left` conserva todas las de la tabla izquierda ✅
+- c) `left` solo funciona cuando la llave está en la columna del lado izquierdo
+- d) No hay diferencia práctica
+
+*Explicación:* `inner` es como una intersección: solo filas que calzan. `left` es más conservador: no bota ninguna fila de la tabla principal, aunque queden con `NaN` en las columnas del catálogo.
+
+---
+
+**3. Tienes `df_ordenes` (50 filas) y haces un merge inner con `df_organismos`. El resultado tiene 47 filas. ¿Qué significa?**
+- a) pandas eliminó filas duplicadas automáticamente
+- b) El catálogo de organismos tiene 47 entradas
+- c) 3 órdenes tenían un `entcode` que no existe en el catálogo ✅
+- d) El merge siempre reduce el tamaño del DataFrame
+
+*Explicación:* Con `inner`, cada fila del resultado necesita pareja en ambas tablas. Si 3 órdenes tienen un `entcode` que no aparece en `organismos.csv`, esas 3 filas desaparecen silenciosamente.
+
+---
+
+**4. ¿Qué hace `df_cruce.groupby("region")["monto"].sum()`?**
+- a) Selecciona solo las columnas `region` y `monto`
+- b) Agrupa las filas por región y suma el monto total de cada región ✅
+- c) Ordena el DataFrame por región y luego por monto
+- d) Cuenta cuántas filas hay por región
+
+*Explicación:* `groupby("region")` crea grupos de filas con el mismo valor en `region`. `["monto"].sum()` suma los valores de `monto` dentro de cada grupo. Es la tabla dinámica de pandas.
+
+---
+
+**5. ¿Cuál es el orden correcto de las operaciones para responder "¿qué región gasta más"?**
+- a) groupby → merge → sum
+- b) sum → groupby → merge
+- c) merge → groupby → sum ✅
+- d) merge → sum → groupby
+
+*Explicación:* Primero debes **cruzar** las tablas (merge) para que cada orden tenga su región. Luego **agrupar** por región (groupby). Finalmente **sumar** el monto de cada grupo. Sin el merge previo, `df_ordenes` no tiene la columna `region` y el groupby fallaría.
+
+---
+
+## 9. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en Excel / administración |
+|---|---|---|
+| **merge** | Operación que pega dos tablas comparando una columna en común | BUSCARV / VLOOKUP |
+| **llave (key)** | Columna que existe en ambas tablas y sirve para emparejar filas | La columna de búsqueda del BUSCARV |
+| **entcode** | Código único que identifica a cada organismo público | RUT del organismo |
+| **inner join** | Tipo de cruce que solo conserva filas con pareja en ambas tablas | BUSCARV que devuelve #N/A para los no encontrados (y los elimina) |
+| **left join** | Tipo de cruce que conserva todas las filas de la tabla izquierda | BUSCARV que deja los #N/A visibles |
+| **fila huérfana** | Fila de la tabla izquierda cuya llave no existe en la tabla derecha | Una fila con #N/A en el BUSCARV |
+| **NaN** | Valor vacío (Not a Number) — aparece cuando no hay pareja en el join | Celda vacía o #N/A |
+| **groupby** | Operación que agrupa filas por una categoría y aplica una función | Tabla dinámica (pivot table) de Excel |
+| **sum()** | Suma los valores de un grupo | Campo "Suma de monto" en tabla dinámica |
+| **sort_values()** | Ordena el resultado de mayor a menor (o viceversa) | Ordenar columna en Excel |
+| **catálogo** | Tabla que traduce códigos a nombres y describe entidades | Hoja de referencia con la lista de organismos |
+| **base de datos relacional** | Sistema donde la información se guarda en tablas separadas que se relacionan por llaves | Múltiples hojas de Excel relacionadas por BUSCARV |
+
+---
+
+## 10. Conexión con el siguiente módulo
+
+### ¿Qué viene en R1-04 · Limpieza de datos?
+
+En este módulo cruzaste tablas suponiendo que los datos están limpios: que `entcode` en `ordenes.csv` y en `organismos.csv` tienen exactamente el mismo formato. Pero en el mundo real del Estado chileno, una tabla puede tener `" 6931"` (con espacio al inicio) y la otra `"6931"`. Para `merge`, esos son valores distintos y la fila queda huérfana aunque el organismo sí existe en el catálogo.
+
+R1-04 te enseña a dejar las llaves impecables antes de cruzar: eliminar espacios, estandarizar mayúsculas, convertir tipos, detectar y reparar inconsistencias.
+
+### Pregunta motivadora
+
+> Terminaste este módulo sabiendo cruzar tablas perfectas. Pero, ¿qué pasa cuando el `entcode` en las órdenes tiene espacios, guiones o letras mayúsculas que en el catálogo no? ¿Cuántas órdenes "huérfanas" son en realidad errores de tipeo que se pueden reparar?
+
+Esa es la pregunta que responde **R1-04 · Limpieza de datos**. ¡Nos vemos allá!
+
+---
+
+*Guía elaborada para el Bootcamp de Datos para Funcionarios Públicos — Formación Pública. Rama R1 · Análisis y Visualización. Módulo R1-03.*
