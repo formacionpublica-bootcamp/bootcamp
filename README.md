@@ -1,3 +1,12 @@
+> ## 🆕 Rediseño en 3 ramas independientes
+>
+> El curso se reorganizó en **3 ramas autocontenidas** (elige una según tu rol), en [`ramas/`](ramas/):
+> - **R1 · Análisis y Visualización de Datos** — `ramas/R1-analisis-visualizacion/`
+> - **R2 · Científico de Datos** — `ramas/R2-cientifico-de-datos/`
+> - **R3 · IA Aplicada** — `ramas/R3-ia-aplicada/`
+>
+> El curso anterior (Prework + Capa A/B/C) quedó archivado en [`legacy/`](legacy/) y respaldado en la rama `curso-v1-legacy`.
+
 # Formación Pública — Datos para funcionarios públicos
 
 Bootcamp **gratuito, autoguiado y práctico** de datos para funcionarios públicos chilenos que
