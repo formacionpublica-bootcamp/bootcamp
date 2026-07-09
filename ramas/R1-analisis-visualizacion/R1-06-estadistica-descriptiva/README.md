@@ -1,11 +1,12 @@
-# M6 · Estadística descriptiva
+# R1-06 · Estadística descriptiva
 
 Séptimo módulo (tronco común) del **Bootcamp de Datos para Funcionarios Públicos — Formación Pública**.
 Módulo compartido. Modalidad autoguiada, se ejecuta en Google Colab.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A5-estadistica-descriptiva/leccion.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-06-estadistica-descriptiva/leccion.ipynb)
 
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
 
 ## ¿Qué vas a aprender?
 A resumir e interpretar una columna numérica con medidas de tendencia central (media, mediana, moda), de dispersión (rango, desviación estándar) y de posición (cuartiles), y a usar `describe()`. La lección central: por qué un solo número (el promedio) engaña con datos sesgados, y cómo la mediana describe mejor el valor típico.
@@ -32,7 +33,7 @@ coeficiente de variación**, **asimetría**, ***outliers* con la regla del IQR**
 y la trampa más peligrosa para la política pública: **correlación ≠ causalidad** y la **paradoja de
 Simpson**. Con 4 ejercicios conceptuales auto-corregidos.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A5-estadistica-descriptiva/profundiza.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-06-estadistica-descriptiva/profundiza.ipynb)
 
 ## Licencia
 Contenido bajo **CC BY 4.0**.

@@ -1,11 +1,12 @@
-# M3 · Exploración con pandas
+# R1-02 · Exploración con pandas
 
 Cuarto módulo (primero del tronco común) del **Bootcamp de Datos para Funcionarios Públicos — Formación Pública**.
 Módulo compartido. Modalidad autoguiada, se ejecuta en Google Colab.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A1-exploracion-con-pandas/leccion.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-02-exploracion-con-pandas/leccion.ipynb)
 
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
 
 ## ¿Qué vas a aprender?
 A dar el salto del prework a pandas: cargar un dataset desde un archivo, inspeccionarlo (`head`, `shape`, `columns`, `info`), seleccionar columnas, filtrar filas, contar por categoría (`value_counts`) y calcular estadísticos básicos (`mean`, `describe`).
@@ -47,7 +48,7 @@ las **máscaras booleanas** por debajo del filtrado, **vistas vs. copias** y el 
 los **tipos de dato (`dtype`) y la memoria**, y la **semántica del valor faltante (`NaN`)**. Con 4
 ejercicios conceptuales auto-corregidos.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A1-exploracion-con-pandas/profundiza.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-02-exploracion-con-pandas/profundiza.ipynb)
 
 ---
 Licencia: CC BY 4.0 · Formación Pública · **Datos:** Ministerio de Salud (MINSAL) en datos.gob.cl

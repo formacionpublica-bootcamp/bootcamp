@@ -3,9 +3,7 @@
 **Formación Pública — Bootcamp de Ciencia de Datos para funcionarios públicos**
 Bloque avanzado · IA aplicada (opcional) · Semana 20
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/C2-rag/leccion.ipynb)
-
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R3-ia-aplicada/R3-03-rag/leccion.ipynb)
 
 ---
 
@@ -66,7 +64,10 @@ compromisos, la **calidad de la recuperación**, por qué **RAG reduce pero no e
 ejercicios conceptuales auto-corregidos. **Todo es conceptual y verificable sin conexión ni API key**
 (recuperación con TF-IDF; ningún ejercicio llama a un LLM).
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/C2-rag/profundiza.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R3-ia-aplicada/R3-03-rag/profundiza.ipynb)
+
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
 
 ---
 *Fuente de datos: Dirección de Compras y Contratación Pública (ChileCompra / MercadoPúblico).*

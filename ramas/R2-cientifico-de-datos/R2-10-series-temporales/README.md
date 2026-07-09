@@ -3,9 +3,10 @@
 **Formación Pública — Bootcamp de Ciencia de Datos para funcionarios públicos**
 Bloque avanzado · IA aplicada (opcional) · Semana 17
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/B7-series-temporales/leccion.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R2-cientifico-de-datos/R2-10-series-temporales/leccion.ipynb)
 
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
 
 ---
 
@@ -58,7 +59,7 @@ hondo en teoría: por qué la **validación es temporal** (sin barajar, sin fuga
 (*walk-forward*) y por qué la **incertidumbre crece con el horizonte**. Con 4 ejercicios conceptuales
 auto-corregidos.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/B7-series-temporales/profundiza.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R2-cientifico-de-datos/R2-10-series-temporales/profundiza.ipynb)
 
 ---
 *Contenido bajo licencia [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.es).*

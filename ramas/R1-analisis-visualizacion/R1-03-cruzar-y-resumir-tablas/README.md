@@ -1,11 +1,12 @@
-# M3B · Cruzar tablas: relacionar y resumir
+# R1-03 · Cruzar y resumir tablas
 
 Módulo puente del **tronco común (Pista A)** del **Bootcamp de Datos para Funcionarios Públicos — Formación Pública**.
 Va entre **M3 (pandas)** y **M4 (limpieza)**. Modalidad autoguiada, se ejecuta en Google Colab.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A2-cruzar-y-resumir-tablas/leccion.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-03-cruzar-y-resumir-tablas/leccion.ipynb)
 
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
 
 ## ¿Qué vas a aprender?
 A **relacionar dos tablas** por una llave común con `pd.merge()` (el BUSCARV de Excel, pero para toda la tabla), a elegir el **tipo de cruce** correcto (`inner` vs `left`) y detectar las **filas huérfanas** que se pierden en silencio, y a **resumir** el resultado con `groupby` para responder una pregunta real de gestión.
@@ -48,7 +49,7 @@ la **explosión** de filas cuando la llave está **duplicada** —que infla el g
 `groupby`; y la diferencia entre **agregar** (un valor por grupo) y **transformar** (un valor por fila).
 Con 4 ejercicios conceptuales auto-corregidos.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A2-cruzar-y-resumir-tablas/profundiza.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-03-cruzar-y-resumir-tablas/profundiza.ipynb)
 
 ## Verificación de calidad
 - Solución ejecutada: **4/4 ✅** (cruce inner pierde la huérfana; left la conserva con region vacía; gasto por región calculado).

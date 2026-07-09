@@ -1,11 +1,12 @@
 # D16 · IA generativa y LLMs
 
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
+
 **Formación Pública — Bootcamp de Ciencia de Datos para funcionarios públicos**
 Bloque avanzado · IA aplicada (opcional) · Semana 19
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A7-ia-generativa-y-llms/leccion.ipynb)
-
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R3-ia-aplicada/R3-02-ia-generativa-y-llms/leccion.ipynb)
 
 ---
 
@@ -69,7 +70,7 @@ plausibilidad, no verdad), qué hace la **temperatura** (*softmax* con `T`), la 
 los **sesgos heredados** de los datos de entrenamiento y los **límites para el uso responsable en el
 Estado** (verificar cifras, privacidad). Con 4 ejercicios conceptuales auto-corregidos.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A7-ia-generativa-y-llms/profundiza.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R3-ia-aplicada/R3-02-ia-generativa-y-llms/profundiza.ipynb)
 
 ## Requisitos previos
 

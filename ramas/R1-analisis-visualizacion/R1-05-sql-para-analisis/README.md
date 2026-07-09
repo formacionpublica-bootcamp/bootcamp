@@ -1,11 +1,12 @@
-# M5 · SQL fundamentos
+# R1-05 · SQL para análisis
 
 Sexto módulo (tronco común) del **Bootcamp de Datos para Funcionarios Públicos — Formación Pública**.
 Módulo compartido. Modalidad autoguiada, se ejecuta en Google Colab.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A4-sql-fundamentos/leccion.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-05-sql-para-analisis/leccion.ipynb)
 
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
 
 ## ¿Qué vas a aprender?
 A consultar una base de datos con SQL: `SELECT`/`FROM` (elegir columnas), `WHERE` (filtrar filas), `ORDER BY`/`LIMIT` (ordenar y rankear) y funciones de agregación (`COUNT`, `SUM`, `AVG`, `MAX`, `MIN`) con `GROUP BY` (resumir por grupo). Se usa **SQLite** mediante el módulo `sqlite3`, incluido en Python (cero instalación en Colab).
@@ -33,7 +34,7 @@ ejecución** (`FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY`) 
 y por qué existen los **índices** (consultas instantáneas vs. eternas). Con 4 ejercicios conceptuales
 auto-corregidos.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A4-sql-fundamentos/profundiza.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-05-sql-para-analisis/profundiza.ipynb)
 
 ## Licencia
 Contenido bajo **CC BY 4.0**.

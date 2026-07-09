@@ -3,9 +3,7 @@
 **Formación Pública — Bootcamp de Ciencia de Datos para funcionarios públicos**
 Bloque avanzado · IA aplicada (opcional) · Semana 18
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/C1-introduccion-al-nlp/leccion.ipynb)
-
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R3-ia-aplicada/R3-01-introduccion-al-nlp/leccion.ipynb)
 
 ---
 
@@ -62,7 +60,10 @@ TF-IDF** (por qué el *IDF*), la **alta dimensión y dispersión**, **por qué f
 clave** (sinónimos y contexto), los **n-gramas** y los **sesgos del lenguaje**. Con 4 ejercicios
 conceptuales auto-corregidos. **Todo corre sin conexión ni API key.**
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/C1-introduccion-al-nlp/profundiza.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R3-ia-aplicada/R3-01-introduccion-al-nlp/profundiza.ipynb)
+
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
 
 ---
 *Contenido bajo licencia [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.es).*

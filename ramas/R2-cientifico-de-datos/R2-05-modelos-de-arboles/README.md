@@ -3,7 +3,10 @@
 **Bootcamp de Datos para Funcionarios Públicos — Formación Pública**
 Línea B · *Data Scientist* · Semana 11 · Módulo específico de la ruta de Ciencia de Datos.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/B3-modelos-de-arboles/leccion.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R2-cientifico-de-datos/R2-05-modelos-de-arboles/leccion.ipynb)
+
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
 
 > Reemplaza `formacionpublica-bootcamp/bootcamp` en el enlace por la ruta real del repositorio al publicar.
 
@@ -71,7 +74,7 @@ hondo en teoría: **cómo decide un árbol** (impureza Gini/entropía), **por qu
 **bagging vs boosting** y los **cuidados al leer la importancia de variables**. Con 4 ejercicios
 conceptuales auto-corregidos.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/B3-modelos-de-arboles/profundiza.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R2-cientifico-de-datos/R2-05-modelos-de-arboles/profundiza.ipynb)
 
 ---
 

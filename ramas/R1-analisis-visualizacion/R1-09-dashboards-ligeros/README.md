@@ -2,6 +2,9 @@
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-09-dashboards-ligeros/leccion.ipynb)
 
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
+
 Construye un tablero interactivo con **Gradio** sobre datos reales de compras públicas:
 funciones de filtro + KPIs + visualización, publicable desde Colab con `demo.launch(share=True)`.
 

@@ -1,11 +1,12 @@
-# M4 · Limpieza de datos
+# R1-04 · Limpieza de datos
 
 Quinto módulo (tronco común) del **Bootcamp de Datos para Funcionarios Públicos — Formación Pública**.
 Módulo compartido. Modalidad autoguiada, se ejecuta en Google Colab.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A3-limpieza-de-datos/leccion.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-04-limpieza-de-datos/leccion.ipynb)
 
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
+> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
 
 ## ¿Qué vas a aprender?
 A dejar un dataset sucio listo para analizar: diagnosticar problemas (faltantes, duplicados, tipos), normalizar texto (`.str.strip()`, `.str.capitalize()`), convertir texto a número, resolver valores faltantes (`dropna`/`fillna`) y eliminar duplicados (`drop_duplicates`), todo empaquetado en una función de limpieza reutilizable.
@@ -33,7 +34,7 @@ imputar media/mediana**), las **trampas de la normalización de texto** (siglas 
 funden), y la **procedencia / linaje** del dato y la reproducibilidad (*garbage in, garbage out*).
 Con 4 ejercicios conceptuales auto-corregidos.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A3-limpieza-de-datos/profundiza.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-04-limpieza-de-datos/profundiza.ipynb)
 
 ## Licencia
 Contenido bajo **CC BY 4.0**.
