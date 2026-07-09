@@ -101,9 +101,14 @@ No es un curso de programación: es lo justo para llegar rápido a pandas y SQL.
 4. Cada ejercicio termina en una **celda de chequeo**: ✅ si está bien, o una pista amable.
 5. El módulo está completo cuando todas las celdas de chequeo muestran ✅.
 
-> **¿Te trancaste?** Es normal y parte del oficio. Lee el error completo, y si no lo entiendes,
-> **pégaselo a la IA junto con tu código** (Gemini/ChatGPT) y pídele que te explique qué significa
-> y cómo arreglarlo — **sin pegar datos personales**.
+> **¿Te trancaste?** Es normal y parte del oficio. Tu escalera de ayuda, en orden:
+> 1. La **`GUIA_APRENDIZAJE.md`** del módulo (en su misma carpeta): pistas progresivas 🟢🟡🔴,
+>    errores frecuentes y autoevaluación.
+> 2. **Gemini dentro de Colab** (botón ✨): pégale el error completo junto con tu código y pídele
+>    que te explique qué significa — **sin pegar datos personales**.
+> 3. **[Antigravity como tutor de IA](GUIA_GRAVITY.md)** *(opcional)*: un IDE gratuito de Google
+>    con un asistente que ve todo el curso y, con el modo tutor ([TUTOR_IA.md](TUTOR_IA.md)),
+>    te da pistas en vez de resolverte los ejercicios.
 
 ---
 

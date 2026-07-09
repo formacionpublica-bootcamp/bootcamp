@@ -120,18 +120,16 @@ Genera ahora la guía completa siguiendo exactamente la estructura indicada.
 
 ---
 
-## Parámetros de referencia — Módulos ya documentados
+## Estado de las guías por rama (actualizado 9-jul-2026)
 
-| Módulo | Dataset | Competencia de salida | Guía |
-|--------|---------|----------------------|------|
-| R1-02 · Exploración con pandas | Establecimientos SML (`establecimientos.csv`) | Cargar, inspeccionar y resumir un dataset con pandas | ✅ `GUIA_APRENDIZAJE.md` |
-| R1-03 · Cruzar y resumir tablas | Por definir | Por definir | ⬜ Pendiente |
-| R1-04 · Limpieza de datos | Por definir | Por definir | ⬜ Pendiente |
-| R1-05 · SQL para análisis | Por definir | Por definir | ⬜ Pendiente |
-| R1-06 · Estadística descriptiva | Por definir | Por definir | ⬜ Pendiente |
-| R1-07 · Visualización exploratoria | Por definir | Por definir | ⬜ Pendiente |
-| R1-08 · Visualización: comunicar y ética | Por definir | Por definir | ⬜ Pendiente |
-| R1-09 · Dashboards ligeros | Por definir | Por definir | ⬜ Pendiente |
+| Rama | Guías hechas ✅ | Pendientes ⬜ |
+|------|----------------|---------------|
+| R1 · Análisis y Visualización | **11/11** (R1-00 … R1-CAP) | — |
+| R2 · Científico de Datos | **12/12** (R2-00 … R2-CAP, incl. optativa R2-10) | — |
+| R3 · IA Aplicada | **6/6** (R3-00 … R3-CAP) | — |
+
+> Al generar una guía nueva: usar el dataset y las secciones REALES del `leccion.ipynb` del
+> módulo, verificar toda cifra contra el CSV, y actualizar esta tabla.
 
 ---
 
