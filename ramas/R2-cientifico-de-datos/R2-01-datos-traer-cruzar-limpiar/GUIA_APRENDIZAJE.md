@@ -1,375 +1,255 @@
-# 📘 Guía de Aprendizaje — R2-01 · Datos: traer, cruzar y limpiar
+# Guía de Aprendizaje — R2-01 · Datos: traer, cruzar y limpiar
+
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R2 · Científico de Datos · Módulo 1 · Semana 3
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Nombre del módulo** | R2-01 · Datos: traer, cruzar y limpiar |
-| **Pista / Rama** | R2 — Científico/a de Datos |
-| **Duración estimada** | 3–4 horas (Semana 3) |
-| **Nivel** | Inicial-intermedio |
-| **Prerrequisitos** | Haber completado R2-00: cargar DataFrames, filtrar, ordenar y usar `groupby`. |
-| **Competencia de salida** | Construir un dataset analítico limpio y listo para modelar, cruzando tablas, tratando nulos, eliminando duplicados y corrigiendo tipos. |
-| **Dataset** | `compras_ml.csv` — Compras públicas reales de ChileCompra (monto, categoría, región, tamaño de proveedor). |
-| **Entregable** | Las 4 celdas de chequeo del `leccion.ipynb` muestran ✅. |
+|-------|---------|
+| **Módulo** | R2-01 · Datos: traer, cruzar y limpiar |
+| **Rama** | R2 — Científico de Datos |
+| **Duración estimada** | 2–3 horas |
+| **Nivel** | Básico — requiere R2-00 |
+| **Prerrequisitos** | Filtrar con máscaras, `groupby`, `isna()` |
+| **Competencia de salida** | Construir un dataset analítico limpio: cruzar mediciones con su catálogo, corregir tipos, diagnosticar faltantes reales y declarar cada decisión de limpieza |
+| **Entregable** | Las 4 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `aire_diario.csv` (PM2.5 y meteorología diaria, 14 estaciones SINCA, 2020–2025, 30.674 filas) × `estaciones.csv` (comuna, región y coordenadas de las 14 estaciones). Profundización: `matricula_rbd.csv` × `directorio_establecimientos.csv` (MINEDUC 2025) |
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-En el trabajo público, casi nunca recibes una base de datos perfecta. Lo más común es que te llegue una tabla con nombres repetidos, celdas vacías, columnas mal tipadas y otra planilla adicional que hay que unir para que el análisis tenga sentido.
+Ningún dato del Estado llega listo para usar. Las mediciones viven en una tabla y el catálogo que dice **dónde** se midió, en otra; las fechas llegan como texto; y siempre hay huecos. Antes de cualquier modelo o informe, alguien tiene que armar el **dataset analítico** — y ese alguien eres tú.
 
-Eso pasa todo el tiempo en ministerios, municipalidades, servicios y gobiernos regionales: una planilla de compras, otra de proveedores, otra de clasificación presupuestaria. Si no sabes **traer, cruzar y limpiar**, cualquier dashboard, informe o modelo posterior nace chueco.
+Este módulo usa problemas **reales** del registro de calidad del aire, no errores inventados:
 
-Este módulo te entrena justamente en esa etapa crítica. Aprendes a:
+- **7 de las 14 estaciones nunca midieron temperatura ni humedad**: no tienen sensor. Imputar ahí sería inventar datos.
+- **1.030 días-estación no tienen PM2.5** (mantenimiento, fallas).
+- En **Las Encinas Temuco, los 240 registros de humedad son exactamente 0 %** — un valor imposible para una ciudad del sur de Chile. Es un sensor que reporta ceros, no un clima.
 
-- **Cruzar tablas** con `merge`, como cuando unes un Excel de compras con otro Excel de categorías.
-- **Resolver nulos**, que en la práctica son celdas vacías que pueden romper un análisis.
-- **Eliminar duplicados**, para no inflar conteos o montos.
-- **Corregir tipos**, para que las columnas funcionen como lo que realmente son.
-
-> 🏛️ **Traducción al mundo público:** antes de pedirle inteligencia a los datos, primero hay que dejarlos ordenados y confiables.
+La lección más importante no es técnica: limpiar no es «borrar lo feo», es **diagnosticar, decidir y dejar escrito por qué**. Un informe que dice «se excluyeron 1.030 días sin medición y se anularon 230 humedades de 0 % por error de sensor» es auditable. Uno que no lo dice, no.
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía sector público |
-|---|---|---|
-| `merge` | Une dos tablas usando una clave común | BUSCARV/XLOOKUP entre dos planillas de Excel |
-| `groupby` | Resume información por grupos | Tabla dinámica por categoría o región |
-| `reset_index()` | Convierte el índice en una columna normal | "Aplanar" una tabla resumen para poder reutilizarla |
-| `rename()` | Cambia el nombre de una columna | Renombrar encabezados para que sean claros en un informe |
-| `isna()` | Detecta valores faltantes (`NaN`) | Identificar celdas vacías en una planilla |
-| `dropna()` | Elimina filas con valores nulos | Sacar registros incompletos antes de reportar |
-| `drop_duplicates()` | Elimina filas repetidas | Quitar registros duplicados de un listado oficial |
-| `astype('category')` | Convierte una columna a tipo categórico | Tratar una columna como clasificación cerrada (Grande, Mediana, Pequeña) |
-| `left join` | Mantiene todas las filas de la tabla principal | Mantener todas las órdenes de compra aunque falten datos de apoyo |
-| `inner join` | Mantiene solo filas que tienen cruce en ambas tablas | Quedarse solo con registros que existen en ambos padrones |
+| Concepto | ¿Qué hace? | Equivalente en Excel |
+|----------|-----------|----------------------|
+| **Llave** | Columna compartida que conecta dos tablas (`estacion`) | La columna que le das a BUSCARV |
+| **`merge(..., how="left")`** | Pega el catálogo a cada medición sin perder filas | BUSCARV con los #N/A visibles |
+| **Fila huérfana** | Medición cuya llave no está en el catálogo | El #N/A |
+| **`pd.to_datetime`** | Convierte texto en fecha real | Formato de celda «Fecha» |
+| **`.dt.year` / `.dt.month`** | Extrae año y mes | `=AÑO()` / `=MES()` |
+| **`isna().groupby(...).mean()`** | Proporción de faltantes por grupo | Contar vacíos por estación con una tabla dinámica |
+| **`dropna(subset=...)`** | Descarta filas sin dato en una columna | Filtrar y borrar vacíos |
+| **`duplicated(subset=...)`** | Detecta llaves repetidas | Formato condicional «duplicados» |
+| **`np.nan`** | Marca un valor como faltante | Dejar la celda vacía a propósito |
 
 ---
 
 ## 4. Verificación de Prerrequisitos
 
-Antes de entrar al notebook, revisa este checklist:
-
-| ¿Puedo...? | ✅ Listo | 🔄 Revisar |
-|---|---|---|
-| Ejecutar celdas en Colab sin perderme | ✅ | Si no, repasa la dinámica del módulo R2-00 |
-| Entender qué es un DataFrame y para qué sirve | ✅ | Piensa en una planilla Excel cargada en Python |
-| Filtrar o seleccionar columnas con pandas | ✅ | Si te cuesta, vuelve a R2-00 |
-| Leer mensajes de chequeo ✅ o ❌ sin frustrarme | ✅ | En este módulo el error es parte del aprendizaje |
-| Entender la idea de “cruzar” dos tablas | ✅ | Piensa en BUSCARV o XLOOKUP entre dos Excels |
-
-> 💬 Si alguna te quedó en “Revisar”, no pasa nada. Pero te conviene reforzar R2-00 antes de seguir, porque aquí ya empezamos a trabajar con calidad de datos.
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Filtrar filas con una máscara booleana | ☐ |
+| Usar `groupby(...).mean()` | ☐ |
+| Detectar valores faltantes con `isna()` y contarlos con `.sum()` | ☐ |
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### 🔷 Sección 0 — Preparación del entorno
+### Sección 0 · Preparación
 
-**🎯 Objetivo:** Cargar el archivo `compras_ml.csv` y dejar listo el entorno para trabajar.
+🎯 **Objetivo:** Cargar las dos tablas: `df` (30.674 mediciones) y `estaciones` (14 filas).
 
-**💡 Concepto clave:** Igual que en R2-00, primero preparas la mesa antes de cocinar. Aquí se importan `pandas`, `numpy` y `matplotlib`, y luego se carga el dataset.
-
-**🔍 Qué hace el código:**
-1. Revisa si el CSV existe localmente.
-2. Si no existe, lo descarga desde el repositorio.
-3. Lo abre como DataFrame llamado `df`.
-4. Muestra dimensiones y primeras filas.
-
-**⚠️ Error frecuente:** Saltarse esta celda y luego intentar usar `df`, `np` o `plt`. Si eso ocurre, aparecerán errores tipo `NameError`.
-
-**✅ Señal de comprensión:** Ves la tabla cargada y puedes explicar qué significa algo como `(5000, 8)`.
+💡 **Concepto clave:** La celda baja ambos archivos si faltan («en vivo o caché»). Mira las primeras filas de `df`: la estación «21 de Mayo» ya muestra `NaN` en temperatura. Es la primera pista del ejercicio 3.
 
 ---
 
-### 🔷 Sección 1 — Cruzar tablas con `merge`
+### Sección 1 · Cruzar tablas con `merge`
 
-**🎯 Objetivo:** Enriquecer cada compra con el promedio de monto de su categoría.
+🎯 **Objetivo:** Enriquecer cada medición con su `comuna` y `region`.
 
-**💡 Concepto clave:** `merge` es el equivalente programable de un BUSCARV bien hecho. Tomas una tabla principal y le agregas información desde otra tabla usando una llave común. En el sector público esto se parece mucho a unir una base de órdenes de compra con una tabla maestra de rubros, proveedores o códigos presupuestarios.
+💡 **Concepto clave:** Con `how="left"` conservas las 30.674 mediciones; si alguna estación no estuviera en el catálogo, su región quedaría nula. Aquí el resultado es **0 huérfanas**: las 14 estaciones calzan. Ese 0 no es trivial — es **la prueba** de que el cruce es completo, y se reporta igual.
 
-**🔍 Qué hace el código:**
-- Primero crea una tabla resumen con `groupby('categoria')['monto_total'].mean()`.
-- Después usa `reset_index()` para que la categoría quede como columna.
-- Luego cambia el nombre de la columna promedio a `monto_prom_categoria`.
-- Finalmente, une esa tabla resumen con `df` usando `merge(..., on='categoria', how='left')`.
+⚠️ **Error frecuente:** Cruzar con el modo por defecto (`inner`) y no revisar si se perdieron filas.
 
-**⚠️ Error frecuente:** Usar un `how='inner'` sin darse cuenta. Eso puede eliminar filas si una categoría no aparece en ambos lados del cruce. En este caso se usa `left` porque queremos conservar todas las compras originales.
-
-**✅ Señal de comprensión:** El DataFrame final `enriquecido` tiene la misma cantidad de filas que `df`, pero con una columna nueva adicional.
+✅ **Señal de que entendiste:** Puedes explicar por qué contar huérfanas vale la pena incluso cuando el resultado es 0.
 
 ---
 
-### 🔷 Sección 2 — Limpiar nulos
+### Sección 2 · Corregir tipos: las fechas
 
-**🎯 Objetivo:** Detectar cuántos valores faltantes hay en `monto_total` y eliminarlos.
+🎯 **Objetivo:** Convertir `fecha` de texto a `datetime` y crear `anio` y `mes`.
 
-**💡 Concepto clave:** Un nulo es como una celda vacía en Excel, pero en pandas aparece como `NaN`. Si no lo detectas a tiempo, puede arruinar cálculos, gráficos o modelos. En el Estado esto pasa mucho cuando una planilla se llenó incompleta o cuando un sistema no capturó un dato obligatorio.
+💡 **Concepto clave:** Mientras `fecha` sea texto, pandas no sabe que «2024-07-01» es invierno. Tras `pd.to_datetime`, el accesor `.dt` extrae año (2020–2025) y mes (1–12). El mes es la variable que más explica el PM2.5: el gráfico final lo muestra.
 
-**🔍 Qué hace el código:**
-- Se crea una copia del DataFrame llamada `sucio`.
-- Se introducen 50 nulos artificiales en `monto_total` para practicar.
-- Luego debes contarlos con `isna().sum()`.
-- Finalmente, construir una versión limpia eliminando esas filas con `dropna(subset=['monto_total'])`.
-
-**⚠️ Error frecuente:** Aplicar `dropna()` sobre todo el DataFrame sin especificar la columna. Eso puede borrar más filas de las necesarias si hay otros nulos en columnas no críticas.
-
-**✅ Señal de comprensión:** Puedes explicar cuántos nulos había y por qué el DataFrame limpio tiene menos filas, pero ningún `NaN` en `monto_total`.
+⚠️ **Error frecuente:** Intentar `aire["fecha"].dt.month` **antes** de convertir: da `AttributeError` («Can only use .dt accessor with datetimelike values»).
 
 ---
 
-### 🔷 Sección 3 — Eliminar duplicados
+### Sección 3 · Faltantes reales: diagnosticar antes de decidir
 
-**🎯 Objetivo:** Quitar filas repetidas para no inflar resultados.
+🎯 **Objetivo:** Medir la proporción de nulos de `temp_media` por estación, identificar las estaciones sin meteorología y descartar los días sin PM2.5.
 
-**💡 Concepto clave:** Los duplicados son uno de los errores más peligrosos en analítica pública, porque parecen inocentes pero pueden duplicar gasto, duplicar usuarios o duplicar beneficiarios. En Excel muchas veces se detectan tarde; en pandas puedes removerlos de forma explícita y reproducible.
+💡 **Concepto clave:** Hay dos tipos de hueco y merecen decisiones distintas:
 
-**🔍 Qué hace el código:**
-- Crea un DataFrame llamado `con_dup` agregando las primeras 10 filas de nuevo al final.
-- Luego debes aplicar `drop_duplicates()` para quedarte solo con registros únicos.
+- **Estructural:** 7 estaciones (21 de Mayo, Antofagasta, Bomberos, Centro Quintero, Concón, Copiapó Sivica y Nielol) tienen **100 %** de nulos en temperatura: no tienen sensor. **No se imputa**; se declara que la meteorología solo existe en 7 de 14 estaciones.
+- **Puntual:** 1.030 días-estación sin PM2.5. Para analizar PM2.5 no aportan: se **descartan** con `dropna(subset=["pm25"])`, quedando **29.644** filas.
 
-**⚠️ Error frecuente:** Pensar que `drop_duplicates()` modifica automáticamente la tabla original. Si no asignas el resultado a una nueva variable, no se guarda el cambio.
+⚠️ **Error frecuente:** Usar `dropna()` **sin** `subset`: botaría también todas las filas de las 7 estaciones sin meteorología — perderías la mitad del país sin darte cuenta.
 
-**✅ Señal de comprensión:** `sin_dup` queda con el mismo largo que `df.drop_duplicates()` y claramente menor que `con_dup`.
-
----
-
-### 🔷 Sección 4 — Corregir tipos
-
-**🎯 Objetivo:** Convertir `tamano_proveedor` al tipo `category`.
-
-**💡 Concepto clave:** No todas las columnas son iguales. Algunas son numéricas, otras son texto libre y otras son categorías cerradas. Cuando una variable tiene pocas opciones repetidas —como Grande, Mediana o Pequeña— conviene marcarla como categórica. Es más eficiente y evita ciertos errores.
-
-**🔍 Qué hace el código:**
-- Crea una copia `df2`.
-- Convierte la columna `tamano_proveedor` con `.astype('category')`.
-- Luego verifica si el tipo quedó bien comparando `dtype.name == 'category'`.
-
-**⚠️ Error frecuente:** Aplicar `astype('category')` pero olvidar reasignarlo a la columna. Si no lo reasignas, la columna queda igual que antes.
-
-**✅ Señal de comprensión:** Puedes explicar por qué `tamano_proveedor` es una categoría y no una medida numérica ni texto libre.
+✅ **Señal de que entendiste:** Puedes explicar por qué imputar la temperatura de Antofagasta con el promedio de las otras estaciones sería inventar datos.
 
 ---
 
-## 6. Guía de Ejercicios
+### Sección 4 · Decisiones de limpieza: duplicados y valores imposibles
 
-### ✍️ Ejercicio 1 — Enriquece cada fila con el promedio de su categoría
+🎯 **Objetivo:** Verificar que la llave `(fecha, estacion)` no se repita y anular las humedades de 0 %.
 
-**Habilidad que desarrolla:** Cruce de tablas y enriquecimiento de datos.
+💡 **Concepto clave:** El conteo de duplicados da **0**: cada estación tiene un registro por día. Las humedades de 0 % son **230** en `limpio` (240 en el archivo; 10 caen en días sin PM2.5 ya descartados) y **todas** son de Las Encinas Temuco — de hecho, **todos** los registros de humedad de esa estación son 0. Un dato imposible se convierte en `np.nan`: deja de mentir y queda contado como faltante.
 
-**Pista 1 (conceptual):** Ya tienes la tabla resumen creada. La tarea no es recalcular nada, sino **pegar esa información** de vuelta en cada fila original usando la categoría como llave.
-
-**Pista 2 (técnica):** La operación correcta es `merge`. Necesitas unir `df` con `resumen` usando `on='categoria'`.
-
-**Pista 3 (casi solución):** Si quieres conservar todas las compras originales, el tipo de join adecuado es `left`.
-
-**Lógica de solución:** Tomar la tabla principal `df`, cruzarla con `resumen` por la columna `categoria` y usar `how='left'`.
+⚠️ **Error frecuente:** Hacer `limpio[limpio["humedad_media"] == 0]["humedad_media"] = np.nan` (asignación encadenada): pandas avisa (`SettingWithCopyWarning` o similar) y la tabla puede quedar sin cambios. Usa `limpio.loc[condición, "humedad_media"] = np.nan`.
 
 ---
 
-### ✍️ Ejercicio 2 — Cuenta y elimina los nulos
+### Reflexión final
 
-**Habilidad que desarrolla:** Diagnóstico y limpieza de valores faltantes.
-
-**Pista 1 (conceptual):** Primero necesitas medir el problema. Antes de limpiar, cuenta cuántos valores faltan.
-
-**Pista 2 (técnica):** Para contar nulos en una columna, usa `.isna().sum()`.
-
-**Pista 3 (casi solución):** Para limpiar solo las filas donde falta `monto_total`, usa `dropna(subset=['monto_total'])`.
-
-**Lógica de solución:** Contar nulos en la columna indicada y luego eliminar solo las filas donde esa columna está vacía.
+Escribir la nota metodológica (qué, por qué y cuántas filas) es parte del entregable profesional aunque no tenga chequeo. Ejemplo: *«Meteorología disponible en 7 de 14 estaciones (no imputada). Se excluyeron 1.030 días-estación sin PM2.5. Se anularon 230 registros de humedad 0 % (Las Encinas Temuco, error de sensor). Sin duplicados de llave.»*
 
 ---
 
-### ✍️ Ejercicio 3 — Quita las filas duplicadas
+## 6. Guía de los 4 Ejercicios
 
-**Habilidad que desarrolla:** Detección de repetidos en bases de datos.
+### Ejercicio 1 — Enriquece cada medición con su comuna y región
 
-**Pista 1 (conceptual):** La tabla `con_dup` fue creada con filas repetidas a propósito. No necesitas comparar manualmente; pandas ya trae una función lista.
+**Pistas progresivas:**
+- 🟢 Pista suave: La llave es la columna que aparece en ambas tablas. El tipo de cruce debe conservar todas las mediciones.
+- 🟡 Pista media: `df.merge(estaciones, on="...", how="left")`; las huérfanas son las de `region` nula.
+- 🔴 Pista directa: `aire = df.merge(estaciones, on="estacion", how="left")` y `n_huerfanas = int(aire["region"].isna().sum())`.
 
-**Pista 2 (técnica):** La función clave es `drop_duplicates()`.
-
-**Pista 3 (casi solución):** Recuerda guardar el resultado en `sin_dup`, porque el método no se aplica “mágicamente” solo.
-
-**Lógica de solución:** Aplicar `drop_duplicates()` al DataFrame con duplicados y guardar el resultado limpio.
-
----
-
-### ✍️ Ejercicio 4 — Convierte `tamano_proveedor` a category
-
-**Habilidad que desarrolla:** Corrección de tipos de datos.
-
-**Pista 1 (conceptual):** La columna no representa texto libre, sino una clasificación cerrada con pocas opciones.
-
-**Pista 2 (técnica):** El método que transforma el tipo es `.astype(...)`.
-
-**Pista 3 (casi solución):** El string exacto del tipo que necesitas es `'category'`.
-
-**Lógica de solución:** Reasignar la columna `tamano_proveedor` usando `.astype('category')`.
+**¿Qué significa el ✅?** Que el cruce conservó las 30.674 filas, sumó `comuna` y `region`, y auditaste las huérfanas (0).
 
 ---
 
-## 7. Sección en Profundidad: Ejercicio 1 — Cruzar tablas con `merge`
+### Ejercicio 2 — Convierte `fecha` a datetime y crea `anio` y `mes`
 
-Este es el ejercicio más estratégico del módulo para política pública, porque **el Estado trabaja casi siempre con datos fragmentados**.
+**Pistas progresivas:**
+- 🟢 Pista suave: Hay una función de pandas que convierte texto en fecha; después, un accesor para sacarle partes.
+- 🟡 Pista media: `pd.to_datetime(...)` y luego `.dt.year` / `.dt.month`.
+- 🔴 Pista directa: `aire["fecha"] = pd.to_datetime(aire["fecha"])`, `aire["anio"] = aire["fecha"].dt.year`, `aire["mes"] = aire["fecha"].dt.month`.
 
-Una sola base rara vez basta. Para construir un buen análisis, casi siempre necesitas unir:
-
-- una tabla de compras,
-- una tabla de proveedores,
-- una tabla de comunas o regiones,
-- una tabla presupuestaria,
-- o una tabla de clasificación programática.
-
-### ¿Por qué este ejercicio importa tanto?
-
-Porque `merge` es la habilidad que convierte datos aislados en información útil.
-
-Ejemplos reales de uso público:
-
-| Situación real | Cruce necesario |
-|---|---|
-| Analizar compras por región | Orden de compra + tabla de organismos + región |
-| Revisar pagos a proveedores MIPYME | Compras + clasificación de tamaño de proveedor |
-| Estudiar concentración de gasto | Compras + rubro + identificador proveedor |
-| Armar tablero de control institucional | Varias tablas maestras unidas por llave común |
-
-### Riesgos de un mal `merge`
-
-- **Perder filas sin darte cuenta** si usas `inner` cuando debías usar `left`.
-- **Duplicar registros** si la llave no es única en una de las tablas.
-- **Cruzar mal** si los nombres de categoría están escritos distinto.
-
-> 🧠 **Regla práctica:** cuando tu tabla principal son las compras y quieres enriquecerlas, normalmente el `left join` es tu amigo.
+**¿Qué significa el ✅?** Que `fecha` es de tipo fecha, los meses van de 1 a 12 y los años de 2020 a 2025.
 
 ---
 
-## 8. Conexión con profundiza.ipynb
+### Ejercicio 3 — Diagnostica los nulos y descarta los días sin PM2.5
 
-La profundización de este módulo no repite la lección: la amplía hacia problemas reales más finos de integración y calidad de datos.
+**Pistas progresivas:**
+- 🟢 Pista suave: `isna()` da `True` en los vacíos; el promedio de `True`/`False` es la proporción. Hazlo por estación.
+- 🟡 Pista media: `aire["temp_media"].isna().groupby(aire["estacion"]).mean()`; las estaciones sin sensor tienen proporción `1`.
+- 🔴 Pista directa: `sin_meteo = sorted(pct_nulos_temp[pct_nulos_temp == 1].index)`, `n_nulos_pm25 = int(aire["pm25"].isna().sum())`, `limpio = aire.dropna(subset=["pm25"])`.
 
-### Comparativa leccion vs. profundiza
-
-| Tema | `leccion.ipynb` | `profundiza.ipynb` |
-|---|---|---|
-| Cruce de tablas | `merge` básico con `left` | Comparación `left` vs `inner` |
-| Nulos | Eliminación con `dropna` | Imputación con media del grupo |
-| Calidad de texto | No aborda | Normalización con `str.strip().str.lower()` |
-| Complejidad | ⭐⭐ Básico-intermedio | ⭐⭐⭐ Intermedio |
-| Proyección | Dejar el dato limpio | Prepararse para linkage y features más robustos |
-
-### Guía de decisión
-
-```
-¿Terminaste las 4 celdas con ✅?
-    ├── No → Termina primero la lección principal.
-    └── Sí → ¿Te interesa trabajar con cruces reales y bases imperfectas?
-              ├── Sí → Haz el profundiza ahora.
-              └── No → Avanza a R2-02 y vuelve después.
-```
-
-**Ejercicio más valioso del profundiza:** La imputación por media de categoría, porque enseña una decisión muy común en analítica pública: no siempre conviene eliminar filas; a veces conviene completarlas de forma razonable y trazable.
+**¿Qué significa el ✅?** Que encontraste las 7 estaciones sin meteorología y que `limpio` no tiene ningún PM2.5 faltante (29.644 filas).
 
 ---
 
-## 9. Autoevaluación Final
+### Ejercicio 4 — Cuenta duplicados y anula las humedades imposibles
 
-**Pregunta 1:** ¿Para qué sirve `merge` en pandas?
+**Pistas progresivas:**
+- 🟢 Pista suave: `duplicated` acepta las columnas que forman la llave. Para el valor imposible, filtra `== 0` y asigna `np.nan` con `.loc`.
+- 🟡 Pista media: `limpio.duplicated(subset=["fecha", "estacion"]).sum()`; `(limpio["humedad_media"] == 0).sum()`.
+- 🔴 Pista directa: `limpio.loc[limpio["humedad_media"] == 0, "humedad_media"] = np.nan`.
 
-- a) Para ordenar columnas alfabéticamente
-- b) Para unir tablas usando una clave común
-- c) Para borrar nulos automáticamente
-- d) Para cambiar nombres de columnas
-
-✅ **Respuesta correcta: b)**
-**Explicación:** `merge` permite combinar dos tablas usando una columna compartida. Es el equivalente más cercano a BUSCARV/XLOOKUP en Excel, pero con mayor control.
+**¿Qué significa el ✅?** Que verificaste la unicidad de la llave (0 duplicados) y que ya no quedan humedades de 0 % (230 anuladas).
 
 ---
 
-**Pregunta 2:** ¿Qué hace `isna().sum()` sobre una columna?
-
-- a) Suma todos los valores numéricos
-- b) Cuenta cuántos valores faltantes hay
-- c) Elimina las filas vacías
-- d) Convierte los nulos en cero
-
-✅ **Respuesta correcta: b)**
-**Explicación:** `isna()` marca con True/False dónde hay nulos, y `sum()` cuenta cuántos True hay. Es una forma rápida de medir cuántas celdas vacías tienes.
+> 🔬 **En la profundización:** el mismo oficio sobre la **matrícula 2025 por RBD** × el **directorio oficial** del MINEDUC. Verificas que el RBD sea único en ambas tablas, comparas `inner` (10.945 filas) con `left` (10.949), cazas las **4 huérfanas reales** (RBD con matrícula pero sin estado «funcionando», que suman **57 estudiantes**) y decides no botarlas sino etiquetarlas como `"Sin directorio"` con `fillna`, para que el total nacional de estudiantes no pierda a nadie.
 
 ---
 
-**Pregunta 3:** ¿Qué riesgo tienes si no eliminas duplicados en una base de compras?
+## 7. Autoevaluación Final
 
-- a) Que pandas no pueda abrir el archivo
-- b) Que se borren todas las columnas categóricas
-- c) Que se inflen conteos, montos o registros analizados
-- d) Que los gráficos cambien de color
+**Pregunta 1:** Cruzas mediciones con su catálogo usando `how="left"` y obtienes 0 huérfanas. ¿Qué haces con ese dato?
 
-✅ **Respuesta correcta: c)**
-**Explicación:** Los duplicados pueden hacer que parezca que hubo más compras, más gasto o más proveedores de los que realmente existieron. Es un problema serio de calidad de datos.
+- A) Nada, es irrelevante
+- B) Lo reportas: demuestra que el cruce es completo ✅
+- C) Cambias a `inner` para estar seguro
+- D) Repites el cruce hasta que aparezcan huérfanas
 
----
-
-**Pregunta 4:** ¿Cuándo tiene sentido usar `astype('category')`?
-
-- a) Cuando una columna contiene texto libre largo
-- b) Cuando una columna tiene pocas categorías repetidas
-- c) Cuando una columna tiene fechas
-- d) Cuando una columna debe borrarse
-
-✅ **Respuesta correcta: b)**
-**Explicación:** El tipo categórico es útil para variables con pocas opciones posibles y mucha repetición, como tramo, región, estado o tamaño de proveedor.
+**Explicación:** Un 0 verificado es evidencia de calidad. Lo que no se cuenta, no se puede afirmar.
 
 ---
 
-**Pregunta 5:** Si quieres conservar todas las filas de la tabla principal al hacer un cruce, ¿qué tipo de join te conviene usar?
+**Pregunta 2:** 7 estaciones tienen 100 % de nulos en temperatura. ¿Qué es lo correcto?
 
-- a) `inner`
-- b) `cross`
-- c) `left`
-- d) `outer` siempre
+- A) Imputar con el promedio nacional
+- B) Imputar con la estación más cercana sin decirlo
+- C) No imputar y declarar que la meteorología solo existe en 7 de 14 estaciones ✅
+- D) Borrar esas 7 estaciones del dataset
 
-✅ **Respuesta correcta: c)**
-**Explicación:** El `left join` mantiene todas las filas de la tabla de la izquierda, agregando información cuando existe coincidencia. Es muy útil cuando tu base principal no debe perder registros.
-
----
-
-## 10. Glosario del Módulo
-
-| Término | Definición simple | Equivalente sector público / Excel |
-|---|---|---|
-| **merge** | Unión de dos tablas por una llave común | BUSCARV/XLOOKUP entre dos planillas |
-| **llave / clave** | Columna que permite relacionar tablas | RUT, ID de compra, código de categoría |
-| **left join** | Mantiene todas las filas de la tabla principal | No perder compras aunque falten datos de apoyo |
-| **inner join** | Mantiene solo filas con coincidencia en ambas tablas | Quedarse solo con registros que cruzan perfecto |
-| **nulo / NaN** | Valor faltante | Celda vacía en Excel |
-| **isna()** | Detecta valores faltantes | Marcar celdas vacías |
-| **dropna()** | Elimina filas con nulos | Borrar registros incompletos |
-| **duplicado** | Registro repetido | Fila repetida en una planilla |
-| **drop_duplicates()** | Elimina filas repetidas | Quitar duplicados automáticamente |
-| **tipo de dato** | Forma en que una columna es interpretada | Número, texto, fecha, categoría |
-| **category** | Tipo para variables con opciones cerradas | Clasificación como Grande/Mediana/Pequeña |
-| **enriquecimiento de datos** | Agregar atributos nuevos a cada fila desde otra tabla | Completar una base con datos maestros |
+**Explicación:** Un faltante estructural (no hay sensor) no se rellena: se declara. Borrar las estaciones perdería su PM2.5, que sí es válido.
 
 ---
 
-## 11. Conexión con el Módulo Siguiente
+**Pregunta 3:** ¿Por qué `aire.dropna()` sin argumentos es peligroso aquí?
 
-Después de este módulo ya no solo sabes mirar datos: ahora sabes **prepararlos con criterio**. Eso te deja listo para dar el siguiente salto.
+- A) Es más lento
+- B) Botaría toda fila con cualquier nulo, incluidas todas las de las estaciones sin meteorología ✅
+- C) No elimina nada
+- D) Cambia el tipo de las fechas
 
-**El siguiente módulo es R2-02 · SQL para features.**
+**Explicación:** `dropna(subset=["pm25"])` descarta solo lo que la pregunta necesita descartar.
 
-Ahí vas a aprender a construir variables útiles para análisis y modelamiento a partir de consultas SQL. En otras palabras:
+---
 
-- pasarás de limpiar tablas a **diseñar atributos analíticos**,
-- dejarás de trabajar solo en pandas para integrar lógica de base de datos,
-- y empezarás a pensar como alguien que prepara datos para modelos reales.
+**Pregunta 4:** Encuentras humedades de 0 % en todos los registros de una estación. ¿Qué haces?
 
-> 🔗 **Conexión pedagógica:** R2-01 te enseña a dejar la base confiable; R2-02 te enseña a volverla inteligente.
+- A) Las dejas: es el dato oficial
+- B) Las conviertes en faltantes (`np.nan`) y lo declaras como error de sensor ✅
+- C) Las reemplazas por 50 %
+- D) Borras la estación completa
 
-Si en este módulo aprendiste a que la planilla “no esté sucia”, en el siguiente aprenderás a que además “sirva para predecir y explicar”. Vamos con todo 🚀
+**Explicación:** Un valor imposible no es un dato, es un error de registro. Como faltante declarado, deja de sesgar promedios.
+
+---
+
+**Pregunta 5:** `aire["fecha"].dt.month` da `AttributeError`. ¿La causa más probable?
+
+- A) La columna no existe
+- B) `fecha` todavía es texto: falta `pd.to_datetime` ✅
+- C) El mes no existe en pandas
+- D) Hay nulos en la fecha
+
+**Explicación:** El accesor `.dt` solo funciona sobre columnas de tipo fecha.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **Dataset analítico** | Tabla limpia y cruzada lista para analizar o modelar | La base «oficial» del informe |
+| **Catálogo** | Tabla que describe las entidades (aquí, estaciones) | El maestro de establecimientos, de comunas |
+| **Llave** | Columna que conecta tablas | Código de estación, RBD, RUT, CUT |
+| **`datetime`** | Tipo de dato fecha | Celda con formato fecha |
+| **Faltante estructural** | Hueco porque el dato nunca se midió | La estación sin sensor |
+| **Faltante puntual** | Hueco ocasional en un dato que sí se mide | El día de mantenimiento |
+| **Valor imposible** | Valor fuera de lo físicamente posible | Humedad 0 % en Temuco |
+| **Imputar** | Rellenar un faltante con un valor estimado | «Completar» una planilla |
+| **Nota metodológica** | Registro de las decisiones de limpieza | El anexo metodológico del informe |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R2-01 armaste un dataset analítico del aire: cruzado con su catálogo, con fechas reales, y con cada faltante diagnosticado y cada decisión declarada.
+
+En **R2-02 · SQL para *features*** vas a cargar este mismo registro en una base SQLite y **fabricar variables** con SQL: promedios por estación y mes, la etiqueta de episodio de cada día (alerta, preemergencia, emergencia), el PM2.5 de ayer y la media de la semana previa — y vas a aprender por qué esa media **no puede incluir el día de hoy**.
+
+> 💡 **Pregunta para reflexionar:** ¿Qué faltantes «estructurales» tienen las bases de tu servicio — datos que nunca se registraron — y quién los está rellenando sin decirlo?

@@ -3,12 +3,20 @@
 Bootcamp **gratuito, autoguiado y práctico** de datos e IA para funcionarios públicos chilenos que
 **parten desde cero** (sin programación previa). El objetivo es **upskilling**: usar datos —y luego
 IA— para hacer mejor tu trabajo. Todo se ejecuta en **Google Colab** (solo necesitas una cuenta de
-Google), con datos públicos reales (compras públicas de ChileCompra/MercadoPúblico) y ejercicios
-auto-corregidos.
+Google), con **datos públicos chilenos reales** y ejercicios autocorregidos.
 
-> 🌐 Sitio del bootcamp: **[formacionpublica.cl](https://formacionpublica.cl)** ·
-> **Syllabus completo**: [SYLLABUS.md](SYLLABUS.md) ·
-> Diseño y razonamiento: [BLUEPRINT_FORMACION_PUBLICA.md](BLUEPRINT_FORMACION_PUBLICA.md)
+> 🌐 Campus: **[formacionpublica.cl/campus.html](https://formacionpublica.cl/campus.html)** ·
+> Datos y procedencia: [data/README.md](data/README.md) ·
+> Modo tutor de IA: [TUTOR_IA.md](TUTOR_IA.md)
+
+**Datos ancla por rama** (un dataset en todas las lecciones de la rama; cada `profundiza` cambia de
+dataset para practicar la transferencia):
+
+| Rama | Dataset ancla | Fuente |
+|---|---|---|
+| R1 | Matrícula escolar 2025: 10.945 establecimientos | MINEDUC, datos abiertos |
+| R2 | Calidad del aire: PM2.5 + meteorología, 14 estaciones, 2020–2025, y 2026 como datos nuevos | SINCA, Ministerio del Medio Ambiente |
+| R3 | 245 fichas de trámites con texto completo | ChileAtiende |
 
 ---
 
@@ -103,11 +111,19 @@ institución: **anonimiza antes** de subirlos o de pasarlos por un LLM.
 ## Recursos y mantención
 
 - [**Recursos/**](Recursos/): chuleta de Python + pandas + SQL y glosario (~50 términos).
-- Los notebooks se re-ejecutan automáticamente cada semana
-  ([`notebooks.yml`](.github/workflows/notebooks.yml)) para detectar módulos rotos a tiempo;
-  también puedes correrlos localmente con `python tools/run_notebooks.py`.
-- El curso v1 (Prework + Capas A/B/C) quedó archivado en [`legacy/`](legacy/) y en la rama
-  `curso-v1-legacy`.
+- **Verificación automática** ([`notebooks.yml`](.github/workflows/notebooks.yml)): en cada cambio y
+  cada lunes se ejecutan todas las soluciones (`solucion.ipynb` y `profundiza_solucion.ipynb`), y el
+  build falla si una celda de chequeo da ❌. Localmente: `python tools/run_notebooks.py`.
+- **Datos al día** ([`fuentes.yml`](.github/workflows/fuentes.yml)): cada mes se revisa que las
+  fuentes oficiales respondan y si MINEDUC publicó un año nuevo. Para regenerar todo:
+  `python tools/make_datasets.py todo` (ver [data/README.md](data/README.md)).
+- **Los notebooks no se editan a mano**: se generan con `tools/build_<módulo>.py` a partir de los
+  helpers de [`tools/build_helpers.py`](tools/build_helpers.py). Para cambiar un ejercicio, edita su
+  builder, ejecútalo y verifica.
+- **LLM (R3):** `preguntar_llm()` usa Gemini con el SDK `google-genai`. El modelo se define en
+  `build_helpers.GEMINI_MODEL` y cada persona puede cambiarlo con `GEMINI_MODEL`. Sin clave, los
+  notebooks corren igual con respuestas de respaldo.
+- El curso v1 (Prework + Capas A/B/C) se conserva en la rama `curso-v1-legacy`.
 
 ---
 

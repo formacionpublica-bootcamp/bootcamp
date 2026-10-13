@@ -1,341 +1,270 @@
-# 📘 Guía de Aprendizaje — R2-05 · Modelos basados en árboles
+# Guía de Aprendizaje — R2-05 · Modelos basados en árboles
+
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R2 · Científico de Datos · Módulo 5 · Semana 11
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Nombre del módulo** | R2-05 · Modelos basados en árboles (D10) |
-| **Pista / Rama** | R2 — Científico/a de Datos · Línea B |
-| **Duración estimada** | 3–4 horas (Semana 11) |
-| **Nivel** | Intermedio |
-| **Prerrequisitos** | R2-04 completado (patrón `fit`/`predict`, train/test split, MAE). |
-| **Competencia de salida** | Entrenar y evaluar árboles de decisión y Random Forests, controlar el sobreajuste con `max_depth`, e interpretar la importancia de features. |
-| **Dataset** | `compras_ml.csv` — Compras públicas reales de alimentos: cantidad, `tamano_num` (1=Micro a 4=Grande), monto total. |
-| **Entregable** | Las 4 celdas de chequeo del `leccion.ipynb` muestran ✅. |
+|-------|---------|
+| **Módulo** | R2-05 · Modelos basados en árboles |
+| **Rama** | R2 — Científico de Datos |
+| **Duración estimada** | 2–3 horas |
+| **Nivel** | Intermedio — requiere R2-04 |
+| **Prerrequisitos** | Corte temporal, baseline, `fit`/`predict`, MAE (R2-04) |
+| **Competencia de salida** | Entrenar, comparar e interpretar árboles de decisión y bosques aleatorios; controlar el sobreajuste con la profundidad; leer la importancia de variables; convertir predicciones en alertas |
+| **Entregable** | Las 5 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `aire_diario.csv` — PM2.5 diario, temperatura y humedad de Cerro Navia 2020–2025 (SINCA, MMA), el mismo problema de R2-04. Profundización: `sismos.csv` (USGS, M ≥ 4,5, 2020–2025) |
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-Los árboles de decisión son, de lejos, los modelos más “explicables” en machine learning. A diferencia de otros algoritmos que son cajas negras, un árbol puede mostrarse gráficamente como un diagrama de preguntas y respuestas, similar a los “árboles de proceso” que se usan en normativas y procedimientos del Estado.
+Los árboles de decisión son los modelos que mejor se **explican**: un árbol chico es literalmente un flujograma de preguntas sí/no, como los que ya usa el Estado en protocolos y guías de trámite. Los **bosques aleatorios** promedian cientos de árboles y suelen ganar en precisión, y además dicen **qué variable pesa más** — información de diseño de política.
 
-Pero el aporte más poderoso para el sector público viene del Random Forest: la **importancia de variables**. Saber qué factores pesan más en una predicción (por ejemplo, qué características de una licitación predicen mejor si habrá oferta o no) es información de diseño de política.
+En este módulo los pones a prueba sobre el mismo pronóstico de PM2.5 de R2-04, con la misma vara:
 
-Aplicaciones directas en el Estado:
+- Un árbol de 3 preguntas (MAE **7,74**) es fácil de explicar, pero **pierde** contra la recta (7,09) y la persistencia (7,36).
+- Un árbol sin límite **memoriza**: error 0,0 en entrenamiento y **9,2** en 2025.
+- El bosque gana a todos (**6,37 µg/m³**) y revela que el **PM2.5 de ayer** pesa el 80% de la decisión.
+- Convertido en **alerta** de días sobre 50 µg/m³, el bosque detecta 36 de 54 días con solo 6 falsas alarmas; la persistencia detecta 39 pero con 15 falsas alarmas. Elegir entre ambos **no es técnico**: es una decisión de salud pública.
 
-- **Clasificación de riesgo:** ¿este contrato tiene características de posible conflicto de interés?
-- **Priorizar fiscalización:** qué variables predicen más incumplimientos.
-- **Estimación de demanda:** cuantos beneficiarios esperar por características territoriales.
-- **Toma de decisiones estructurada:** el árbol puede convertirse en un flujograma de apoyo a la decisión.
-
-> 🏛️ **Mensaje clave:** los árboles son modelos que “piensa como un funcionario”: secuencias de preguntas con reglas claras. Son fáciles de explicar a autoridades y equipos no técnicos.
+> 🏛️ **Mensaje clave:** un modelo más complejo no es automáticamente mejor; se gana su lugar contra el baseline, con datos que no vio.
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía sector público |
-|---|---|---|
-| **Árbol de decisión** | Hace preguntas sí/no sobre las features hasta predecir | Flujograma de toma de decisión como en guías de trámites |
-| **Nodo** | Cada pregunta del árbol | Criterio en un proceso de evaluación |
-| **Hoja** | Respuesta final del árbol | Resultado del proceso: monto estimado |
-| **Profundidad (`max_depth`)** | Número de niveles del árbol | Cuantas preguntas puede hacer antes de dar una respuesta |
-| **Sobreajuste** | El modelo memoriza el pasado y falla con lo nuevo | Regla diseñada sólo para los casos conocidos; no sirve para los nuevos |
-| **Random Forest** | Muchos árboles, cada uno con datos distintos, se promedian | Comisión evaluadora de varios expertos: el promedio es más robusto que uno solo |
-| **`n_estimators`** | Número de árboles en el bosque | Tamaño de la comisión evaluadora |
-| **Importancia de features** | Cuánto pesa cada variable en las predicciones del bosque | ¿Qué factor es más determinante: la cantidad pedida o el tamaño del proveedor? |
-| `feature_importances_` | Atributo del bosque con los pesos de cada variable | Ranking de factores influyentes |
-| **Hiperparámetro** | Configuración del modelo que se define antes de entrenar | Parámetros del proceso antes de abrir el concurso |
-| **Ensemble** | Combinar muchos modelos para obtener uno mejor | Panel de evaluación multidisciplinario |
+| Concepto | ¿Qué hace? | Equivalente en Excel / en el trabajo |
+|----------|-----------|----------------------|
+| **Árbol de decisión** | Predice con una secuencia de preguntas sí/no | Flujograma de un protocolo |
+| **Nodo / hoja** | Pregunta / respuesta final (valor estimado) | Criterio / resultado del trámite |
+| **`max_depth`** | Máximo de preguntas seguidas | Cuántos pasos tiene el flujograma |
+| **`min_samples_leaf`** | Mínimo de casos por hoja | No hacer reglas para un solo caso |
+| **Sobreajuste** | Memorizar el entrenamiento y fallar en lo nuevo | Regla a la medida de los casos conocidos |
+| **Bosque aleatorio** | Promedia muchos árboles con datos y features al azar | Comisión de varios evaluadores |
+| **`feature_importances_`** | Cuánto aportó cada variable (suman 1) | Ranking de factores |
+| **Hiperparámetro** | Ajuste que se fija antes de entrenar | Reglas del concurso antes de abrirlo |
+| **Alerta** | Predicción convertida en decisión con un umbral | «Avisar si se esperan más de 50» |
+| **Falsa alarma / día no detectado** | Los dos errores posibles de una alerta | Avisar de más / avisar de menos |
 
 ---
 
 ## 4. Verificación de Prerrequisitos
 
-| ¿Puedo...? | ✅ Listo | 🔄 Revisar |
-|---|---|---|
-| Definir `X` con doble corchete y `y` con uno | ✅ | Repasa R2-04 si esto te cuesta |
-| Usar `train_test_split` con `test_size` y `random_state` | ✅ | Lo hiciste en el ejercicio 1 de R2-04 |
-| Aplicar el patrón `modelo.fit()` + `modelo.predict()` | ✅ | Es el mismo patrón que ya conoces |
-| Interpretar el MAE como un error promedio | ✅ | Revisado en R2-04 |
-| Entender qué es sobreajuste conceptualmente | ✅ | Revisado en R2-04 |
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Hacer un corte temporal de entrenamiento y prueba (R2-04) | ☐ |
+| Explicar qué es el baseline «mañana = hoy» y por qué importa | ☐ |
+| Usar `fit` y `predict` y calcular `mean_absolute_error` | ☐ |
+| Combinar condiciones booleanas con `&` y negarlas con `~` | ☐ |
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### 🔷 Sección 0 — Preparación y visualización del árbol demo
+### Sección 0 · Preparación
 
-**🎯 Objetivo:** Cargar el dataset y ver cómo se ve un árbol de decisión de profundidad 2.
+🎯 **Objetivo:** Cargar Cerro Navia con las **mismas features** de R2-04, ya fabricadas: `temp_media`, `humedad_media`, `mes`, `dia_semana`, `pm25_ayer` (1.990 días completos).
 
-**💡 Concepto clave:** El gráfico del árbol demo es la representación visual más directa de qué hace el modelo: cada caja es una pregunta, cada rama es una respuesta. Leer este gráfico es clave para explicar el modelo a personas no técnicas.
-
-**🔍 Qué hace el código:** Carga el CSV, entrena un árbol de profundidad 2 y lo grafica con `plot_tree`.
-
-**⚠️ Error frecuente:** Saltarse la visualización. El gráfico del árbol es una de las salidas más útiles del módulo para entender cómo funciona el modelo.
-
-**✅ Señal de comprensión:** Puedes leer el árbol graficado y describir en voz alta la regla que usa para estimar el monto de una compra.
+💡 **Concepto clave:** Mismo dato, mismo corte, misma vara: así la comparación entre modelos es justa.
 
 ---
 
-### 🔷 Sección 1 — ¿Qué es un árbol de decisión?
+### Sección 1 · Preparar el corte y las varas
 
-**🎯 Objetivo:** Entender la lógica de los árboles antes de usarlos.
+🎯 **Objetivo:** Repetir el corte temporal (1.637 días de 2020–2024 / 353 de 2025) y recalcular el baseline (7,36) y la regresión lineal (7,09).
 
-**💡 Concepto clave:** Un árbol de decisión es exactamente como un flujograma: “¿la cantidad es mayor a 100?”, si sí, sigue por la izquierda; si no, por la derecha. Cada camino termina en una predicción. Es el modelo más fácil de explicar a un jefe de servicio que no es técnico.
-
-**🔍 Qué hace el código:** Solo texto conceptual. No hay `TODO` en esta sección.
-
-**⚠️ Error frecuente:** Creer que “más profundo = mejor”. El árbol puede crecer sin fin y memorizar cada contrato individual, lo que lo hace inútil para casos nuevos.
-
-**✅ Señal de comprensión:** Puedes describir la diferencia entre regresión lineal (una ecuación) y un árbol (preguntas secuenciales).
+💡 **Concepto clave:** Sin estas dos cifras a la vista, cualquier MAE nuevo es imposible de juzgar.
 
 ---
 
-### 🔷 Sección 2 — Ejercicio 1: preparar datos con dos features
+### Sección 2 · Tu primer árbol
 
-**🎯 Objetivo:** Definir `X` con `cantidad` y `tamano_num`, y dividir en train/test.
+🎯 **Objetivo:** Árbol con `max_depth=3`, MAE en 2025 y dibujo del árbol.
 
-**💡 Concepto clave:** Este módulo pasa de una sola feature a **dos**. Eso no cambia nada en la sintaxis (`df[["cantidad", "tamano_num"]]`), pero sí aumenta el poder del modelo: ahora puede hacer preguntas sobre ambas variables.
+💡 **Concepto clave:** MAE **7,74**: peor que la recta y que la persistencia. A cambio, se lee solo: casi todas las preguntas son sobre `pm25_ayer`, y una sobre la temperatura (si ayer hubo entre 19,5 y 33,5 µg/m³ y hoy la media es ≤ 8,7 °C, el árbol espera ~42 µg/m³). Interpretabilidad y precisión a veces tiran para lados distintos.
 
-**🔍 Qué hace el código:** Define `X` con dos columnas e `y` con `monto_total`, luego divide con `train_test_split`.
-
-**⚠️ Error frecuente:** Usar un solo corchete `df["cantidad", "tamano_num"]` que dará error. La lista de columnas debe ir dentro de doble corchete: `df[["cantidad", "tamano_num"]]`.
-
-**✅ Señal de comprensión:** `X_train.columns` muestra `["cantidad", "tamano_num"]` y el tamaño es 5188 filas.
+✅ **Señal de que entendiste:** Puedes leer en voz alta una rama del árbol como una regla.
 
 ---
 
-### 🔷 Sección 3 — Ejercicio 2: entrenar y evaluar el árbol
+### Sección 3 · El sobreajuste, visible
 
-**🎯 Objetivo:** Entrenar `DecisionTreeRegressor(max_depth=3)` y calcular su MAE en prueba.
+🎯 **Objetivo:** Árbol sin límite: MAE en entrenamiento vs prueba.
 
-**💡 Concepto clave:** El parámetro `max_depth=3` limita el árbol a 3 niveles de preguntas. Es suficiente para capturar patrones sin memorizar. Cambiar este número cambia el comportamiento del modelo.
+💡 **Concepto clave:** El árbol crece hasta profundidad **25** con **1.432 hojas** — casi una por día de entrenamiento —, error **0,0** en entrenamiento y **9,2** en 2025. El gráfico muestra que el error de prueba es mínimo en profundidad 5 (7,38, casi igual al baseline) y luego sube.
 
-**🔍 Qué hace el código:** `arbol.fit(X_train, y_train)` entrena el árbol. `arbol.predict(X_test)` genera predicciones. `mean_absolute_error(y_test, y_pred)` mide el error.
-
-**⚠️ Error frecuente:** Olvidar `from sklearn.tree import DecisionTreeRegressor`. Esta es una clase distinta a `LinearRegression`.
-
-**✅ Señal de comprensión:** El MAE del árbol puede compararse con el de la regresión lineal de R2-04. No siempre el árbol gana en datos simples.
+⚠️ **Error frecuente:** Elegir la profundidad mirando el conjunto de prueba. En rigor se usa un conjunto de **validación** aparte (R2-07); aquí la curva es solo ilustrativa.
 
 ---
 
-### 🔷 Sección 4 — El sobreajuste visible (ilustración + Ejercicio 3)
+### Sección 4 · Bosque e importancias
 
-**🎯 Objetivo:** Ver con tus propios ojos cómo sube el MAE en prueba cuando el árbol crece sin límite.
+🎯 **Objetivo:** `RandomForestRegressor(n_estimators=100, min_samples_leaf=5, random_state=42)`, su MAE y la variable más importante.
 
-**💡 Concepto clave:** El gráfico de la sección muestra algo crucial: a medida que aumenta la profundidad, el error en entrenamiento baja (el modelo memoriza mejor), pero el error en prueba primero baja y luego sube. El óptimo está en esa curva. Un árbol sin `max_depth` tiene error de entrenamiento cercano a cero, pero un error de prueba mucho mayor.
+💡 **Concepto clave:** MAE **6,37**: el mejor de todos. Importancias: `pm25_ayer` **0,80**, temperatura 0,07, humedad 0,07, día de la semana 0,04, mes 0,03. A diferencia de la recta, el árbol no lee `mes` como un número que «crece»: lo corta en tramos.
 
-**🔍 Qué hace el código:** Entrena `DecisionTreeRegressor(random_state=42)` sin `max_depth`, calcula el MAE en entrenamiento y en prueba.
-
-**⚠️ Error frecuente:** Esperar que el MAE de prueba también sea muy bajo. La señal del sobreajuste es precisamente que el entrenamiento es excelente y la prueba es mala.
-
-**✅ Señal de comprensión:** `mae_train` es mucho menor que `mae_test`. Esa diferencia grande es la firma del sobreajuste.
+⚠️ **Error frecuente:** Leer la importancia como causa. `pm25_ayer` manda porque el aire **persiste**, no porque el de ayer «provoque» el de hoy.
 
 ---
 
-### 🔷 Sección 5 — Ejercicio 4: Random Forest e importancia de features
+### Sección 5 · De la predicción a la alerta
 
-**🎯 Objetivo:** Entrenar un bosque aleatorio, evaluar su MAE e identificar la variable más importante.
+🎯 **Objetivo:** Contar días reales sobre 50 µg/m³ en 2025 (**54**), cuántos detecta el bosque (**36**) y cuántas falsas alarmas da (**6**); comparar con el baseline (39 detectados, 15 falsas alarmas).
 
-**💡 Concepto clave:** El bosque es más robusto que un solo árbol porque promedia 100 árboles distintos. Además, `feature_importances_` te da el ranking de variables: saber qué factor manda más en las predicciones es información de política, no solo técnica.
-
-**🔍 Qué hace el código:** `RandomForestRegressor(n_estimators=100, random_state=42).fit(...)` entrena el bosque. `pd.Series(bosque.feature_importances_, index=X_train.columns).idxmax()` devuelve el nombre de la variable más importante.
-
-**⚠️ Error frecuente:** El bosque tarda más que un solo árbol (entrena 100 modelos). Si Colab parece lento, es normal: dale unos segundos.
-
-**✅ Señal de comprensión:** `feature_top == "cantidad"` y el MAE del bosque es mejor o comparable al del árbol individual.
+💡 **Concepto clave:** Ningún modelo es «el mejor» en abstracto: uno avisa de menos, el otro de más. Cuál conviene depende del costo de cada error, y eso lo decide la política pública, no el algoritmo.
 
 ---
 
-## 6. Guía de Ejercicios
+### Reflexión final
 
-### ✍️ Ejercicio 1 — Preparar datos con dos features
-
-**Habilidad que desarrollas:** Ampliar el espacio de features y mantener el flujo train/test.
-
-**Pista 1 (conceptual):** Ahora tienes dos variables predictoras. ¿Cómo pasas dos columnas a `X`?
-
-**Pista 2 (técnica):** `df[["cantidad", "tamano_num"]]` con doble corchete y lista de columnas.
-
-**Pista 3 (casi solución):** La línea completa de división es `X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)`.
-
-**Lógica de solución:** Exactamente igual que en R2-04 pero con dos columnas en `X`.
+La pregunta de qué error es más caro (avisar de más o de menos) no tiene celda de chequeo: es la conversación con la autoridad sanitaria. En R2-06 y R2-07 estos dos errores tendrán nombre — *precision* y *recall* — y aprenderás a mover el umbral con criterio.
 
 ---
 
-### ✍️ Ejercicio 2 — Entrenar y evaluar el árbol
+## 6. Guía de los 5 Ejercicios
 
-**Habilidad que desarrollas:** Aplicar el patrón `fit`/`predict`/`MAE` con un nuevo modelo.
+### Ejercicio 1 — Corte temporal y MAE de referencia
 
-**Pista 1 (conceptual):** El proceso es idéntico a R2-04: crear el modelo, entrenarlo con train, predecir en test, calcular MAE.
+**Pistas progresivas:**
+- 🟢 Pista suave: Es el mismo corte del ejercicio 2 de R2-04.
+- 🟡 Pista media: Dos filtros sobre `datos["fecha"]`, con `<` y `>=` contra `corte`.
+- 🔴 Pista directa: `train = datos[datos["fecha"] < corte]` y `test = datos[datos["fecha"] >= corte]`.
 
-**Pista 2 (técnica):** `DecisionTreeRegressor(max_depth=3, random_state=42)`. El `max_depth` ya está en el código del notebook.
-
-**Pista 3 (casi solución):** `arbol.fit(X_train, y_train)`, luego `y_pred = arbol.predict(X_test)`, luego `mae_arbol = mean_absolute_error(y_test, y_pred)`.
-
-**Lógica de solución:** Tres líneas: `fit`, `predict`, `mean_absolute_error`.
-
----
-
-### ✍️ Ejercicio 3 — Ver el sobreajuste con tus manos
-
-**Habilidad que desarrollas:** Detectar sobreajuste comparando errores de train y test.
-
-**Pista 1 (conceptual):** El árbol profundo no tiene `max_depth`. Va a memorizar cada compra del entrenamiento.
-
-**Pista 2 (técnica):** `mae_train = mean_absolute_error(y_train, arbol_profundo.predict(X_train))` y `mae_test = mean_absolute_error(y_test, arbol_profundo.predict(X_test))`.
-
-**Pista 3 (casi solución):** El `fit` ya está implícito. Sólo faltan las dos líneas de MAE, una con `y_train/X_train` y otra con `y_test/X_test`.
-
-**Lógica de solución:** Entrenar `arbol_profundo` y calcular dos MAE: uno en train y uno en test.
+**¿Qué significa el ✅?** Que tienes a la vista las varas: baseline 7,36 y recta 7,09.
 
 ---
 
-### ✍️ Ejercicio 4 — Random Forest e importancias
+### Ejercicio 2 — Árbol de profundidad 3
 
-**Habilidad que desarrollas:** Entrenar un ensemble y extraer información sobre las variables.
+**Pistas progresivas:**
+- 🟢 Pista suave: Igual que la regresión: crear, `fit`, `predict`, MAE.
+- 🟡 Pista media: `DecisionTreeRegressor(max_depth=3, random_state=42)`.
+- 🔴 Pista directa: `arbol = DecisionTreeRegressor(max_depth=3, random_state=42)`, `arbol.fit(X_train, y_train)`, `mae_arbol = mean_absolute_error(y_test, arbol.predict(X_test))`.
 
-**Pista 1 (conceptual):** El bosque usa el mismo patrón `fit`/`predict` que ya conoces. Lo nuevo es leer `feature_importances_`.
-
-**Pista 2 (técnica):** `pd.Series(bosque.feature_importances_, index=X_train.columns)` crea una serie con los pesos de cada variable. `.idxmax()` devuelve el nombre de la más importante.
-
-**Pista 3 (casi solución):** `feature_top = pd.Series(bosque.feature_importances_, index=X_train.columns).idxmax()`. El resultado esperado es `"cantidad"`.
-
-**Lógica de solución:** Entrenar el bosque, calcular MAE en prueba, extraer la importancia con `pd.Series(...).idxmax()`.
+**¿Qué significa el ✅?** Que entrenaste un modelo legible (MAE 7,74) y puedes ver sus reglas.
 
 ---
 
-## 7. Sección en Profundidad: Ejercicio 4 — Importancia de features como herramienta de política pública
+### Ejercicio 3 — Árbol sin límite
 
-El ejercicio 4 es el más relevante para política pública de este módulo. Saber qué variable pesa más en una predicción puede cambiar decisiones de diseño de programas.
+**Pistas progresivas:**
+- 🟢 Pista suave: Es el mismo árbol, sin `max_depth`. Luego mide el error dos veces.
+- 🟡 Pista media: Un MAE con `predict(X_train)` contra `y_train`; otro con `predict(X_test)` contra `y_test`.
+- 🔴 Pista directa: `arbol_profundo = DecisionTreeRegressor(random_state=42).fit(X_train, y_train)`; `mae_train = mean_absolute_error(y_train, arbol_profundo.predict(X_train))`; ídem para prueba.
 
-### ¿Qué dice la importancia de features?
-
-`feature_importances_` es un vector que suma 1. Cada valor indica qué proporción de las divisiones del bosque se basó en esa variable. Si `cantidad` tiene importancia 0.80 y `tamano_num` tiene 0.20, el bosque usó la cantidad en el 80% de sus decisiones.
-
-### Uso en el diseño de políticas
-
-| Situación | Lo que preguntamos | Lo que dice la importancia |
-|---|---|---|
-| Predecir gasto de contratos | ¿Qué factor determina más el monto? | Si es `cantidad`, debemos regularla. Si es `tamano_num`, el tamaño del proveedor importa más. |
-| Predecir riesgo de incumplimiento | ¿Qué característica es más predictiva? | Permite diseñar criterios de elegibilidad basados en evidencia. |
-| Priorizar fiscalización | ¿Qué variables definen mejor los casos problemáticos? | Permite asignar recursos de fiscalización donde más importan. |
-
-### Advertencias importantes
-
-> ⚠️ **Importancia ≠ causalidad.** Una variable importante para el modelo no es necesariamente la *causa* del resultado. Puede ser un proxy de otra variable no incluída.
-
-> ⚠️ **Importancia en datos sesgados.** Si el dataset histórico tiene sesgos (por ejemplo, infrarepresentación de proveedores MIPYME), la importancia puede reflejar ese sesgo, no la realidad.
+**¿Qué significa el ✅?** Que viste la firma del sobreajuste: 0,0 en entrenamiento, 9,2 en prueba.
 
 ---
 
-## 8. Conexión con profundiza.ipynb
+### Ejercicio 4 — Bosque aleatorio e importancias
 
-Este módulo tiene `solucion.ipynb` como referencia. No hay `profundiza.ipynb` separado.
+**Pistas progresivas:**
+- 🟢 Pista suave: El bosque se usa igual que el árbol; las importancias ya quedan en una Serie ordenada.
+- 🟡 Pista media: `bosque.fit(X_train, y_train)`; el nombre del máximo de una Serie es `.idxmax()`.
+- 🔴 Pista directa: `bosque = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, random_state=42)`, `bosque.fit(X_train, y_train)` y `feature_top = importancias.idxmax()`.
 
-> 💡 **Alternativas de profundización:** Si quieres ir más allá, intenta:
-> - Cambiar `n_estimators` de 100 a 10 y comparar el MAE.
-> - Probar `GradientBoostingRegressor` de scikit-learn y comparar su MAE con el Random Forest.
-> - Graficar la importancia de features con `plt.bar(X.columns, bosque.feature_importances_)`.
-
----
-
-## 9. Autoevaluación Final
-
-**Pregunta 1:** ¿Qué es un árbol de decisión?
-
-- a) Un modelo que predice usando una fórmula lineal
-- b) Un modelo que hace preguntas sí/no secuenciales sobre las features para llegar a una predicción
-- c) Un algoritmo que agrupa datos similares sin supervisar
-- d) Una red de neuronas artificiales
-
-✅ **Respuesta correcta: b)**
-**Explicación:** Un árbol de decisión es una secuencia jerárquica de preguntas binarias. Es equivalente a un flujograma de decisión con criterios cuantitativos.
+**¿Qué significa el ✅?** Que el bosque (6,37) supera a la recta y al baseline, y que `pm25_ayer` manda.
 
 ---
 
-**Pregunta 2:** Un árbol entrenado sin `max_depth` tiene MAE de entrenamiento muy bajo y MAE de prueba muy alto. ¿Qué significa esto?
+### Ejercicio 5 — Detectados y falsas alarmas
 
-- a) El modelo es excelente porque el error de entrenamiento es bajo
-- b) El modelo tiene sobreajuste: memorizó el pasado pero no generaliza
-- c) El dataset tiene errores
-- d) Hay que agregar más features
+**Pistas progresivas:**
+- 🟢 Pista suave: Una alerta es una condición sobre la predicción; los aciertos y errores son combinaciones de dos condiciones.
+- 🟡 Pista media: `&` es «y»; `~real` es «no real».
+- 🔴 Pista directa: `alerta = pred_bosque > 50`, `detectados = int((alerta & real).sum())`, `falsas_alarmas = int((alerta & ~real).sum())`.
 
-✅ **Respuesta correcta: b)**
-**Explicación:** La brecha entre MAE de train y MAE de test es la firma del sobreajuste. Un buen modelo tiene errores similares en ambos conjuntos.
-
----
-
-**Pregunta 3:** ¿Para qué sirve `max_depth` en un árbol de decisión?
-
-- a) Para aumentar el número de datos de entrenamiento
-- b) Para limitar la complejidad del árbol y evitar el sobreajuste
-- c) Para decidir cuántas features usar
-- d) Para calcular el MAE automáticamente
-
-✅ **Respuesta correcta: b)**
-**Explicación:** `max_depth` define cuántos niveles de preguntas puede hacer el árbol. Un valor pequeño produce modelos simples que generalizan mejor.
+**¿Qué significa el ✅?** Que llevaste el modelo al terreno de la decisión: 36 de 54 días detectados, 6 falsas alarmas.
 
 ---
 
-**Pregunta 4:** Un Random Forest de 100 árboles es mejor que uno solo porque:
-
-- a) Cada árbol se entrena con todos los datos
-- b) Los 100 árboles promedian sus predicciones, lo que reduce el error y la variabilidad
-- c) Solo usa los mejores 10 árboles de los 100
-- d) Entrena más rápido
-
-✅ **Respuesta correcta: b)**
-**Explicación:** Cada árbol se entrena con una muestra aleatoria distinta de los datos. El promedio de muchos árboles débilmente correlacionados es más robusto y estable.
+> 🔬 **En la profundización:** transferencia a los **sismos M ≥ 4,5 de Chile 2020–2025** (USGS). Predices la **profundidad** con latitud, longitud y magnitud: un árbol de 3 preguntas baja el error de 54,3 km (baseline) a **19,9 km**, el árbol sin límite memoriza (0,0 en entrenamiento, 14,7 en prueba) y el bosque llega a **12,4 km**. La importancia de la **longitud (0,84)** revela la **subducción**: mientras más al este, más profundo el sismo — la placa de Nazca hundiéndose bajo la Sudamericana. La magnitud casi no aporta (0,01).
 
 ---
 
-**Pregunta 5:** `bosque.feature_importances_` indica que `cantidad` tiene importancia 0.85 y `tamano_num` tiene 0.15. ¿Qué concluyes?
+## 7. Autoevaluación Final
 
-- a) La cantidad causa el 85% del monto de la compra
-- b) El modelo usó la cantidad en el 85% de sus divisiones; es la variable más predictiva para el modelo
-- c) El 85% de las compras son de cantidad alta
-- d) El tamaño del proveedor no debería incluirse en el modelo
+**Pregunta 1:** Un árbol de profundidad 3 tiene MAE 7,74 y la regresión lineal 7,09. ¿Por qué podrías igual querer el árbol?
 
-✅ **Respuesta correcta: b)**
-**Explicación:** La importancia mide cuánto usó el modelo cada variable, no causalidad. Es una herramienta de interpretación, no de causalidad.
+- A) Porque siempre es más preciso
+- B) Porque se puede leer como un conjunto de reglas y explicarse a una autoridad ✅
+- C) Porque entrena más rápido
+- D) No hay razón
 
----
-
-## 10. Glosario del Módulo
-
-| Término | Definición simple | Equivalente sector público / Excel |
-|---|---|---|
-| **Árbol de decisión** | Modelo de preguntas sí/no secuenciales | Flujograma de decisión con criterios numéricos |
-| **Nodo** | Pregunta en el árbol | Criterio de evaluación en un proceso |
-| **Hoja** | Respuesta final del árbol | Resultado del proceso |
-| **Profundidad** | Número de niveles del árbol | Complejidad del flujograma |
-| **Sobreajuste** | Memorizar en vez de aprender; falla con datos nuevos | Regla pensada solo para casos conocidos |
-| **Random Forest** | Ensemble de muchos árboles promediados | Comisión evaluadora multidisciplinaria |
-| **`n_estimators`** | Número de árboles en el bosque | Tamaño de la comisión |
-| **Importancia de features** | Peso de cada variable en las predicciones | Ranking de factores determinantes |
-| **Ensemble** | Combinar múltiples modelos para reducir errores | Panel de expertos que promedian criterios |
-| **Hiperparámetro** | Configuración del modelo definida antes de entrenar | Bases del concurso fijadas antes de abrir ofertas |
-| **`max_depth`** | Profundidad máxima del árbol | Límite de complejidad del flujograma |
-| **`feature_importances_`** | Vector con la importancia de cada variable | Ranking de criterios de decisión |
+**Explicación:** Precisión e interpretabilidad son valores distintos. A veces un modelo algo menos preciso pero explicable es el adecuado para una decisión pública.
 
 ---
 
-## 11. Conexión con el Módulo Siguiente
+**Pregunta 2:** Un árbol sin límite tiene MAE 0,0 en entrenamiento y 9,2 en prueba. ¿Qué pasó?
 
-En R2-05 aprendiste a predecir con modelos más potentes: árboles y bosques. El patrón `fit`/`predict` sigue siendo el mismo.
+- A) Es el mejor modelo posible
+- B) Sobreajuste: memorizó cada día de entrenamiento y no generaliza ✅
+- C) El conjunto de prueba tiene errores
+- D) Faltan árboles
 
-**El siguiente módulo es R2-06 · Clasificación y Clustering.**
+**Explicación:** Un error de entrenamiento cercano a cero con un error de prueba alto es la firma clásica de memorizar en vez de aprender.
 
-Allí cambiarás el objetivo de predicción:
+---
 
-- En vez de predecir un **número** (monto), predecirás una **categoría** (Grande/Micro, sí/no).
-- Aprenderás métricas específicas para clasificación: accuracy, precisión, recall.
-- También agruparás datos sin etiquetas con **clustering** (K-Means): encontrar patrones ocultos sin saber de antemano cuáles son los grupos.
+**Pregunta 3:** ¿Por qué un bosque aleatorio suele generalizar mejor que un solo árbol?
 
-> 🔗 **Conexión pedagógica:** R2-05 te enseña a predecir mejor; R2-06 te enseña a predecir diferente (categorías) y a descubrir estructura oculta en los datos. Las dos habilidades son complementarias para análisis de política pública.
+- A) Porque usa árboles más profundos
+- B) Porque promedia muchos árboles distintos y los errores individuales se compensan ✅
+- C) Porque no necesita datos de entrenamiento
+- D) Porque elimina variables
 
-¡Excelente! Ya conoces el modelo más explicable **y** el más robusto de ML. Eso es un combo muy poderoso 🌲
+**Explicación:** Cada árbol ve una muestra distinta de datos y features; el promedio es más estable que cualquiera de ellos.
+
+---
+
+**Pregunta 4:** La importancia de `pm25_ayer` es 0,80. ¿Qué **no** puedes concluir?
+
+- A) Que es la variable que más usa el bosque
+- B) Que el PM2.5 de ayer causa el de hoy ✅
+- C) Que el aire tiende a persistir de un día a otro
+- D) Que las demás variables aportan poco
+
+**Explicación:** La importancia mide uso en el modelo, no causalidad (recuerda R2-03).
+
+---
+
+**Pregunta 5:** El bosque detecta 36 de 54 días sobre la norma con 6 falsas alarmas; el baseline detecta 39 con 15 falsas alarmas. ¿Cuál elegir?
+
+- A) Siempre el bosque, porque tiene menor MAE
+- B) Siempre el baseline, porque detecta más
+- C) Depende del costo de cada error para la salud pública; es una decisión que se explicita ✅
+- D) Ninguno sirve
+
+**Explicación:** Avisar de menos y avisar de más tienen costos distintos. El modelo informa; la decisión del umbral es de política pública.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **Árbol de decisión** | Modelo de preguntas sí/no | Flujograma de un protocolo |
+| **Hoja** | Final de una rama, con el valor estimado | Resultado del trámite |
+| **`max_depth`** | Límite de preguntas seguidas | Pasos máximos del protocolo |
+| **`min_samples_leaf`** | Casos mínimos por hoja | No crear reglas para un solo caso |
+| **Sobreajuste** | Memorizar en vez de aprender | Regla a la medida del pasado |
+| **Bosque aleatorio** | Promedio de muchos árboles | Comisión de evaluadores |
+| **Importancia de variables** | Peso de cada feature en el modelo | Ranking de factores |
+| **Hiperparámetro** | Ajuste fijado antes de entrenar | Bases del concurso |
+| **Alerta** | Predicción + umbral = decisión | Aviso de episodio |
+| **Falsa alarma** | Alertar un día que no superó la norma | Avisar de más |
+| **Subducción** | Una placa tectónica se hunde bajo otra | Por qué Chile tiene sismos profundos al este |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R2-05 comparaste árboles y bosques contra el baseline y la recta, viste el sobreajuste con tus ojos, leíste qué variable manda y llevaste el modelo hasta una alerta.
+
+En **R2-06 · Clasificación y clustering** darás el paso que el ejercicio 5 dejó abierto: en vez de predecir un número y luego aplicarle un umbral, entrenarás modelos que predicen directamente una **categoría**, y aprenderás a **agrupar** casos parecidos sin etiquetas. Las falsas alarmas y los días no detectados de hoy se convertirán en métricas con nombre propio.
+
+> 💡 **Pregunta para reflexionar:** si tuvieras que explicarle el bosque a la Seremi de Salud en dos frases, ¿qué le dirías: el MAE, la importancia de variables o las alertas?

@@ -1,333 +1,302 @@
-# 📘 Guía de Aprendizaje — R2-06 · Clasificación y clustering
+# Guía de Aprendizaje — R2-06 · Clasificación y clustering
+
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R2 · Científico de Datos · Módulo 6 · Semana 12
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Nombre del módulo** | R2-06 · Clasificación y clustering |
-| **Pista / Rama** | R2 — Científico/a de Datos |
-| **Duración estimada** | 3–4 horas |
-| **Semana** | Semana 12 |
-| **Nivel** | Intermedio |
-| **Prerrequisitos** | R2-04 (fundamentos de ML y regresión) y R2-05 (árboles de decisión) |
-| **Competencia de salida** | Entrenar y evaluar un clasificador (exactitud y matriz de confusión) y aplicar clustering con K-Means (incluido el escalado), distinguiendo cuándo un problema es supervisado y cuándo no |
-| **Dataset** | `compras_ml.csv` — 7.412 órdenes de compra de alimentos de MercadoPúblico / ChileCompra |
-| **Entregable** | Las 4 celdas de chequeo del notebook mostrando ✅ |
+|-------|---------|
+| **Módulo** | R2-06 · Clasificación y clustering |
+| **Rama** | R2 — Científico de Datos |
+| **Duración estimada** | 3 horas |
+| **Nivel** | Intermedio — requiere R2-04 y R2-05 |
+| **Prerrequisitos** | `train_test_split`, `fit`/`predict`, árboles de decisión, `groupby` y `pivot_table` |
+| **Competencia de salida** | Entrenar y evaluar un clasificador con clases desbalanceadas (matriz de confusión, precisión, recall) y aplicar clustering con K-Means distinguiendo cuándo un problema es supervisado y cuándo no |
+| **Entregable** | Las 6 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `aire_diario.csv` (PM2.5 diario 2020–2025, 14 estaciones SINCA) + `estaciones.csv` (comuna y región). Profundización: `reclamos.csv` (muestra de 20.000 reclamos SERNAC 2011, dato histórico) |
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-Hasta ahora, en R2-04 y R2-05, tus modelos predecían **números**: el monto de una compra, la duración de un proceso. Pero en el trabajo del Estado, muchas decisiones no son numéricas sino de **categoría**: ¿este trámite es prioritario u ordinario? ¿Esta licitación es de riesgo alto, medio o bajo? ¿Este proveedor es micro, pequeño, mediano o grande?
+En R2-04 y R2-05 tus modelos predecían **números**. Pero muchas decisiones del Estado son de **categoría**: ¿se decreta o no un episodio crítico mañana?, ¿este reclamo se resolverá o no?, ¿este establecimiento es rural o urbano? Y a veces ni siquiera tienes categorías: tienes muchos casos y quieres saber **qué tipos** hay.
 
-Este módulo te da dos herramientas nuevas para eso:
+Este módulo te da las dos herramientas, con un dato que le importa a millones de personas: el **material particulado fino (PM2.5)**. La norma de 24 horas es **50 µg/m³** (D.S. 12/2011 del Ministerio del Medio Ambiente). En los seis años de datos hay **1.279 mediciones diarias sobre la norma**: Cerro Navia acumula 332, Las Encinas (Temuco) 282, El Bosque 240, Rancagua 231 y Nielol 165; en seis estaciones del norte y la costa no hubo ninguna. Tras quedarnos con los días que tienen el dato del día anterior, quedan 29.305 días-estación, de los cuales **1.269 (4,3 %)** superan la norma.
 
-- **Clasificación (supervisada):** con datos históricos donde ya conoces la categoría correcta, entrenas un modelo que la predice para casos nuevos. Aquí lo harás con órdenes de compra reales: a partir de la **cantidad de artículos** y el **monto total**, el modelo deduce el **tamaño del proveedor**.
-- **Clustering (no supervisado):** cuando **no tienes etiquetas** — nadie ha clasificado nada — el algoritmo descubre grupos por sí solo. Es como recibir miles de expedientes sin clasificar y separarlos en pilas de "parecidos entre sí".
-
-**Conexión con el dataset real:** `compras_ml.csv` contiene 7.412 compras públicas de alimentos de ChileCompra, con la cantidad comprada, el monto total (mediana de $25.000, pero con órdenes que superan los $4,9 millones) y el tamaño del proveedor adjudicado. ¿Qué decisiones permite? Detectar perfiles de compra (¿cuáles son las compras "gigantes" que merecen más revisión?), entender qué tipo de proveedor gana qué tipo de orden, y sentar las bases para políticas de fomento a las empresas de menor tamaño en compras públicas — un objetivo explícito de ChileCompra.
+- **Clasificación:** con el PM2.5 de ayer y la estación del año, ¿se puede anticipar si mañana se supera la norma? Vas a descubrir que un modelo con **96,8 % de exactitud** deja escapar **208 de 381** días malos del conjunto de prueba — y que decidir qué error es más caro es una **decisión de política pública**, no un detalle técnico.
+- **Clustering:** sin decirle nada sobre leña, latitud ni industria, K-Means separa las 14 estaciones en tres tipos de ciudad que cualquier SEREMI reconocería.
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía en Excel / sector público |
-|---|---|---|
-| **Clasificación** | Predice una categoría (texto), no un número | Decidir si un trámite es "Prioritario" u "Ordinario" según reglas aprendidas de casos anteriores |
-| **Aprendizaje supervisado** | Aprende de ejemplos con respuesta conocida | Capacitar a un funcionario nuevo mostrándole expedientes ya resueltos con su resolución |
-| **Aprendizaje no supervisado** | Encuentra estructura sin respuestas conocidas | Ordenar un archivador heredado sin ninguna pauta: agrupas lo que se parece |
-| **`DecisionTreeClassifier`** | Árbol de decisión que predice categorías | El mismo diagrama de flujo de R2-05, pero terminando en una etiqueta, no en un número |
-| **Exactitud (*accuracy*)** | % de casos bien clasificados | Tasa de aciertos de una revisión: de 100 expedientes, ¿cuántos clasifiqué bien? |
-| **Matriz de confusión** | Tabla real vs. predicho: muestra *en qué* se equivoca | Planilla que cruza "lo que dijo el revisor" con "lo que era en verdad" |
-| **`stratify=y`** | Mantiene la proporción de clases al dividir train/test | Muestra representativa: si el 80% de las órdenes son de proveedores Pequeños, el test también debe tenerlo |
-| **Clustering / K-Means** | Agrupa registros parecidos en *k* grupos | Separar miles de expedientes en 3 pilas por volumen y costo, sin pauta previa |
-| **`StandardScaler`** | Lleva las variables a la misma escala (media 0, desv. 1) | Convertir pesos y unidades a un "índice común" para poder compararlos con justicia |
-| **`pd.crosstab`** | Tabla cruzada de frecuencias entre dos variables | Una tabla dinámica de Excel que cruza dos columnas y cuenta |
+| Concepto | ¿Qué hace? | Equivalente en Excel / en el Estado |
+|----------|-----------|----------------------|
+| **Clasificación** | Predice una categoría (0/1), no un número | Una columna «¿Alerta?» con SÍ/NO en vez de un monto |
+| **Clases desbalanceadas** | Una clase es mucho más rara que la otra | 4 de cada 100 días superan la norma |
+| **Exactitud (*accuracy*)** | % de casos bien clasificados | Tasa de aciertos de una revisión — engañosa si casi todo es «no» |
+| **Modelo tonto / línea base** | Predice siempre la clase más frecuente | Responder «no» a todo y acertar 95 % |
+| **`stratify=y`** | Mantiene la proporción de clases al dividir | Muestra representativa por estrato |
+| **Matriz de confusión** | Cruza lo real con lo predicho | Tabla dinámica «real» × «predicho» |
+| **Falso negativo (FN)** | Día malo que el modelo no avisó | Población expuesta sin medidas |
+| **Falso positivo (FP)** | Falsa alarma | Restricción innecesaria |
+| **Precisión** | De lo que alerté, cuánto era cierto | Credibilidad de las alertas |
+| **Recall** | De lo malo, cuánto detecté | Cobertura de protección |
+| **`class_weight="balanced"`** | Hace pesar más los errores en la clase rara | Priorizar no perderse casos graves |
+| **Clustering / K-Means** | Agrupa casos parecidos sin etiquetas | Ordenar fichas en pilas sin pauta previa |
+| **`StandardScaler`** | Media 0 y desviación 1 por columna | Llevar todo a un «índice común» |
 
 ---
 
-## 4. Antes de Empezar: Verificación de Prerrequisitos
+## 4. Verificación de Prerrequisitos
 
-Responde honestamente antes de abrir el notebook:
-
-| ¿Puedo...? | Estado |
-|---|---|
-| Cargar un CSV con pandas y seleccionar columnas con `df[["a", "b"]]` | ✅ Sí / 🔄 Revisar R1-02 |
-| Explicar la diferencia entre entrenamiento y prueba, y usar `train_test_split` | ✅ Sí / 🔄 Revisar R2-04 |
-| Entrenar un modelo de scikit-learn con `.fit()` y predecir con `.predict()` | ✅ Sí / 🔄 Revisar R2-04 |
-| Explicar cómo decide un árbol de decisión (preguntas encadenadas) | ✅ Sí / 🔄 Revisar R2-05 |
-| Leer una tabla de frecuencias (`value_counts`) e interpretar proporciones | ✅ Sí / 🔄 Revisar R1-02 |
-
-Si marcaste más de dos "Revisar", dedica 30 minutos a repasar esos módulos antes de continuar. Este módulo reutiliza el flujo `fit`/`predict` completo: si ese flujo te resulta natural, lo nuevo se aprende rápido.
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Dividir datos con `train_test_split` y entrenar con `.fit()` / `.predict()` | ☐ |
+| Explicar cómo decide un árbol de decisión (R2-05) | ☐ |
+| Crear una columna con `groupby(...).shift(1)` o entender qué hace | ☐ |
+| Armar una tabla con `pivot_table` (filas × columnas × valor) | ☐ |
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### 🔷 Sección: Dos preguntas, dos tipos de aprendizaje + preparación del entorno
+### Sección 0 · Preparación
 
-🎯 **Objetivo:** entender la diferencia entre aprendizaje supervisado y no supervisado, y cargar el dataset.
+🎯 **Objetivo:** Cargar `aire_diario.csv` (30.674 filas) y `estaciones.csv` (14 estaciones), y construir las variables.
 
-💡 **Concepto clave — ¿tengo o no tengo la respuesta correcta?**
-Toda la diferencia entre los dos mundos de este módulo es una sola pregunta: ¿existen etiquetas conocidas para aprender? Si tienes compras con su tamaño de proveedor conocido, es **supervisado** (clasificación). Si solo tienes las compras y quieres descubrir perfiles, es **no supervisado** (clustering). Es la diferencia entre capacitar con expedientes ya resueltos y ordenar un archivador sin pauta.
+💡 **Concepto clave:** `pm25_ayer = groupby("estacion")["pm25"].shift(1)` trae, a cada día, el valor del día anterior **de la misma estación**. Es información que la autoridad **sí tiene** la víspera. `invierno` vale 1 de mayo a agosto. `sobre_norma = (pm25 > 50)` es la respuesta que queremos anticipar.
 
-🔍 **Qué hace el código:**
-- Si `compras_ml.csv` no existe localmente (por ejemplo en Colab), intenta descargarlo desde GitHub como respaldo.
-- `pd.read_csv("compras_ml.csv")` carga las 7.412 compras.
-- `df["tamano_proveedor"].value_counts()` muestra la distribución de clases: Pequeña 5.976, Mediana 1.137, Grande 178, Micro 121. Fíjate bien en esos números: ¡el 80,6% de las órdenes las gana un proveedor Pequeño!
-
-⚠️ **Error frecuente:** saltarse la celda de preparación e ir directo a los ejercicios. Sin esa celda, `df` no existe y todo lo demás falla con `NameError`.
-
-✅ **Señal de comprensión:** puedes explicarle a un colega por qué predecir el tamaño del proveedor es supervisado y agrupar compras por perfil es no supervisado.
+⚠️ **Error frecuente:** hacer `shift(1)` sin `groupby`: el primer día de Antofagasta recibiría el último día de Alto Hospicio.
 
 ---
 
-### 🔷 Sección 1: Clasificación — predecir una categoría
+### Sección 1 · Clasificación: predecir una categoría
 
-🎯 **Objetivo:** preparar los datos (Ejercicio 1) y entrenar un `DecisionTreeClassifier` midiendo su exactitud (Ejercicio 2).
+🎯 **Objetivo:** Definir `X` e `y`, medir el desbalance y dividir con `stratify=y`.
 
-💡 **Concepto clave — es el mismo flujo, con `y` de texto:**
-La clasificación no es un mundo nuevo: es el mismo `fit`/`predict` de R2-04 y el mismo árbol de R2-05, pero ahora `y` es una **categoría** ("Micro", "Pequeña", "Mediana", "Grande") en vez de un número. Como las clases están muy desbalanceadas (80,6% Pequeña vs 1,6% Micro), el `stratify=y` en la división es crucial: garantiza que entrenamiento y prueba conserven la misma proporción de cada clase. Sin eso, podría tocarte un test casi sin proveedores Grandes y la evaluación sería una lotería.
+💡 **Concepto clave:** Solo el **4,3 %** de los días supera la norma. Con `stratify=y`, entrenamiento (20.513 días) y prueba (8.792) quedan con la misma proporción: 4,33 % y 4,33 %.
 
-🔍 **Qué hace el código:**
-- `X = df[["cantidad", "monto_total"]]` define las dos features; `y = df["tamano_proveedor"]` el objetivo.
-- `train_test_split(..., test_size=0.3, random_state=42, stratify=y)` divide en 5.188 compras de entrenamiento y 2.224 de prueba.
-- `DecisionTreeClassifier(max_depth=3, random_state=42)` crea un árbol clasificador poco profundo (3 niveles de preguntas) para que sea interpretable.
-- `accuracy_score(y_test, y_pred)` calcula el porcentaje de aciertos: ≈ 0,81 (81% de las 2.224 compras de prueba bien clasificadas).
-
-⚠️ **Error frecuente:** olvidar el `stratify=y` u ordenar mal los cuatro resultados de `train_test_split` (el orden es `X_train, X_test, y_train, y_test` — mezclar `y_train` con `X_test` es un clásico).
-
-✅ **Señal de comprensión:** entiendes por qué una exactitud de 0,81 aquí es *menos impresionante* de lo que parece: un modelo tonto que dijera siempre "Pequeña" ya acertaría el 80,6% de las veces. Este matiz es la puerta de entrada a R2-07.
+✅ **Señal de que entendiste:** Puedes explicar qué pasaría con la prueba si, por azar, le tocaran muy pocos días malos.
 
 ---
 
-### 🔷 Sección: La matriz de confusión (celda ilustrativa)
+### Sección 2 · La trampa de la exactitud
 
-🎯 **Objetivo:** ver *en qué* se equivoca el modelo, no solo *cuánto*.
+🎯 **Objetivo:** Entrenar una regresión logística y compararla con el modelo que siempre dice «no».
 
-💡 **Concepto clave — el tipo de error importa más que la cantidad:**
-En el Estado, no es lo mismo confundir "riesgo bajo" con "riesgo medio" que con "riesgo alto". La matriz de confusión cruza la categoría **real** (filas) con la **predicha** (columnas): los aciertos quedan en la diagonal y los errores fuera de ella. Un vistazo te dice, por ejemplo, si el modelo confunde sistemáticamente a los proveedores Micro con Pequeños.
+💡 **Concepto clave:** El modelo logra **0,968** de exactitud… y el modelo tonto, **0,957**. Once décimas de diferencia: la exactitud casi no distingue un modelo útil de uno que nunca avisa nada.
 
-🔍 **Qué hace el código:**
-- `confusion_matrix(yi_te, y_pred_te, labels=[...])` construye la tabla con las clases en el orden Micro → Pequeña → Mediana → Grande.
-- `sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")` la pinta como mapa de calor con los conteos visibles.
-
-⚠️ **Error frecuente:** leer la matriz al revés. Recuerda la convención del gráfico: **filas = real, columnas = predicho**. La celda (fila Mediana, columna Pequeña) son proveedores Medianos que el modelo etiquetó como Pequeños.
-
-✅ **Señal de comprensión:** mirando el heatmap puedes decir cuál clase concentra los errores y por qué las clases minoritarias (Micro, Grande) son las más difíciles de acertar.
+✅ **Señal de que entendiste:** Ante un «96 % de exactitud», tu primera pregunta es «¿y cuánto saca el que dice siempre que no?».
 
 ---
 
-### 🔷 Sección 2: Clustering — descubrir grupos sin etiquetas
+### Sección 3 · La matriz de confusión
 
-🎯 **Objetivo:** escalar las variables y agrupar las 7.412 compras en 3 clusters con K-Means (Ejercicio 3), visualizándolos después.
+🎯 **Objetivo:** Desarmar los aciertos y los dos tipos de error.
 
-💡 **Concepto clave — escalar antes de agrupar no es opcional:**
-K-Means agrupa por **distancia** entre puntos. Pero `cantidad` se mueve entre 0 y 492 artículos, mientras `monto_total` va desde $100 hasta $4.947.600. Sin escalar, el monto aplastaría por completo a la cantidad: sería como comparar expedientes midiendo uno en hojas y otro en toneladas. `StandardScaler` lleva ambas variables a la misma escala (media 0, desviación 1) para que las dos opinen por igual.
-
-🔍 **Qué hace el código:**
-- `StandardScaler().fit_transform(X_compras)` produce la versión escalada de cantidad y monto.
-- `KMeans(n_clusters=3, random_state=42, n_init=10)` pide 3 grupos; `n_init=10` prueba 10 puntos de partida distintos y se queda con el mejor (K-Means es sensible al azar inicial).
-- `km.fit_predict(X_escalado)` entrena y devuelve la etiqueta de cluster (0, 1 o 2) de cada compra, que se guarda en `df["cluster"]`.
-- La celda ilustrativa siguiente dibuja el scatter cantidad vs monto coloreado por cluster: verás un grupo masivo de compras chicas y grupos pequeños de compras grandes o voluminosas.
-
-⚠️ **Error frecuente:** pasarle a K-Means los datos **sin escalar** (`X_compras` en vez de `X_escalado`). El chequeo puede incluso dar ✅ (hay 3 clusters igual), pero los grupos estarían dominados solo por el monto y la interpretación sería engañosa. Escalar primero es el hábito que te llevas de este módulo.
-
-✅ **Señal de comprensión:** puedes explicar por qué el número 3 lo elegiste **tú** y no el algoritmo, y qué pasaría con las distancias si no escalaras.
+💡 **Concepto clave:** En la prueba: 8.338 días normales bien clasificados (TN), **73 falsas alarmas** (FP), **208 días malos que se escaparon** (FN) y 173 días malos detectados (TP). El orden de `ravel()` es siempre `tn, fp, fn, tp`.
 
 ---
 
-### 🔷 Sección: ¿Coinciden grupos y tamaños de proveedor? (Ejercicio 4)
+### Sección 4 · Precisión, recall y el error más caro
 
-🎯 **Objetivo:** comparar los clusters descubiertos con la etiqueta real usando una tabla cruzada.
+🎯 **Objetivo:** Medir precisión y recall, y comparar con un modelo `class_weight="balanced"`.
 
-💡 **Concepto clave — los clusters no son "la verdad":**
-K-Means nunca vio el tamaño del proveedor; agrupó solo por cantidad y monto. Al cruzar cluster contra tamaño real descubres algo valioso: **no calzan perfectamente**. En la ejecución de referencia, un cluster gigante concentra la enorme mayoría de las compras (cerca de 6.900 de las 7.412) mezclando proveedores de todos los tamaños, mientras dos clusters pequeños capturan las compras de montos o volúmenes atípicos. Lección didáctica: los clusters describen **perfiles de compra**, no categorías administrativas. Que no coincidan no es un fracaso — es información.
+💡 **Concepto clave:** El modelo normal tiene precisión **0,70** y recall **0,45**: sus alertas son creíbles, pero detecta menos de la mitad de los días malos. El balanceado sube el recall a **0,91** (solo 35 días malos se escapan) a cambio de bajar la precisión a **0,39** (548 falsas alarmas). Ninguno es «el correcto»: depende de cuánto cuesta cada error. Para la autoridad sanitaria, un día malo sin aviso suele ser más caro que una falsa alarma — pero esa decisión se **declara**.
 
-🔍 **Qué hace el código:**
-- `pd.crosstab(df["tamano_proveedor"], df["cluster"])` cuenta cuántas compras de cada tamaño cayeron en cada cluster (la suma total debe dar 7.412).
-
-⚠️ **Error frecuente:** interpretar el número del cluster (0, 1, 2) como un ranking. Las etiquetas de K-Means son arbitrarias: el cluster 2 no es "mejor" ni "más grande" que el 0; incluso pueden cambiar de número si re-ejecutas con otra semilla o versión de scikit-learn.
-
-✅ **Señal de comprensión:** puedes explicar con la tabla en la mano por qué "el algoritmo agrupó parecido pero no igual" y qué perfil de compra representa cada cluster.
+✅ **Señal de que entendiste:** Puedes explicar el intercambio con números concretos de días.
 
 ---
 
-## 6. Guía de los Ejercicios
+### Sección 5 · Clustering
 
-### ✍️ Ejercicio 1 — Preparar la clasificación
+🎯 **Objetivo:** Armar el perfil mensual (14 estaciones × 12 meses), estandarizar y agrupar con K-Means (k = 3).
 
-**Objetivo:** definir `X`, `y` y dividir con estratificación.
-**Habilidad que entrena:** preparar datos para clasificación con clases desbalanceadas.
+💡 **Concepto clave:** Aquí no hay `y`. Cada estación es una fila con su PM2.5 promedio de enero a diciembre. `StandardScaler` deja cada mes con media 0 y desviación 1 para que la distancia compare **formas y niveles** sin que un mes domine.
 
-**Pistas progresivas:**
-1. 🟢 *Pista suave:* `X` e `y` ya vienen definidos en la celda. Solo falta reemplazar la línea PLACEHOLDER por una llamada real a `train_test_split`, que ya usaste en R2-04. La novedad es un parámetro extra que preserva las proporciones de clase.
-2. 🟡 *Pista media:* la función recibe `X`, `y` y tres parámetros con nombre: `test_size=0.3`, `random_state=42` y `stratify=y`. Devuelve **cuatro** cosas, en el orden: primero los dos X (train, test), luego los dos y (train, test).
-3. 🔴 *Pista directa:* la línea tiene la forma `X_train, X_test, y_train, y_test = train_test_split(...)` con los cinco argumentos mencionados adentro, en ese orden: `X`, `y` y los tres parámetros con nombre.
-
-**Lógica de la solución (en prosa):** se reemplaza el placeholder por la división real: 70% para entrenar, 30% para probar, con semilla fija para reproducibilidad y estratificando por `y` para que ambas partes tengan la misma proporción de Micro/Pequeña/Mediana/Grande.
-
-**Qué valida el chequeo ✅:** que `X_train` tenga exactamente las columnas `cantidad` y `monto_total`, que la división produzca 5.188 filas de entrenamiento y 2.224 de prueba, y que `y_train` contenga las cuatro clases.
+⚠️ **Error frecuente:** Olvidar `random_state=42` y `n_init=10`: los grupos pueden cambiar de número de etiqueta entre ejecuciones.
 
 ---
 
-### ✍️ Ejercicio 2 — Entrenar y medir la exactitud
+### Sección 6 · Interpretar los grupos
 
-**Objetivo:** entrenar el `DecisionTreeClassifier` y calcular la accuracy en prueba.
-**Habilidad que entrena:** el ciclo completo `fit` → `predict` → métrica en clasificación.
+🎯 **Objetivo:** Ponerle nombre a cada cluster.
 
-**Pistas progresivas:**
-1. 🟢 *Pista suave:* son tres pasos que ya conoces de la regresión: entrenar con los datos de entrenamiento, predecir sobre los de prueba, y comparar predicción contra realidad con una función de `sklearn.metrics` que ya está importada.
-2. 🟡 *Pista media:* el `clasificador` ya está creado; entrénalo con `.fit(X_train, y_train)`. Luego genera `y_pred` con `.predict(X_test)`. La exactitud compara `y_test` (lo real) con `y_pred` (lo predicho).
-3. 🔴 *Pista directa:* tres líneas: el `.fit(...)` sobre el clasificador, un `y_pred = clasificador.predict(X_test)`, y `exactitud = accuracy_score(y_test, y_pred)`. Recuerda que las funciones de métricas reciben primero los valores reales y después los predichos.
+💡 **Concepto clave:** Los tres grupos que aparecen:
 
-**Lógica de la solución (en prosa):** se entrena el árbol con el 70% de entrenamiento, se predice el tamaño del proveedor para las 2.224 compras de prueba, y se calcula qué fracción quedó bien clasificada. El resultado esperado es ≈ 0,81 (81% de aciertos).
-
-**Qué valida el chequeo ✅:** que el clasificador esté efectivamente entrenado (tiene atributo `tree_`) y que tu `exactitud` coincida (±0,01) con la de un árbol de referencia idéntico.
-
----
-
-### ✍️ Ejercicio 3 — Agrupar las compras con K-Means
-
-**Objetivo:** escalar las features y asignar cada compra a uno de 3 clusters.
-**Habilidad que entrena:** el flujo estándar de clustering: escalar → agrupar → guardar etiquetas.
-
-**Pistas progresivas:**
-1. 🟢 *Pista suave:* son dos pasos y el enunciado de la celda te los deja casi listos en el comentario TODO: primero transformar los datos a una escala común, después pedirle a K-Means que forme los grupos y guardarlos como columna nueva.
-2. 🟡 *Pista media:* el escalado es una sola línea: crear un `StandardScaler()` y aplicar `fit_transform` sobre `X_compras`. Para agrupar, crea el `KMeans` con los tres parámetros que indica el enunciado (`n_clusters=3`, `random_state=42`, `n_init=10`) y usa su método que entrena y devuelve etiquetas en un solo paso.
-3. 🔴 *Pista directa:* dos líneas de trabajo: `X_escalado = StandardScaler().fit_transform(X_compras)` y luego crear `km = KMeans(...)` para asignar `df["cluster"] = km.fit_predict(X_escalado)`. El error típico es pasarle `X_compras` (sin escalar) al `fit_predict`.
-
-**Lógica de la solución (en prosa):** se estandarizan cantidad y monto para que pesen lo mismo en las distancias, se ejecuta K-Means con 3 grupos y semilla fija, y la etiqueta resultante de cada compra (0, 1 o 2) se guarda como columna `cluster` del DataFrame.
-
-**Qué valida el chequeo ✅:** que exista la columna `cluster`, que tenga una etiqueta para cada una de las 7.412 compras, y que haya exactamente 3 valores de cluster distintos.
-
----
-
-### ✍️ Ejercicio 4 — ¿Coinciden grupos y tamaños de proveedor?
-
-**Objetivo:** cruzar la etiqueta real (`tamano_proveedor`) contra el cluster descubierto.
-**Habilidad que entrena:** evaluar cualitativamente un clustering comparándolo con una variable conocida.
-
-**Pistas progresivas:**
-1. 🟢 *Pista suave:* es una sola línea con una función de pandas que ya usaste en la rama R1: la que arma una tabla de frecuencias cruzando dos columnas (la versión pandas de una tabla dinámica de Excel).
-2. 🟡 *Pista media:* `pd.crosstab` recibe dos argumentos: primero la serie que irá en las **filas** (el tamaño real) y luego la que irá en las **columnas** (el cluster). El enunciado te da el llamado casi textual.
-3. 🔴 *Pista directa:* `tabla = pd.crosstab(...)` pasando `df["tamano_proveedor"]` como primer argumento y `df["cluster"]` como segundo. El `print(tabla)` ya está en la celda.
-
-**Lógica de la solución (en prosa):** la tabla cruzada cuenta cuántas compras de cada tamaño de proveedor cayeron en cada cluster. Al leerla verás que un cluster concentra la gran mayoría de las compras de todos los tamaños y que los otros dos capturan perfiles atípicos — es decir, los grupos descubiertos **no replican** la clasificación administrativa, y eso es justamente lo que hay que interpretar.
-
-**Qué valida el chequeo ✅:** que `tabla` exista, que sus celdas sumen las 7.412 compras, y que las filas sean los cuatro tamaños de proveedor.
-
----
-
-## 7. Sección Especial: El Ejercicio de Política Pública
-
-El Ejercicio 4 es el corazón de política pública del módulo: comparaste una **categoría administrativa** (el tamaño del proveedor según su registro) con los **perfiles de compra reales** que descubrió el algoritmo. Y no coinciden.
-
-**Reflexión guiada:**
-- El 80,6% de las órdenes de compra de alimentos las adjudican proveedores Pequeños, y solo el 2,4% proveedores Grandes. Sin embargo, el clustering muestra que el comportamiento de compra (cantidad y monto) no distingue nítidamente los tamaños: hay proveedores Pequeños con compras enormes y Medianos con compras mínimas.
-- Si una política de fomento a las EMT (empresas de menor tamaño) usa **solo la categoría administrativa** para focalizar, podría estar tratando igual a realidades muy distintas. Los clusters sugieren que el "perfil de compra" es otra dimensión relevante.
-- Al revés: si usaras solo los clusters para fiscalizar (por ejemplo, revisar el cluster de compras de montos altos), estarías mirando el perfil de la orden, no del proveedor. Ninguna de las dos miradas basta sola.
-
-**Pregunta de debate abierta:**
-> Si ChileCompra quisiera priorizar la fiscalización de órdenes de compra "atípicas", ¿deberían usar los clusters de K-Means, la categoría de tamaño del proveedor, o una combinación? ¿Qué riesgos de injusticia tendría automatizar esa decisión con lo que sabes hasta ahora?
-
-**Datos que complementarían el análisis:**
-- Historial de adjudicaciones por proveedor (¿concentración de mercado en pocas manos?).
-- Región del comprador (el dataset la trae: 15 regiones) para detectar diferencias territoriales de precios.
-- Rubro específico y precios unitarios de referencia, para saber si un monto alto es "caro" o simplemente "grande".
-- Fechas de las órdenes, para descubrir estacionalidad (por ejemplo, compras de alimentos de JUNAEB en año escolar).
-
----
-
-## 8. Autoevaluación Final
-
-**Pregunta 1:** ¿Cuál es la diferencia esencial entre clasificación y clustering?
-
-- a) La clasificación usa árboles y el clustering usa regresión
-- b) **La clasificación aprende de etiquetas conocidas; el clustering descubre grupos sin etiquetas ✅**
-- c) La clasificación es para números y el clustering para texto
-- d) No hay diferencia, son sinónimos
-
-**Explicación:** es la distinción supervisado vs. no supervisado. En clasificación existe una respuesta correcta (`y`) con la que aprender; en clustering el algoritmo agrupa por similitud sin que nadie le diga qué buscar. Los algoritmos concretos (árbol, K-Means) son secundarios frente a esta diferencia.
-
----
-
-**Pregunta 2:** En este dataset, el 80,6% de las compras son de proveedores "Pequeña". Tu clasificador logra 81% de exactitud. ¿Qué deberías concluir?
-
-- a) El modelo es excelente, 81% es una nota alta
-- b) El modelo está sobreajustado
-- c) **La exactitud apenas supera a un modelo que dijera siempre "Pequeña"; hay que mirar la matriz de confusión ✅**
-- d) Hay fuga de datos
-
-**Explicación:** con clases desbalanceadas, la exactitud tiene un "piso" alto: predecir siempre la clase mayoritaria ya da ~80,6%. Un 81% aporta poco por sí solo; la matriz de confusión revela si el modelo realmente distingue las clases minoritarias (Micro, Grande) o si vive de la mayoritaria.
-
----
-
-**Pregunta 3:** ¿Para qué sirve `stratify=y` en `train_test_split`?
-
-- a) Para que el split sea más rápido
-- b) Para ordenar los datos alfabéticamente
-- c) Para eliminar las clases minoritarias
-- d) **Para que entrenamiento y prueba conserven la misma proporción de cada clase ✅**
-
-**Explicación:** sin estratificar, el azar podría dejar el conjunto de prueba casi sin proveedores Grandes (solo hay 178 en total). Estratificar garantiza que ambas particiones sean representativas de la distribución original, haciendo la evaluación justa y estable.
-
----
-
-**Pregunta 4:** ¿Por qué es necesario usar `StandardScaler` antes de K-Means en este módulo?
-
-- a) Porque K-Means no acepta números decimales
-- b) **Porque el monto (hasta $4,9 millones) aplastaría a la cantidad (hasta 492) en el cálculo de distancias ✅**
-- c) Porque scikit-learn lo exige y lanza error si no
-- d) Para eliminar los valores atípicos del dataset
-
-**Explicación:** K-Means agrupa por distancia. Si una variable se mide en millones y otra en unidades, la primera domina totalmente la distancia y los clusters ignoran a la segunda. El escalado pone ambas en igualdad de condiciones (media 0, desviación 1). Scikit-learn no lanza error: el resultado simplemente sería engañoso, que es peor.
-
----
-
-**Pregunta 5:** La tabla cruzada muestra que los clusters de K-Means no coinciden con los tamaños de proveedor. ¿Qué significa?
-
-- a) El ejercicio quedó malo y hay que repetirlo
-- b) K-Means necesita más clusters para que coincidan
-- c) El dataset tiene errores
-- d) **Los clusters describen perfiles de compra (cantidad/monto), que son una dimensión distinta a la categoría administrativa ✅**
-
-**Explicación:** K-Means nunca vio la etiqueta: agrupó solo por comportamiento numérico. Que los grupos no calcen con la clasificación administrativa es información valiosa, no un error: dice que el tamaño legal del proveedor no determina el perfil de sus órdenes de compra. Forzar la coincidencia subiendo *k* tampoco tendría sentido conceptual.
-
----
-
-## 9. Glosario del Módulo
-
-| Término técnico | Definición simple | Equivalente en Excel / administración pública |
+| Grupo | Estaciones | Perfil |
 |---|---|---|
-| **Clasificación** | Predecir una categoría (etiqueta discreta) a partir de features | Asignar "Prioritario/Ordinario" a un trámite según sus características |
-| **Aprendizaje supervisado** | Entrenar con ejemplos que traen la respuesta correcta | Aprender revisando expedientes ya resueltos, con su resolución a la vista |
-| **Aprendizaje no supervisado** | Modelar datos sin respuestas conocidas | Ordenar un archivador heredado sin pauta ni criterio previo |
-| **`DecisionTreeClassifier`** | Árbol de decisión que termina en una etiqueta | Diagrama de flujo de decisiones que desemboca en una categoría |
-| **Exactitud (*accuracy*)** | Porcentaje de casos bien clasificados sobre el total | Tasa de aciertos de una revisión de expedientes |
-| **Matriz de confusión** | Tabla que cruza clase real (filas) vs predicha (columnas) | Planilla de control de calidad: qué se dijo vs qué era |
-| **Clase desbalanceada** | Una categoría es mucho más frecuente que las demás | Registro donde el 80% de las órdenes son de proveedores Pequeños |
-| **`stratify`** | Mantener las proporciones de clase al dividir los datos | Tomar una muestra representativa, no una al voleo |
-| **Clustering** | Agrupar registros por similitud matemática | Hacer pilas de expedientes parecidos entre sí |
-| **K-Means** | Algoritmo que reparte los datos en *k* grupos que tú eliges | Decidir de antemano "haré 3 pilas" y dejar que la similitud las llene |
-| **`StandardScaler`** | Transformar variables a media 0 y desviación 1 | Convertir montos y cantidades a un índice común comparable |
-| **`pd.crosstab`** | Tabla de frecuencias que cruza dos variables | Tabla dinámica de Excel con conteo |
+| **Temuco** | Las Encinas Temuco, Nielol | Aire limpio en verano (≈4 µg/m³ en enero) y el invierno más severo (≈46 en junio) |
+| **Centro** | Cerro Navia, El Bosque, Rancagua I, Centro Quintero, Bomberos (Tocopilla) | Elevado todo el año (≈12–17) con pico invernal (≈41 en julio) |
+| **Norte y costa** | 21 de Mayo, Alto Hospicio, Antofagasta, Copiapó, Coquimbo, Cuncumen, Concón | Plano y bajo (≈8–12 todo el año) |
+
+> 🔎 **Ojo con el nombre del grupo.** Bomberos está en **Tocopilla** (Región de Antofagasta), a más de 1.000 km de Santiago, y aun así cae en el grupo «Centro». KMeans agrupa por el **perfil** de contaminación, no por la geografía: Tocopilla, una ciudad con historia de centrales termoeléctricas a carbón, se comporta como una estación urbana del centro. El nombre del grupo es una etiqueta que pones tú, así que revísalo contra los datos antes de usarlo en un informe.
+
+El algoritmo no sabe de leña, de inversión térmica ni de industria: **tú** aportas esa interpretación, y debes decir que es una hipótesis.
 
 ---
 
-## 10. Conexión con el Módulo Siguiente
+### Reflexión final
 
-**Módulo siguiente:** R2-07 · Evaluación y validación
-
-En este módulo entrenaste tu primer clasificador y lo evaluaste con la métrica más simple: la exactitud. Pero ya te topaste con su límite: en un dataset donde el 80,6% de las órdenes son de proveedores Pequeños, un 81% de exactitud puede esconder un modelo que casi no distingue nada. La matriz de confusión fue tu primera ventana a ese problema.
-
-**R2-07 lo enfrenta de lleno:** aprenderás métricas que no se dejan engañar por el desbalance (precision, recall, F1), a detectar cuándo un modelo "hace trampa" con información que no debería tener (*data leakage* — y ojo, que `compras_ml.csv` trae una columna trampa esperándote), a validar con *cross-validation* en vez de un solo split, y a auditar si el modelo trata igual a todas las regiones del país (*fairness*).
-
-**Pregunta motivadora para llegar a R2-07:**
-> Tu clasificador acierta el 81% de las veces... pero un modelo que dijera siempre "Pequeña" acertaría el 80,6% sin aprender nada. Si tu jefatura te pide defender el modelo ante la Contraloría, ¿con qué evidencia demostrarías que realmente sirve — y que sirve igual en Arica que en Magallanes?
+Las dos preguntas de la reflexión no tienen celda de chequeo porque son decisiones: qué error tolerar en un sistema de alerta, y qué política distinta merece cada tipo de ciudad. Un buen análisis las deja **escritas y justificadas**.
 
 ---
 
-*Formación Pública Chile · Licencia CC BY 4.0*
+## 6. Guía de los 6 Ejercicios
+
+### Ejercicio 1 — Prepara X, y y una división estratificada
+
+**Pistas progresivas:**
+- 🟢 Pista suave: `X` lleva dos columnas; `y` es la columna 0/1. El promedio de una columna 0/1 es una proporción.
+- 🟡 Pista media: `train_test_split` recibe `test_size`, `random_state` y `stratify`.
+- 🔴 Pista directa: `X = d[["pm25_ayer", "invierno"]]`, `y = d["sobre_norma"]`, `tasa_positivos = y.mean()` y `train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)`.
+
+**¿Qué significa el ✅?** Que mediste el desbalance (≈4 %) y que la prueba tiene la misma proporción de días malos que el entrenamiento.
+
+---
+
+### Ejercicio 2 — Entrena el clasificador y compáralo con el que siempre dice «no»
+
+**Pistas progresivas:**
+- 🟢 Pista suave: El modelo tonto acierta exactamente en los días normales de la prueba.
+- 🟡 Pista media: `accuracy_score(y_test, y_pred)`; la proporción de ceros es `(y_test == 0).mean()`.
+- 🔴 Pista directa: `modelo.fit(X_train, y_train)`, `y_pred = modelo.predict(X_test)`, `exactitud = accuracy_score(y_test, y_pred)`, `exactitud_tonta = (y_test == 0).mean()`.
+
+**¿Qué significa el ✅?** Que viste que 0,968 y 0,957 casi no se distinguen: la exactitud no basta.
+
+---
+
+### Ejercicio 3 — Cuenta los aciertos y los dos tipos de error
+
+**Pistas progresivas:**
+- 🟢 Pista suave: La matriz de 2×2 se puede «aplanar» en cuatro números.
+- 🟡 Pista media: `confusion_matrix(real, predicho)` y luego `.ravel()`.
+- 🔴 Pista directa: `cm = confusion_matrix(y_test, y_pred)` y `tn, fp, fn, tp = cm.ravel()`.
+
+**¿Qué significa el ✅?** Que sabes cuántos días malos se escaparon (208) y cuántas falsas alarmas hubo (73).
+
+---
+
+### Ejercicio 4 — Compara precisión y recall del modelo normal y del balanceado
+
+**Pistas progresivas:**
+- 🟢 Pista suave: Las dos métricas se calculan igual que la exactitud, con otra función.
+- 🟡 Pista media: `precision_score` y `recall_score`; el modelo nuevo es el mismo con `class_weight="balanced"`.
+- 🔴 Pista directa: `modelo_bal = LogisticRegression(max_iter=1000, class_weight="balanced").fit(X_train, y_train)`, `y_pred_bal = modelo_bal.predict(X_test)` y las cuatro métricas sobre `(y_test, y_pred)` y `(y_test, y_pred_bal)`.
+
+**¿Qué significa el ✅?** Que comprobaste el intercambio: recall de 0,45 a 0,91, precisión de 0,70 a 0,39.
+
+---
+
+### Ejercicio 5 — Arma el perfil mensual y agrupa con K-Means
+
+**Pistas progresivas:**
+- 🟢 Pista suave: Una fila por estación, una columna por mes, el promedio como valor.
+- 🟡 Pista media: `pivot_table(index=..., columns=..., values=..., aggfunc="mean")`, luego `StandardScaler().fit_transform(...)`.
+- 🔴 Pista directa: `perfil = df.pivot_table(index="estacion", columns="mes", values="pm25", aggfunc="mean")`, `Z = StandardScaler().fit_transform(perfil)`, `grupos = pd.Series(km.fit_predict(Z), index=perfil.index, name="cluster")`.
+
+**¿Qué significa el ✅?** Que cada una de las 14 estaciones quedó asignada a uno de 3 grupos, con datos estandarizados.
+
+---
+
+### Ejercicio 6 — Ponle nombre al grupo del invierno más severo
+
+**Pistas progresivas:**
+- 🟢 Pista suave: Primero promedia el perfil de cada grupo; luego mira la columna de junio.
+- 🟡 Pista media: `perfil.groupby(grupos).mean()` y `idxmax()` sobre la columna `6`.
+- 🔴 Pista directa: `cluster_invierno = perfil_grupo[6].idxmax()` y `estaciones_invierno = list(grupos[grupos == cluster_invierno].index)`.
+
+**¿Qué significa el ✅?** Que el algoritmo, sin saber nada de geografía, aisló a las dos estaciones de Temuco — y que tú puedes explicarlo.
+
+---
+
+> 🔬 **En la profundización:** clasificación con datos **solo categóricos** — 20.000 reclamos SERNAC de 2011 (dato histórico: el SERNAC no publica una base abierta más reciente con este detalle). Conviertes `mercado` y `motivo_legal` en 51 columnas con **one-hot**, superas la línea base (0,519 → 0,650 de exactitud prediciendo si el proveedor acoge el reclamo) y ves cómo el desbalance reaparece con 7 resultados posibles: exactitud 0,60, pero **recall macro 0,33**, con dos categorías que el modelo nunca predice.
+
+---
+
+## 7. Autoevaluación Final
+
+**Pregunta 1:** Un modelo de alerta de episodios tiene 96 % de exactitud. ¿Qué preguntas primero?
+
+- A) Si usó árboles o regresión logística
+- B) Cuánta exactitud tiene el modelo que siempre dice «no hay episodio» ✅
+- C) Cuántas filas tenía el dataset
+- D) Si se entrenó en Colab
+
+**Explicación:** Con clases desbalanceadas, la línea base ya es altísima (0,957 aquí). Sin compararla, el 96 % no dice nada.
+
+---
+
+**Pregunta 2:** En la matriz de confusión, un **falso negativo** es…
+
+- A) Un día normal que el modelo marcó como malo
+- B) Un día sobre la norma que el modelo no avisó ✅
+- C) Un día sin dato
+- D) Un acierto en la clase mayoritaria
+
+**Explicación:** «Negativo» es lo que dijo el modelo («no se supera»); «falso» es que se equivocó.
+
+---
+
+**Pregunta 3:** La SEREMI prefiere no perderse ningún día malo aunque haya más falsas alarmas. ¿Qué métrica prioriza?
+
+- A) Precisión
+- B) Exactitud
+- C) Recall ✅
+- D) Ninguna, da lo mismo
+
+**Explicación:** Recall = de los días realmente malos, cuántos detectó. Subirlo cuesta precisión (más falsas alarmas), y esa es una decisión que se declara.
+
+---
+
+**Pregunta 4:** ¿Por qué se estandariza el perfil antes de K-Means?
+
+- A) Porque K-Means no acepta números decimales
+- B) Porque K-Means mide distancias y una variable con números más grandes dominaría los grupos ✅
+- C) Para que el resultado sea siempre 3 grupos
+- D) Para eliminar los valores faltantes
+
+**Explicación:** Sin escalar, la distancia la deciden las columnas de mayor magnitud. Escalar las pone en igualdad de condiciones.
+
+---
+
+**Pregunta 5:** K-Means puso a Temuco en un grupo aparte. ¿Qué puedes afirmar en un informe?
+
+- A) Que la causa es la leña, porque el algoritmo lo demostró
+- B) Que su perfil mensual es distinto (verano muy limpio, invierno muy severo); la causa es una hipótesis que hay que respaldar con otra evidencia ✅
+- C) Que Temuco tiene un error de medición
+- D) Nada, el clustering no sirve para informes
+
+**Explicación:** El clustering describe parecidos; no explica causas. Interpretar es tu trabajo, y debe decir qué es dato y qué es hipótesis.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **Clasificación** | Aprendizaje supervisado que predice categorías | Decidir «alerta / no alerta» |
+| **Aprendizaje no supervisado** | Encontrar estructura sin respuestas conocidas | Ordenar un archivo heredado sin pauta |
+| **Clases desbalanceadas** | Una categoría es mucho más rara | Pocos días críticos en un año |
+| **Línea base** | El desempeño de una regla trivial | «Siempre no» |
+| **Matriz de confusión** | Tabla real × predicho | Planilla de aciertos y errores por tipo |
+| **Precisión** | TP / (TP + FP) | Credibilidad de las alertas |
+| **Recall** | TP / (TP + FN) | Cobertura de los casos graves |
+| **`class_weight="balanced"`** | Penaliza más los errores en la clase rara | Priorizar lo grave sobre lo frecuente |
+| **K-Means** | Agrupa en *k* grupos por cercanía | Separar en pilas de parecidos |
+| **Estandarizar** | Media 0 y desviación 1 | Índice común para comparar |
+| **One-hot** | Una columna 0/1 por categoría | Convertir «mercado» en casillas marcables |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R2-06 aprendiste los dos grandes tipos de aprendizaje y, sobre todo, a desconfiar de la exactitud cuando lo que importa es raro.
+
+En **R2-07 · Evaluación y validación** vas a ir más lejos con el mismo problema del aire: el **F1**, la **fuga de datos** (una variable que mira el futuro y dispara el desempeño), la diferencia entre validación cruzada **barajada** y **temporal** — por qué con datos en el tiempo no se puede barajar — y el desempeño **por estación**: ¿el modelo protege igual a todas las ciudades?
+
+> 💡 **Pregunta para reflexionar:** El modelo de hoy dividió los días al azar. Pero en la vida real se entrena con el pasado y se usa en el futuro. ¿Crees que el desempeño sería el mismo si lo evaluaras solo en 2025, habiendo entrenado con 2020–2024?

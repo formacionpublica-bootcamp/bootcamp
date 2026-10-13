@@ -1,418 +1,316 @@
-# 📘 Guía de Aprendizaje — R3-00 · Onramp express + Prueba de Nivel
+# Guía de Aprendizaje — R3-00 · Onramp express + Prueba de Nivel
+
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R3 · Especialista en IA Aplicada · Módulo 0 · Semana 0–1
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Nombre del módulo** | R3-00 · Onramp express + Prueba de Nivel |
-| **Pista / Rama** | R3 — IA Aplicada (Especialista en IA aplicada) |
-| **Duración estimada** | 2–3 horas (Semana 0–1) |
-| **Nivel** | Inicial (cero conocimientos de programación) |
-| **Prerrequisitos** | Ninguno. Solo una cuenta Google para usar Colab. |
-| **Competencia de salida** | Tener listo el prerequisito de Python/datos para la rama de IA Aplicada: recorrer colecciones, escribir funciones, leer JSON y aplicar el patrón "en vivo o caché" con APIs. |
-| **Dataset** | `compras_ml.csv` — Compras públicas reales de alimentos (ChileCompra): 7.412 órdenes con monto, categoría, tamaño de proveedor y región compradora. |
-| **Entregable** | Las **5 celdas de chequeo** del `leccion.ipynb` muestran ✅. |
+|-------|---------|
+| **Módulo** | R3-00 · Onramp express + Prueba de Nivel |
+| **Rama** | R3 — IA Aplicada |
+| **Duración estimada** | 2–3 horas (vía completa) · 30 minutos (solo Prueba de Nivel) |
+| **Nivel** | Inicial — no requiere saber programar |
+| **Prerrequisitos** | Ninguno. Una cuenta Google para usar Colab |
+| **Competencia de salida** | Tener listo el prerequisito de Python y JSON para la rama: strings, listas, comprensiones, diccionarios, funciones, JSON y el patrón «en vivo o caché» |
+| **Entregable** | Las 7 celdas de chequeo deben mostrar ✅ (o solo la del ejercicio 7, si vas por la vía b) |
+| **Dataset** | `fichas.csv` — 245 fichas de trámites de ChileAtiende con su texto completo (18 temas, 64 instituciones). Profundización: `aire_diario.csv` + `estaciones.csv` (PM2,5 diario del SINCA, 14 estaciones, 2020-2025) |
 
-### 🚪 Doble vía de entrada a la rama R3
-
-Este módulo es la **puerta de entrada** a IA Aplicada, y tiene dos caminos válidos:
+### Doble vía de entrada a la rama R3
 
 | Vía | ¿Para quién? | ¿Qué haces? |
 |---|---|---|
-| **(a) Cursar completo** | Nunca has programado, o vienes con Python oxidado | Recorres las secciones 1 a 4 completando los `TODO`, y cierras con la Prueba de Nivel. |
-| **(b) Prueba de Nivel directa** | Ya manejas Python básico (listas, funciones, diccionarios) | Vas directo al **Ejercicio 5 (Prueba de Nivel)**. Si lo resuelves **sin ayuda** y la celda de chequeo muestra ✅, saltas directo a **R3-01 · Introducción al NLP**. |
+| **(a) Cursar completo** | Nunca has programado, o tu Python está oxidado | Recorres los ejercicios 1 a 6 y cierras con la Prueba de Nivel (ejercicio 7). |
+| **(b) Prueba de Nivel directa** | Ya manejas listas, funciones y diccionarios | Ejecutas la preparación y vas directo al **ejercicio 7**. Si lo resuelves **sin ayuda** y muestra ✅, saltas a **R3-01**. |
 
-> 💡 No hay vía "de primera" ni "de segunda": ambas te dejan en el mismo punto de partida. Si dudas cuál tomar, intenta la Prueba de Nivel primero; si te trabas, vuelve a la sección 1 sin culpa.
+> Ninguna vía es «de segunda»: ambas te dejan en el mismo punto de partida. Si dudas, intenta la Prueba de Nivel; si te trabas, vuelve al ejercicio 1 sin culpa.
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-La rama R3 te va a enseñar a usar **inteligencia artificial aplicada** en tu trabajo: clasificar reclamos ciudadanos, resumir oficios, extraer datos de textos, conversar con documentos. Pero toda esa magia se apoya en tres habilidades muy terrenales que este módulo instala:
+La rama R3 te enseña a usar inteligencia artificial sobre **texto del Estado**: clasificar documentos, resumirlos en lenguaje claro, extraer requisitos y responder preguntas de la ciudadanía citando la fuente. El texto con que trabajaremos toda la rama son las **fichas de trámites de ChileAtiende**: 245 fichas reales — Bono de Invierno, Pensión Garantizada Universal, certificados, becas, subsidios — cada una con su texto completo (una ficha típica tiene unas 435 palabras; la más larga, *Asignación Familiar*, 1.915).
 
-1. **Recorrer colecciones de datos** (listas de montos, registros de compras) y resumirlas con unas pocas líneas.
-2. **Escribir funciones** que empaquetan reglas del servicio: "si el monto es menor a $100.000 es compra menor; si supera $1.000.000, requiere otra revisión".
-3. **Leer JSON**, que es el idioma en que hablan las APIs — incluidas las APIs de los modelos de lenguaje (LLM) que usarás desde R3-01 en adelante.
+Pero toda esa IA se apoya en cuatro habilidades muy terrenales que este módulo instala:
 
-El dataset es real: **7.412 órdenes de compra de alimentos de ChileCompra** (frutas y verduras, panadería, lácteos, pescados y mariscos, entre 12 categorías), que suman más de **$807 millones** en gasto público. Cuando en el Ejercicio 1 cuentas cuántas órdenes superan el millón de pesos, no estás haciendo un ejercicio de juguete: estás respondiendo la misma pregunta que se hace un analista de abastecimiento un lunes en la mañana.
+1. **Leer texto con código:** partir una ficha en palabras y líneas, buscar si menciona al IPS o a FONASA.
+2. **Recorrer colecciones:** contar cuántas fichas hay por tema o cuántas superan las 1.000 palabras, sin abrir 245 páginas.
+3. **Escribir funciones:** empaquetar una regla («una ficha de 700 palabras o más es extensa») para aplicarla a todas.
+4. **Hablar JSON:** el idioma de las APIs, incluida la del modelo de lenguaje que usarás desde R3-02.
 
-Además aprenderás el patrón **"en vivo o caché"**: intentar una llamada a una API y, si falla (sin red, servicio caído, límite de uso), usar una copia local. En el Estado, donde las plataformas a veces se caen justo cuando las necesitas, esta es la diferencia entre un informe que sale y uno que queda "esperando al sistema".
-
-> 💡 **La clave:** este módulo no te convierte en programador/a; te da el vocabulario mínimo de Python para que en R3-01 puedas concentrarte en la IA y no en la sintaxis.
+Y el patrón **«en vivo o caché»**: intentar la llamada a un servicio y, si falla, usar un respaldo. En el Estado, donde las plataformas se caen justo cuando las necesitas, es la diferencia entre un informe que sale y uno que queda «esperando al sistema».
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía en el sector público |
-|---|---|---|
-| Variable | Guarda un valor con un nombre (`total = ...`) | Una celda con nombre en Excel |
-| Lista | Colección ordenada de valores | Una columna de montos en la planilla |
-| Comprensión de lista | Crea una lista nueva filtrando/transformando otra | Filtro de Excel + pegar el resultado en otra hoja, en una sola línea |
-| `sum()` / `len()` | Suma los elementos / cuenta cuántos hay | SUMA() y CONTARA() en Excel |
-| Función (`def`) | Empaqueta una regla reutilizable con nombre | Un instructivo interno: mismos pasos, cualquier caso |
-| `if / elif / else` | Decide entre alternativas según una condición | El flujograma de un procedimiento: "si el monto supera X, entonces..." |
-| Diccionario (`dict`) | Pares clave → valor | Una ficha: RUT → nombre, región → gasto |
-| JSON | Formato de texto para intercambiar datos estructurados | El "oficio digital" con que responden las plataformas del Estado |
-| `json.loads()` | Convierte texto JSON en diccionarios y listas de Python | Abrir el sobre y leer el contenido del oficio |
-| API | Servicio que entrega datos a pedido por internet | La ventanilla digital de Mercado Público o del SII |
-| `try / except` | Intenta algo y captura el error si falla | Plan B del procedimiento: si la plataforma no responde, se usa el respaldo |
-| Patrón "en vivo o caché" | Llama a la API; si falla, usa una copia local | Trabajar con el último reporte descargado cuando el sistema está caído |
+| Concepto | ¿Qué hace? | Equivalente en Excel / en la oficina |
+|----------|-----------|----------------------|
+| **String (`str`)** | Guarda texto | El contenido de una celda de texto |
+| **`.split()` / `.split("\n")`** | Parte el texto en palabras / en líneas | «Texto en columnas» |
+| **`in`** | ¿Aparece esto dentro del texto? | `BUSCAR()` o Ctrl+F |
+| **Lista** | Colección ordenada de valores | Una columna de la planilla |
+| **Comprensión de lista** | Lista nueva filtrando otra, en una línea | Filtro + copiar el resultado a otra hoja |
+| **Diccionario (`dict`)** | Pares clave → valor | Una ficha: tema → cantidad |
+| **`.get(clave, 0)`** | Lee el valor o un 0 si no existe | `SI.ERROR(BUSCARV(...); 0)` |
+| **Función (`def`)** | Empaqueta una regla reutilizable | Un instructivo: mismos pasos, cualquier caso |
+| **JSON** | Texto con estructura de llaves y corchetes | El «oficio digital» con que responden las plataformas |
+| **`json.dumps` / `json.loads`** | Python → JSON / JSON → Python | Ensobrar el oficio / abrir el sobre |
+| **`try / except`** | Intenta algo y captura el error | El plan B del procedimiento |
+| **En vivo o caché** | Llama al servicio; si falla, usa el respaldo | Trabajar con el último reporte descargado cuando el sistema está caído |
 
 ---
 
-## 4. Antes de Empezar: Verificación de Prerrequisitos
+## 4. Verificación de Prerrequisitos
 
-No necesitas saber programar. Solo verifica tu punto de partida:
-
-| ¿Puedo...? | ✅ Listo | 🔄 Revisar |
-|---|---|---|
-| Abrir Google Colab (colab.research.google.com) con mi cuenta Google | ✅ | Si no tienes cuenta Google, créala primero |
-| Ejecutar una celda en Colab con ▶︎ o Shift+Enter | ✅ | Practica 5 minutos con un notebook vacío |
-| Entender qué es una tabla con filas y columnas | ✅ | Piensa en Excel: filas son registros, columnas son campos |
-| Reconocer un archivo .csv | ✅ | Es una planilla separada por comas, como las descargas de ChileCompra |
-| Ver un mensaje de error sin cerrar la pestaña | ✅ | Los ❌ de las celdas de chequeo traen pistas; son parte del método |
-
-**¿Y si ya sé Python?** Si puedes escribir de memoria una comprensión de lista, una función con `if/elif/else` y recorrer una lista de diccionarios, salta directo a la **sección 5 del notebook (Prueba de Nivel)**. Si la celda de chequeo muestra ✅ sin que pidas ayuda, tu siguiente parada es R3-01.
-
-> 🟢 Si marcaste todo ✅, adelante. Si algo dice 🔄, dedícale 10 minutos antes de seguir.
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Abrir un notebook en Google Colab con mi cuenta | ☐ |
+| Ejecutar una celda con ▶︎ o `Shift`+`Enter` | ☐ |
+| Leer un mensaje ❌ con pista sin cerrar la pestaña (los errores son parte del método) | ☐ |
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### 🔷 Sección 0 — Preparación del entorno (celda inicial)
+### Sección 0 · Preparación
 
-**🎯 Objetivo:** Cargar las librerías y el dataset `compras_ml.csv`.
+🎯 **Objetivo:** Cargar `fichas.csv` en `df` (245 filas × 7 columnas: `id`, `titulo`, `tema`, `institucion`, `url`, `n_palabras`, `texto`) y mirar una ficha concreta: el **Bono de Invierno** (id 39484, Instituto de Previsión Social, 765 palabras).
 
-**💡 Concepto clave:** La primera celda ya usa el patrón estrella del módulo, **"en vivo o caché"**: si el archivo está en la carpeta local lo usa; si no (como en Colab), lo descarga del repositorio. Es como revisar primero el archivador de la oficina antes de pedir el documento a otra unidad.
+💡 **Concepto clave:** La primera celda ya usa el patrón «en vivo o caché»: si el archivo está en la carpeta lo usa; si no (Colab), lo descarga del repositorio.
 
-**🔍 Qué hace el código:**
-1. `import os, urllib.request`, `pandas` y `json`: trae las cajas de herramientas.
-2. `if not os.path.exists(CSV)`: pregunta si el archivo ya existe en la carpeta.
-3. `urllib.request.urlretrieve(...)`: si falta, lo descarga desde GitHub.
-4. `pd.read_csv(CSV)` lo carga como tabla y `df.head()` muestra las primeras filas.
-
-**⚠️ Error frecuente:** Saltarse esta celda. Si más abajo ves `NameError: name 'df' is not defined`, es porque no la ejecutaste primero.
-
-**✅ Señal de comprensión:** Ves `Datos cargados: (7412, 6) filas x columnas` y una tabla con las columnas `cantidad`, `tamano_num`, `monto_total`, `categoria`, `tamano_proveedor` y `region_comprador`.
+⚠️ **Error frecuente:** Saltarse esta celda. `NameError: name 'df' is not defined` significa que no la ejecutaste.
 
 ---
 
-### 🔷 Sección 1 — Variables, listas y comprensiones
+### Sección 1 · Strings
 
-**🎯 Objetivo:** Resumir la lista de montos reales **sin pandas**: total gastado y cuántas órdenes superan $1.000.000.
+🎯 **Objetivo:** Leer la ficha con código: título en mayúsculas, número de palabras, primera línea y si menciona al IPS.
 
-**💡 Concepto clave:** En Python casi todo es **recorrer una colección**. Una **comprensión de lista** — `[m for m in montos if m > 1_000_000]` — se lee casi como castellano: "dame cada monto m de la lista, si m supera un millón". Es el filtro de Excel escrito en una línea.
+💡 **Concepto clave:** `texto.split()` parte por espacios (palabras); `texto.split("\n")` parte por saltos de línea (líneas). `len(texto.split())` da **765**, exactamente lo que dice la columna `n_palabras`: así se calculó.
 
-**🔍 Qué hace el código:**
-- `df["monto_total"].tolist()` convierte la columna de montos en una lista simple de Python.
-- Tu tarea: calcular `total` (la suma de todos los montos) y `sobre_un_millon` (cuántos superan $1.000.000, usando una comprensión).
-- El separador `1_000_000` es solo un truco de legibilidad: Python ignora los guiones bajos en números.
-
-**⚠️ Error frecuente:** Confundir *la lista filtrada* con *cuántos elementos tiene*. La comprensión te da una lista de montos; para contarlos necesitas medir su largo. Otro clásico: escribir `1.000.000` con puntos — en Python eso no es un millón, es un error de sintaxis.
-
-**✅ Señal de comprensión:** La celda de chequeo muestra ✅ y puedes decir en voz alta qué hace `[m for m in montos if m > 1_000_000]` sin mirar el notebook. (Spoiler verificado: son **159** órdenes sobre $1 millón, de un total que bordea los **$807,9 millones**.)
+⚠️ **Error frecuente:** `len(texto)` cuenta **caracteres**, no palabras.
 
 ---
 
-### 🔷 Sección 2 — Funciones: empaquetar una decisión
+### Sección 2 · Listas y comprensiones
 
-**🎯 Objetivo:** Escribir la función `clasificar(monto)` que devuelve `"bajo"`, `"medio"` o `"alto"` según el tramo.
+🎯 **Objetivo:** Sin pandas: cuántos títulos contienen «certificado» (**25**), cuántas fichas superan las 1.000 palabras (**11**) y el promedio de palabras por ficha (**471**).
 
-**💡 Concepto clave:** Una **función** encapsula una regla para reutilizarla mil veces. En tu servicio ya existen: "toda compra bajo cierto umbral sigue el procedimiento simplificado". `def clasificar(monto):` convierte ese instructivo en código: se lo aplicas a $50.000 o a $2.000.000 y siempre responde con el mismo criterio.
+💡 **Concepto clave:** `[t for t in titulos if "certificado" in t.lower()]` se lee «cada título t, si contiene certificado». El `.lower()` evita perder «Certificado» con mayúscula.
 
-**🔍 Qué hace el código:**
-- `def clasificar(monto):` define la función con un parámetro de entrada.
-- Dentro, un `if / elif / else` (o `return` final) decide: `"bajo"` si el monto es menor a 100.000; `"medio"` si es menor a 1.000.000; `"alto"` en cualquier otro caso.
-- `return` entrega el resultado; sin `return`, la función devuelve `None` (nada).
-
-**⚠️ Error frecuente:** Usar `print("bajo")` en vez de `return "bajo"`. Imprimir muestra el texto en pantalla, pero la función sigue devolviendo `None` y el chequeo falla. Otro: invertir el orden de las condiciones — si preguntas primero `monto < 1_000_000`, un monto de $50.000 quedará mal clasificado como "medio".
-
-**✅ Señal de comprensión:** `clasificar(50_000)`, `clasificar(500_000)` y `clasificar(2_000_000)` imprimen `bajo medio alto`, y entiendes por qué el orden de los `if` importa.
+✅ **Señal de que entendiste:** Puedes explicar por qué el promedio (471) es mayor que la mediana (435): unas pocas fichas muy largas tiran el promedio hacia arriba.
 
 ---
 
-### 🔷 Sección 3 — JSON: el idioma de las APIs
+### Sección 3 · Diccionarios
 
-**🎯 Objetivo:** Convertir un texto JSON en estructuras de Python y sumar el `monto` de los ítems de una orden.
+🎯 **Objetivo:** Contar las fichas por tema con un dict y encontrar el tema con más fichas.
 
-**💡 Concepto clave:** Cuando consultas una API — Mercado Público, el Banco Central, o el LLM de R3-01 — la respuesta llega como **JSON**: texto con estructura de llaves y corchetes. `json.loads()` lo traduce a diccionarios y listas de Python. Piensa en el JSON como un expediente digital: la orden tiene un número y adentro una lista de ítems, cada uno con nombre y monto.
-
-**🔍 Qué hace el código:**
-- `texto` es una respuesta típica: la orden `123` con dos ítems (pan por $500 y leche por $800).
-- `json.loads(texto)` lo convierte en un diccionario: `data["orden"]` da el número, `data["items"]` da la lista de ítems.
-- Tu tarea: recorrer `data["items"]` sumando el campo `"monto"` de cada uno. El resultado esperado es **1300**.
-
-**⚠️ Error frecuente:** Confundir `json.loads()` (convierte un *string*) con `json.load()` (lee un *archivo o respuesta*). También, intentar `data["items"]["monto"]`: los ítems son una **lista**, hay que recorrerla elemento por elemento.
-
-**✅ Señal de comprensión:** Puedes dibujar en un papel la estructura del JSON (dict → lista → dicts) y explicar por qué `monto_items` da 1300.
+💡 **Concepto clave:** `conteo[tema] = conteo.get(tema, 0) + 1` es el patrón universal de conteo. Resultado: **18 temas**; siete empatan en el máximo de 15 fichas, y `max` devuelve el primero que encontró (`emprendimiento-e-innovacion`). Un empate es un dato: «el tema con más fichas» no existe aquí.
 
 ---
 
-### 🔷 Sección 4 — En vivo o caché: APIs que no te dejan tirado
+### Sección 4 · Funciones
 
-**🎯 Objetivo:** Completar la función `cargar_o_cache(url, fallback)` para que devuelva el respaldo cuando la API falla.
+🎯 **Objetivo:** `extension(n_palabras)` → `"breve"` (< 300), `"media"` (< 700) o `"extensa"`.
 
-**💡 Concepto clave:** Una API real puede fallar: sin red, servicio caído, límite de uso. El patrón **en vivo o caché** dice: *intenta la llamada en vivo; si falla, usa la copia local*. Así tu notebook siempre corre. Es el equivalente a trabajar con el último reporte descargado cuando la plataforma institucional "está lenta".
+💡 **Concepto clave:** El orden de los `if` importa: se pregunta primero por el umbral menor. Aplicada a todas: **125 medias, 77 breves, 43 extensas**.
 
-**🔍 Qué hace el código:**
-- `try:` intenta abrir la URL con `urllib.request.urlopen(url, timeout=2)` y leer el JSON.
-- `except Exception:` captura **cualquier** falla (URL inválida, sin conexión, timeout).
-- Tu tarea: en el `except`, devolver el `fallback` recibido como parámetro.
-- La prueba usa una URL inventada (`http://no-existe.invalid/x.json`) justamente para forzar el camino de caché: `datos` debe terminar siendo `{"fuente": "cache", "n": 3}`.
-
-**⚠️ Error frecuente:** Escribir `return "fallback"` (el texto) en vez de `return fallback` (la variable). O poner el `return` fuera del `except`, con la indentación incorrecta: en Python, la sangría define qué línea pertenece a qué bloque.
-
-**✅ Señal de comprensión:** Puedes explicar por qué `datos["fuente"]` vale `"cache"` aunque la función *intentó* llamar a la API, y se te ocurre al menos un sistema de tu servicio donde aplicarías este patrón.
+⚠️ **Error frecuente:** `print("breve")` en vez de `return "breve"`: la función devolvería `None`.
 
 ---
 
-### 🔷 Sección 5 — Prueba de Nivel (PN): ¿puedes saltar directo a R3-01?
+### Sección 5 · JSON
 
-**🎯 Objetivo:** Resolver **sin ayuda** las tres tareas de corte que certifican el prerequisito de la rama.
+🎯 **Objetivo:** Armar el `registro` de la ficha (id, título, institución, n° de palabras, dos primeras líneas), convertirlo a texto JSON y recuperarlo.
 
-**💡 Concepto clave:** La PN combina todo lo anterior en tres mini funciones. Si las resuelves de corrido, dominas Python + colecciones + funciones y estás listo/a para el NLP. Es el examen de conocimientos relevantes de la rama: no mide memoria, mide que puedas *construir* con las piezas.
+💡 **Concepto clave:** `json.dumps(registro, ensure_ascii=False, indent=2)` produce un texto legible con tildes; `json.loads` lo devuelve a dict idéntico al original.
 
-**🔍 Qué pide cada tarea:**
-1. `filtra_mayores(lista, umbral)` → los elementos de la lista mayores que el umbral. Con `[1, 5, 3, 8]` y umbral 4 debe dar `[5, 8]`.
-2. `cuenta_palabras(texto)` → cuántas palabras tiene el texto. `"compras públicas del estado"` → 4.
-3. `gasto_por_clave(registros)` → un diccionario `{region: suma de montos}` recorriendo una lista de registros. Dos compras de la región "A" ($100 y $50) → `{"A": 150}`.
-
-**⚠️ Error frecuente:** En `gasto_por_clave`, intentar sumar sobre una clave que aún no existe en el diccionario (`KeyError`). El método `.get(clave, 0)` resuelve elegantemente el "primer registro de cada región".
-
-**✅ Señal de comprensión:** La celda de chequeo del Ejercicio 5 muestra ✅ **sin que hayas mirado la solución ni pedido ayuda**. Ese es el corte de la vía (b): si lo lograste, estás habilitado/a para R3-01.
+⚠️ **Error frecuente:** `TypeError: Object of type int64 is not JSON serializable`. Lo que sale de pandas es `numpy.int64`; envuélvelo en `int(...)`.
 
 ---
 
-### 🔬 Extra opcional — `profundiza.ipynb`
+### Sección 6 · En vivo o caché
 
-Si terminaste la lección y te sobran 30 minutos, el `profundiza.ipynb` (Python puro, sin dependencias) afianza el prerequisito con tres ejercicios:
+🎯 **Objetivo:** `cargar_o_cache(url, respaldo)`: intenta bajar un JSON; si falla, devuelve el respaldo.
 
-| Ejercicio | Tema | ¿Por qué importa para R3? |
-|---|---|---|
-| 1 — `por_region` | Diccionarios **por comprensión** | Agregar datos en dicts es pan de cada día al preparar insumos para un LLM |
-| 2 — `a_numero` | Manejo de errores robusto (`try/except` que devuelve `None`) | Los textos reales vienen sucios: `"$mil"` no es un número |
-| 3 — `normaliza` | **Normalización de texto** (minúsculas, espacios, separar palabras) | Es literalmente el primer paso del pipeline de NLP de R3-01 |
+💡 **Concepto clave:** Es el mismo diseño de `preguntar_llm()` en R3-02: sin clave o sin red, el notebook no se cae, usa un respaldo.
 
 ---
 
-## 6. Guía de los Ejercicios
+### Sección 7 · Prueba de Nivel
 
-> Las pistas van de suave 🟢 a directa 🔴. Intenta cada nivel antes de pasar al siguiente. La solución en código **no** está aquí — está en `solucion.ipynb`, para después de intentarlo de verdad.
+🎯 **Objetivo:** Tres funciones de corte: `filtra_mayores`, `cuenta_palabras` y `conteo_por_clave` (que debe reproducir el conteo de fichas por institución: 64 instituciones).
 
-### ✍️ Ejercicio 1 — Resume la lista de montos
-
-**Objetivo:** Calcular `total` y `sobre_un_millon` a partir de la lista `montos`.
-**Habilidad que entrena:** Operar colecciones con funciones built-in y comprensiones.
-
-- 🟢 **Pista suave:** Python trae funciones ya hechas para sumar una lista completa y para medir el largo de una lista. No necesitas escribir ningún ciclo `for` tradicional.
-- 🟡 **Pista media:** Para `sobre_un_millon`, primero construye la lista de los montos que superan `1_000_000` con una comprensión con `if`; luego pregunta cuántos elementos tiene esa lista.
-- 🔴 **Pista directa:** La estructura es `sum(montos)` para el total, y `len([... for ... in montos if ... > 1_000_000])` para el conteo. Completa los espacios.
-
-**Lógica de la solución (en prosa):** sumar la lista completa con la función de suma; filtrar con una comprensión los montos sobre un millón y contar el resultado.
-**Qué valida el chequeo ✅:** que `total` coincida con `df["monto_total"].sum()` (≈ $807,9 millones) y que `sobre_un_millon` sea exactamente el conteo de montos > $1.000.000 (159).
+✅ **Señal de que entendiste:** Lo resolviste sin mirar los ejercicios anteriores.
 
 ---
 
-### ✍️ Ejercicio 2 — Escribe `clasificar`
+## 6. Guía de los 7 Ejercicios
 
-**Objetivo:** Devolver `"bajo"`, `"medio"` o `"alto"` según el tramo del monto.
-**Habilidad que entrena:** Funciones con lógica condicional.
+### Ejercicio 1 — Explora el texto de la ficha
 
-- 🟢 **Pista suave:** Piensa en el flujograma: primera pregunta, ¿es menor que 100.000? Segunda, ¿es menor que 1.000.000? Si ninguna, es alto. El **orden** de las preguntas es la clave.
-- 🟡 **Pista media:** Necesitas `if`, `elif` y un caso final. Cada rama debe **devolver** (no imprimir) el texto del tramo.
-- 🔴 **Pista directa:** `if monto < 100_000: return "bajo"`, luego un `elif` contra `1_000_000`, y un `return "alto"` final. Cuida la indentación de 4 espacios.
+**Pistas progresivas:**
+- 🟢 Pista suave: Cada variable es un método del string o el operador `in`.
+- 🟡 Pista media: `.upper()`, `.split()`, `.split("\n")[0]`, `"IPS" in texto`.
+- 🔴 Pista directa: `titulo_mayus = titulo.upper()`, `n_palabras = len(texto.split())`, `primera_linea = texto.split("\n")[0]`, `menciona_ips = "IPS" in texto`.
 
-**Lógica de la solución (en prosa):** comparar primero contra el umbral menor, luego contra el mayor, y dejar "alto" como caso residual.
-**Qué valida el chequeo ✅:** `clasificar(50_000) == "bajo"`, `clasificar(500_000) == "medio"` y `clasificar(2_000_000) == "alto"`.
-
----
-
-### ✍️ Ejercicio 3 — Parsea el JSON y suma los ítems
-
-**Objetivo:** Calcular `monto_items` sumando el monto de cada ítem de la orden.
-**Habilidad que entrena:** Navegar estructuras JSON (dict → lista → dict).
-
-- 🟢 **Pista suave:** `data` ya es un diccionario. `data["items"]` es una lista donde cada elemento es a su vez un diccionario con las claves `"nombre"` y `"monto"`.
-- 🟡 **Pista media:** Puedes recorrer la lista con una comprensión que extraiga `it["monto"]` de cada ítem, y sumar el resultado.
-- 🔴 **Pista directa:** La forma compacta es pasar una expresión generadora directo a la suma: `sum(it["monto"] for it in data["items"])`. También sirve un `for` con acumulador.
-
-**Lógica de la solución (en prosa):** recorrer la lista de ítems extrayendo el campo monto de cada uno y sumar todos los valores.
-**Qué valida el chequeo ✅:** `data["orden"] == 123` y `monto_items == 1300` (pan $500 + leche $800).
+**¿Qué significa el ✅?** Que tu conteo de palabras coincide con la columna oficial `n_palabras` (765).
 
 ---
 
-### ✍️ Ejercicio 4 — Escribe `cargar_o_cache`
+### Ejercicio 2 — Filtra y resume con listas
 
-**Objetivo:** Que la función devuelva el `fallback` cuando la llamada a la URL falla.
-**Habilidad que entrena:** Manejo de errores con `try/except` y el patrón en vivo o caché.
+**Pistas progresivas:**
+- 🟢 Pista suave: Una comprensión con `if` para filtrar; `len` para contar.
+- 🟡 Pista media: `[t for t in titulos if "certificado" in t.lower()]`.
+- 🔴 Pista directa: `n_extensas = len([p for p in palabras if p > 1000])` y `promedio = sum(palabras) / len(palabras)`.
 
-- 🟢 **Pista suave:** El `try` ya está escrito. Tu trabajo vive solo dentro del `except`: ¿qué debería entregar la función cuando todo lo demás falló?
-- 🟡 **Pista media:** El respaldo llegó como **parámetro** de la función. Devuélvelo tal cual, sin comillas ni transformaciones.
-- 🔴 **Pista directa:** Reemplaza los `...` del `except` por una sola línea que retorne el parámetro de respaldo, alineada con la misma indentación del bloque.
-
-**Lógica de la solución (en prosa):** en la rama de error, retornar el objeto de respaldo recibido como argumento; la URL inválida del ejemplo garantiza que ese camino se ejecute.
-**Qué valida el chequeo ✅:** que `datos["fuente"] == "cache"` (es decir, se usó el respaldo) y que `cargar_o_cache` sea efectivamente una función invocable.
+**¿Qué significa el ✅?** Que tus resultados en Python puro coinciden con los de pandas: 25, 11 y 471,2.
 
 ---
 
-### ✍️ Ejercicio 5 — Prueba de Nivel: las tres tareas de corte
+### Ejercicio 3 — Cuenta las fichas por tema con un dict
 
-**Objetivo:** Resolver `filtra_mayores`, `cuenta_palabras` y `gasto_por_clave` sin ayuda.
-**Habilidad que entrena:** Integrar comprensiones, strings y diccionarios — el prerequisito completo de R3.
+**Pistas progresivas:**
+- 🟢 Pista suave: Dentro del `for`, súmale 1 a lo que ya había para ese tema.
+- 🟡 Pista media: `conteo.get(tema, 0)` devuelve 0 la primera vez.
+- 🔴 Pista directa: `conteo[tema] = conteo.get(tema, 0) + 1` y `tema_top = max(conteo, key=conteo.get)`.
 
-**`filtra_mayores(lista, umbral)`**
-- 🟢 Es el Ejercicio 1 generalizado: en vez de un millón fijo, el umbral llega como parámetro.
-- 🟡 Una comprensión de lista con condición `if` resuelve todo en una línea.
-- 🔴 La estructura es `[x for x in lista if x > umbral]` — piensa qué va en cada espacio y por qué.
-
-**`cuenta_palabras(texto)`**
-- 🟢 ¿Cómo separarías "compras públicas del estado" en pedazos? Los strings de Python traen un método que corta por espacios.
-- 🟡 `texto.split()` devuelve una **lista** de palabras. Contar elementos de una lista ya lo hiciste en el Ejercicio 1.
-- 🔴 Encadena: separar el texto en palabras y medir el largo de la lista resultante. Una sola línea.
-
-**`gasto_por_clave(registros)`**
-- 🟢 Necesitas un diccionario que parte vacío y va acumulando: la primera vez que aparece una región, parte de cero; las siguientes, suma sobre lo acumulado.
-- 🟡 El método `.get(clave, 0)` devuelve el valor acumulado si la clave existe, o 0 si es la primera vez. Es la pieza que evita el `KeyError`.
-- 🔴 Recorre los registros con un `for`; en cada vuelta, `out[region] = out.get(region, 0) + monto`, sacando región y monto del registro actual.
-
-**Lógica de la solución (en prosa):** filtrar con comprensión parametrizada; separar el texto por espacios y contar; acumular montos por clave en un diccionario usando el valor por defecto 0.
-**Qué valida el chequeo ✅:** `filtra_mayores([1,5,3,8], 4) == [5,8]`, `cuenta_palabras("compras públicas del estado") == 4` y `gasto_por_clave(...) == {"A": 150}`. Si los tres pasan **sin ayuda**, apruebas la Prueba de Nivel.
+**¿Qué significa el ✅?** Que tu dict es idéntico a `df["tema"].value_counts()`.
 
 ---
 
-## 7. Sección Especial: El Ejercicio de Política Pública
+### Ejercicio 4 — Escribe `extension`
 
-El corazón de política pública del módulo está en la dupla **Ejercicio 1 + Ejercicio 2**: contar órdenes sobre un umbral y clasificar el gasto en tramos. Con los datos reales del módulo, `clasificar` produce esta radiografía del gasto en alimentos:
+**Pistas progresivas:**
+- 🟢 Pista suave: Tres casos, tres `return`.
+- 🟡 Pista media: `if ... < 300` / `elif ... < 700` / el resto.
+- 🔴 Pista directa: `if n_palabras < 300: return "breve"`, `elif n_palabras < 700: return "media"`, `return "extensa"`.
 
-| Tramo | Regla | Órdenes (verificado en `compras_ml.csv`) |
-|---|---|---|
-| Bajo | menos de $100.000 | 6.188 |
-| Medio | entre $100.000 y $1.000.000 | 1.064 |
-| Alto | $1.000.000 o más | 160 |
-
-Es decir: el **83%** de las órdenes son compras chicas, pero las 160 órdenes del tramo alto concentran una parte desproporcionada de los $807,9 millones totales (la orden más grande llega a **$4.947.600**, casi 45 veces el monto promedio de ~$108.992).
-
-### Reflexión guiada
-
-- Los **umbrales importan**: en compras públicas chilenas, los tramos de monto determinan el procedimiento (compra ágil, licitación, trato directo). Una función `clasificar` mal ordenada — el error frecuente de la sección 2 — no es solo un bug: aplicada a un sistema real, enviaría compras al procedimiento equivocado.
-- **Contar sobre un umbral es fiscalizar:** las 159 órdenes sobre $1 millón son exactamente el tipo de universo que una unidad de auditoría interna revisa primero.
-- El patrón **en vivo o caché** también es política pública: un tablero de gasto que se cae cuando la API falla deja a la jefatura sin información justo cuando la pide.
-
-### Pregunta de debate abierta
-
-> Si tu servicio fijara umbrales de revisión automática de compras con una función como `clasificar`, ¿quién debería definir los cortes ($100.000, $1.000.000) y con qué evidencia? ¿Qué riesgo hay en que los proveedores conozcan el umbral exacto?
-
-### Datos que complementarían el análisis
-
-- **Fechas de las órdenes:** para detectar fraccionamiento (varias compras "bajo" el mismo día al mismo proveedor).
-- **RUT del proveedor:** para medir concentración por tramo (¿las órdenes "alto" van siempre a los mismos?).
-- **Precios de referencia por categoría:** para marcar órdenes con sobreprecio dentro de cada una de las 12 categorías de alimentos.
-- **Región compradora vs. región del proveedor:** el dataset trae 15 regiones compradoras; cruzarlas con el origen del proveedor mostraría cuánto gasto queda en la economía local.
+**¿Qué significa el ✅?** Que también aciertas en los bordes: 300 es `"media"` y 700 es `"extensa"`.
 
 ---
 
-## 8. Autoevaluación Final
+### Ejercicio 5 — Arma el JSON de la ficha y recupéralo
 
-Responde sin mirar el notebook.
+**Pistas progresivas:**
+- 🟢 Pista suave: Completa las dos claves que faltan y usa las dos funciones de `json`.
+- 🟡 Pista media: `int(ficha["n_palabras"])`; `json.dumps(..., ensure_ascii=False, indent=2)`; `json.loads(...)`.
+- 🔴 Pista directa: `"institucion": ficha["institucion"]`, `"n_palabras": int(ficha["n_palabras"])`, `texto_json = json.dumps(registro, ensure_ascii=False, indent=2)`, `recuperado = json.loads(texto_json)`.
 
-**Pregunta 1:** ¿Qué produce la comprensión `[m for m in montos if m > 1_000_000]`?
-
-- a) La cantidad de montos que superan un millón
-- b) Una lista nueva solo con los montos que superan un millón
-- c) La suma de los montos que superan un millón
-- d) Modifica la lista `montos`, eliminando los menores a un millón
-
-✅ **Respuesta correcta: b)**
-**Explicación:** Una comprensión con `if` construye una **lista nueva** filtrada; la original queda intacta. Para *contar* (opción a) habría que aplicar `len()` sobre el resultado, y para *sumar* (opción c), `sum()`.
+**¿Qué significa el ✅?** Que el viaje Python → JSON → Python no perdió nada.
 
 ---
 
-**Pregunta 2:** En la función `clasificar`, ¿por qué importa preguntar primero `monto < 100_000` y después `monto < 1_000_000`?
+### Ejercicio 6 — Escribe `cargar_o_cache`
 
-- a) No importa; el resultado es el mismo en cualquier orden
-- b) Porque Python exige ordenar las condiciones de menor a mayor
-- c) Porque si se pregunta primero por el millón, un monto de $50.000 también cumple esa condición y quedaría mal clasificado como "medio"
-- d) Porque `elif` solo acepta números mayores que el `if` anterior
+**Pistas progresivas:**
+- 🟢 Pista suave: Solo falta qué hacer cuando la llamada falla.
+- 🟡 Pista media: El `except` debe devolver algo.
+- 🔴 Pista directa: `return respaldo`.
 
-✅ **Respuesta correcta: c)**
-**Explicación:** Los `if/elif` se evalúan en orden y gana la **primera** condición verdadera. $50.000 es menor que un millón, así que si esa pregunta va primero, la función devuelve "medio" antes de llegar a la regla del tramo bajo. Python no impone ningún orden (b y d son inventadas); el orden es responsabilidad de quien diseña la regla.
-
----
-
-**Pregunta 3:** ¿Qué hace `json.loads(texto)`?
-
-- a) Descarga un JSON desde internet
-- b) Convierte un string con formato JSON en diccionarios y listas de Python
-- c) Valida que una API esté en línea
-- d) Guarda un diccionario de Python como archivo .json
-
-✅ **Respuesta correcta: b)**
-**Explicación:** `json.loads()` (load **s**tring) traduce texto JSON a estructuras de Python. Descargar es tarea de `urllib`; guardar sería `json.dump()`. Es el paso obligado entre "la API respondió" y "puedo trabajar con los datos".
+**¿Qué significa el ✅?** Que tu función nunca deja al notebook tirado.
 
 ---
 
-**Pregunta 4:** En el patrón "en vivo o caché", ¿qué papel cumple el bloque `except`?
+### Ejercicio 7 — Prueba de Nivel
 
-- a) Reintenta la llamada a la API hasta que funcione
-- b) Detiene el notebook y muestra el error completo
-- c) Entrega los datos de respaldo cuando la llamada en vivo falla
-- d) Borra la caché para forzar una descarga nueva
+**Pistas progresivas:**
+- 🟢 Pista suave: Son los ejercicios 2, 1 y 3 en forma de función.
+- 🟡 Pista media: Comprensión con `if`; `len(texto.split())`; el patrón `.get(..., 0) + 1`.
+- 🔴 Pista directa: `return [x for x in lista if x > umbral]`; `return len(texto.split())`; un `for r in registros:` que acumula `out[r[clave]] = out.get(r[clave], 0) + 1`.
 
-✅ **Respuesta correcta: c)**
-**Explicación:** El `try` intenta la vía en vivo; si cualquier cosa falla (sin red, timeout, URL caída), el `except` toma el control y devuelve el `fallback`. El notebook nunca se cae: degrada con elegancia a la copia local. No hay reintentos ni borrado; eso serían patrones distintos.
-
----
-
-**Pregunta 5:** En `gasto_por_clave`, ¿para qué sirve `out.get(region, 0)`?
-
-- a) Para ordenar las regiones alfabéticamente
-- b) Para obtener el acumulado de esa región, o 0 si es la primera vez que aparece
-- c) Para eliminar las regiones con gasto cero
-- d) Para validar que la región exista en el dataset oficial
-
-✅ **Respuesta correcta: b)**
-**Explicación:** `.get(clave, valor_por_defecto)` consulta el diccionario sin lanzar `KeyError`: si la región ya tiene acumulado, lo devuelve; si no, entrega 0 para partir la suma. Sin este método, el primer registro de cada región rompería el programa.
+**¿Qué significa el ✅?** Que estás listo para R3-01.
 
 ---
 
-## 9. Glosario del Módulo
-
-| Término técnico | Definición simple | Equivalente en sector público / Excel |
-|---|---|---|
-| **Variable** | Nombre que guarda un valor para reutilizarlo | Una celda con nombre definido en Excel |
-| **Lista** | Colección ordenada de valores entre corchetes `[...]` | Una columna de la planilla |
-| **Comprensión de lista** | Sintaxis compacta para filtrar/transformar una lista en una línea | Filtrar en Excel y pegar el resultado, en un solo paso |
-| **Función (`def`)** | Bloque de código con nombre que recibe entradas y devuelve un resultado | Un instructivo del servicio: mismos pasos ante cualquier caso |
-| **`return`** | Instrucción que entrega el resultado de una función | La resolución final del trámite (distinta de solo "comentarla" con `print`) |
-| **`if / elif / else`** | Estructura que decide entre alternativas en orden | El flujograma de un procedimiento administrativo |
-| **Diccionario (`dict`)** | Colección de pares clave → valor | Ficha de registro: RUT → nombre, región → gasto |
-| **`.get(clave, 0)`** | Consulta un dict devolviendo un valor por defecto si la clave no existe | Buscar en el archivador y, si no hay carpeta, abrir una nueva en cero |
-| **JSON** | Formato de texto estándar para intercambiar datos estructurados | El "oficio digital" con que responden las plataformas del Estado |
-| **API** | Servicio que entrega datos a pedido a través de internet | La ventanilla digital de Mercado Público |
-| **`try / except`** | Intenta ejecutar código y captura el error si algo falla | El plan B escrito en el procedimiento: si el sistema no responde, usar el respaldo |
-| **En vivo o caché** | Patrón: intentar la fuente en vivo y, si falla, usar una copia local | Trabajar con el último reporte descargado cuando la plataforma está caída |
-| **Prueba de Nivel (PN)** | Ejercicio de corte que certifica el prerequisito y habilita saltar a R3-01 | El examen de conocimientos relevantes de un concurso |
+> 🔬 **En la profundización:** transferencia a otro dato real — la **calidad del aire** (PM2,5 diario de 14 estaciones del SINCA). Conviertes una tabla en lista de dicts, escribes una función `a_numero` que no se cae con datos sucios (ni con `NaN`), empaquetas el resumen de una estación como **respuesta tipo API** y lees un JSON anidado. Junio de 2024: Las Encinas (Temuco) promedió **29,6 µg/m³** con 6 días sobre 50; **Cerro Navia**, **49,2 µg/m³** con 15 días sobre 50 — la peor de las tres comparadas.
 
 ---
 
-## 10. Conexión con el Módulo Siguiente
+## 7. Autoevaluación Final
 
-Has completado **R3-00 · Onramp express** — por la vía que sea. Ya recorres colecciones, escribes funciones, lees JSON y tus notebooks sobreviven a APIs caídas. Como dice el cierre de la lección: eso es el 80% de lo que usarás en toda la rama R3.
+**Pregunta 1:** ¿Qué devuelve `len(texto.split())`?
 
-**El próximo módulo es R3-01 · Introducción al NLP.**
+- A) El número de caracteres del texto
+- B) El número de palabras del texto ✅
+- C) El número de líneas del texto
+- D) El texto en mayúsculas
 
-Ahí los datos dejan de ser solo números: pasan a ser **texto** — reclamos ciudadanos, glosas de compras, oficios. Vas a aprender a que el computador "entienda" lenguaje: normalizar, tokenizar y representar texto para analizarlo a escala. Y aparecerá el primer **LLM** del bootcamp (Gemini, detrás de la función `get_llm()`), consumido exactamente como practicaste aquí: una API que responde JSON, con su respaldo en caché por si falla.
-
-Si hiciste el `profundiza.ipynb`, ya escribiste `normaliza()` — literalmente el primer paso del pipeline de NLP que viene.
-
-> 🤔 **Pregunta motivadora:** Tu servicio recibe 5.000 reclamos ciudadanos al mes, escritos con mayúsculas, faltas de ortografía y modismos. Hoy tres personas los leen y clasifican a mano. Con lo que sabes ahora — funciones, JSON, APIs — ¿qué parte de ese trabajo crees que puede hacer una máquina, y qué parte debería seguir haciendo una persona? En R3-01 empezamos a responderlo con código.
-
-**Antes de pasar:** asegúrate de que tus 5 celdas de chequeo muestren ✅. Nos vemos en el NLP. 🚀
+**Explicación:** `.split()` parte por espacios y devuelve una lista de palabras; `len` la cuenta. Para líneas se usa `.split("\n")`.
 
 ---
 
-*Formación Pública Chile · Licencia CC BY 4.0*
+**Pregunta 2:** ¿Qué hace `conteo.get(tema, 0)`?
+
+- A) Borra el tema del diccionario
+- B) Devuelve el valor guardado para `tema`, o 0 si todavía no existe ✅
+- C) Agrega 0 a todos los temas
+- D) Lanza un error si el tema no existe
+
+**Explicación:** Es lo que permite contar sin preguntar antes «¿ya vi este tema?».
+
+---
+
+**Pregunta 3:** `json.dumps(registro)` falla con «Object of type int64 is not JSON serializable». ¿Qué haces?
+
+- A) Borro el campo
+- B) Envuelvo el número en `int(...)` al armar el dict ✅
+- C) Cambio a `json.loads`
+- D) Lo convierto a texto con comillas a mano
+
+**Explicación:** pandas entrega tipos de numpy; JSON solo conoce los tipos nativos de Python.
+
+---
+
+**Pregunta 4:** ¿Para qué sirve el patrón «en vivo o caché»?
+
+- A) Para que el código sea más rápido
+- B) Para que el notebook siga funcionando aunque el servicio externo falle ✅
+- C) Para guardar contraseñas
+- D) Para evitar usar internet siempre
+
+**Explicación:** Intenta lo real; si falla, usa el respaldo. En R3-02 lo usarás con el LLM.
+
+---
+
+**Pregunta 5:** Tu función `extension` devuelve `None` para todas las fichas. ¿La causa más probable?
+
+- A) El dataset está vacío
+- B) Usaste `print` en vez de `return` ✅
+- C) Faltó importar pandas
+- D) Las fichas no tienen palabras
+
+**Explicación:** `print` muestra en pantalla, pero la función solo entrega lo que dice `return`; sin `return`, devuelve `None`.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **String** | Texto dentro de Python | El contenido de una ficha |
+| **Lista** | Colección ordenada | Una columna de la planilla |
+| **Comprensión de lista** | Lista filtrada/transformada en una línea | Filtro de Excel |
+| **Diccionario** | Pares clave → valor | Una tabla de dos columnas: tema → cantidad |
+| **Función** | Regla con nombre, reutilizable | Un instructivo interno |
+| **JSON** | Formato de texto para datos estructurados | El oficio digital entre sistemas |
+| **API** | Servicio que entrega datos a pedido | La ventanilla digital de una institución |
+| **`try / except`** | Intenta; si falla, plan B | Procedimiento de contingencia |
+| **Caché / respaldo** | Copia local que se usa si el servicio falla | El último reporte descargado |
+| **`numpy.int64`** | Tipo numérico de pandas | Un número «con formato» que hay que limpiar antes de enviarlo |
+| **PM2,5** | Material particulado fino (µg/m³), indicador de calidad del aire | El dato que gatilla una alerta ambiental |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R3-00 aprendiste a manipular las fichas de ChileAtiende con Python: leerlas, contarlas, empaquetarlas como JSON y no depender de que el servicio responda.
+
+En **R3-01 · Introducción al NLP** darás el primer paso de IA sobre esas mismas fichas: normalizar y tokenizar su texto, contar las palabras que importan, convertirlas en números con **TF-IDF** y entrenar un modelo que **adivina el tema de una ficha leyendo su texto** — y, lo más importante, aprenderás a leer sus errores.
+
+> 💡 **Pregunta para reflexionar:** Contaste que 7 temas empatan con 15 fichas. Si un modelo tuviera que adivinar el tema de una ficha nueva, ¿qué pistas del texto usarías tú? ¿«pensión», «beca», «vivienda»…? Ese es exactamente el problema de R3-01.

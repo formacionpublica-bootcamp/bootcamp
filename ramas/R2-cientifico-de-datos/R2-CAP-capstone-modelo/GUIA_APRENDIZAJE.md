@@ -1,441 +1,258 @@
-# Guía de Aprendizaje · R2-CAP · Capstone — Modelo predictivo sobre datos de tu organismo
+# Guía de Aprendizaje — R2-CAP · Capstone: modelo predictivo de punta a punta
 
 **Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
-Rama R2 · Científico de Datos · Semana 17–18 · Google Colab
+Rama R2 · Científico de Datos · Capstone · Semanas 17–18
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Módulo** | R2-CAP · Capstone — modelo predictivo sobre datos de tu organismo |
-| **Rama** | R2 · Científico de Datos |
-| **Semanas** | 17–18 (cierre de rama) |
-| **Duración estimada** | 4–6 horas de trabajo autónomo |
-| **Nivel** | Integrador — aplica todo lo aprendido en R2-00 a R2-10 |
-| **Prerrequisitos** | Haber completado R2-00 a R2-10 con ✅ en todos los notebooks |
-| **Dataset de ejemplo** | `compras_ml.csv` — 7.412 órdenes de compra pública de alimentos (estilo ChileCompra), o datos de tu propio organismo |
-| **Competencia de salida** | Ejecutar el ciclo de vida completo de un modelo de ML de forma responsable — enmarcar → features sin fuga → entrenar → evaluar honestamente → documentar en una model card |
-| **Entregable** | Notebook reproducible con las 3 celdas de chequeo en ✅ + model card completa |
+|-------|---------|
+| **Módulo** | R2-CAP · Capstone — modelo predictivo de punta a punta |
+| **Rama** | R2 — Científico de Datos |
+| **Duración estimada** | 2 semanas de proyecto (la plantilla de ejemplo: 90 minutos) |
+| **Nivel** | Integrador — requiere R2-04 a R2-09 (R2-10 si tus datos tienen fecha) |
+| **Prerrequisitos** | Pipelines, partición temporal, F1/recall/precision, fuga de datos, ficha de modelo |
+| **Competencia de salida** | Ejecutar el ciclo de vida de un modelo de forma responsable: enmarcar una decisión pública, construir *features* sin fuga, validar contra una línea base y documentar con ficha y brief |
+| **Entregable** | Notebook reproducible (las 4 celdas de chequeo en ✅ con el ejemplo, o adaptadas a tus datos) + ficha de modelo + brief de una plana |
+| **Dataset** | Ejemplo: `aire_diario.csv` (PM2.5 diario, 14 estaciones SINCA, 2020–2025). Para tu proyecto: datos de tu organismo > banco del bootcamp > datos.gob.cl |
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-En el capstone de R1 demostraste que puedes **analizar** un dato y comunicarlo. Este capstone da el paso siguiente: demostrar que puedes **construir un modelo que apoye una decisión pública** — y hacerlo de forma responsable.
+Un modelo predictivo en el Estado no se juzga por su F1: se juzga por la **decisión** que mejora y por los **errores** que comete con personas y territorios reales. Este capstone te pide recorrer el camino completo una vez, con la honestidad como criterio central: ¿le gana el modelo a la regla simple que ya usaría cualquiera?, ¿para quién funciona peor?, ¿qué pasa si alguien lo usa para lo que no fue diseñado?
 
-En el Estado, los modelos predictivos ya están operando: priorización de fiscalizaciones en el SII, alertas tempranas de deserción escolar en Mineduc, listas de espera en salud. Pero un modelo mal construido no es neutro — puede concentrar fiscalizaciones en los mismos de siempre, invisibilizar regiones o automatizar un sesgo histórico. **La diferencia entre un modelo útil y uno peligroso no es la técnica: es el proceso.** Y ese proceso es exactamente lo que este capstone evalúa: framing claro, features sin trampa, evaluación honesta y una model card que declara los límites.
-
-El ejemplo del módulo usa compras públicas de alimentos: predecir si una orden la adjudicará un **proveedor grande**, para entender la concentración del mercado. Es la misma lógica que usarías para anticipar demanda de un servicio, priorizar casos o detectar patrones atípicos en tu institución.
-
-### ⚠️ Si usas datos de tu propio organismo — lee esto primero
-
-El capstone te invita a reemplazar `compras_ml.csv` por datos reales de tu servicio. Antes de hacerlo:
-
-1. **Anonimiza los datos personales.** Elimina o reemplaza RUT, nombres, direcciones, correos, teléfonos y cualquier combinación que permita reidentificar a una persona. La Ley 19.628 (y su reforma) te obliga; el sentido común también.
-2. **No subas datos sensibles a herramientas de IA** (ChatGPT, Claude, Gemini…) ni a repositorios públicos de GitHub: lo que subes puede quedar fuera de tu control.
-3. **Pide autorización** a tu jefatura o encargado/a de datos si dudas de si el dataset es publicable. Si no puedes anonimizar con seguridad, **usa el dataset de ejemplo**: el aprendizaje es el mismo y el riesgo es cero.
-
-Regla simple: si el dato no podría aparecer en Transparencia Activa tal como está, no lo subas a ninguna parte.
+El ejemplo guía es concreto: anticipar con un día de aviso si una estación de monitoreo superará la norma diaria de PM2.5 (50 µg/m³). El resultado es una lección en sí misma: el modelo obtiene un F1 de **0,630** y la regla «si hoy superó, mañana también» obtiene **0,619**. Un modelo que apenas le gana a la persistencia **no es un fracaso**: es un hallazgo que se reporta, y que orienta qué datos faltan (por ejemplo, meteorología). Lo que sí sería un fracaso es esconderlo.
 
 ---
 
-## 3. Mapa conceptual del Capstone
+## 3. Mapa Conceptual del Módulo
 
-```
-┌────────────────────────────────────────────────────────────────────────────┐
-│  CICLO DE VIDA RESPONSABLE DE UN MODELO EN EL SECTOR PÚBLICO               │
-├────────────────────┬────────────────────────────────────────────────────────┤
-│ Etapa              │ Analogía con tu trabajo                                │
-├────────────────────┼────────────────────────────────────────────────────────┤
-│ 1. ENMARCAR        │ Definir qué decisión apoya el modelo antes de programar│
-│ 2. FEATURES SIN    │ No usar como "pista" un dato que ya contiene la        │
-│    FUGA            │ respuesta — como calificar un concurso mirando el acta │
-│ 3. ENTRENAR        │ Armar el procedimiento estándar (pipeline) que         │
-│    (PIPELINE)      │ cualquier colega puede repetir igual                   │
-│ 4. EVALUAR         │ Medir con datos que el modelo nunca vio, con la        │
-│    HONESTAMENTE    │ métrica correcta para clases desbalanceadas            │
-│ 5. MODEL CARD      │ La "ficha técnica" del modelo: qué hace, qué no hace,  │
-│                    │ y bajo qué condiciones se puede usar                   │
-└────────────────────┴────────────────────────────────────────────────────────┘
-```
-
-**Lo que integra este capstone:**
-
-| Módulo anterior | Habilidad que aplicas aquí |
-|---|---|
-| R2-01 Datos: traer, cruzar, limpiar | Cargar y preparar `compras_ml.csv` (o tu dataset) |
-| R2-03 Estadística para modelar | Entender el desbalance de clases (solo 2,4% son "Grande") |
-| R2-04 Fundamentos de ML | `train_test_split`, target binario, regresión logística |
-| R2-06 Clasificación | Clasificador binario y `OneHotEncoder` para categóricas |
-| R2-07 Evaluación y validación | F1 en test, fuga de datos, validación cruzada (profundiza) |
-| R2-08 Pipelines reproducibles | `Pipeline` + `ColumnTransformer` de scikit-learn |
-| R2-09 Despliegue de modelos | La model card como documento que acompaña al modelo |
+| Concepto | ¿Qué hace? | Equivalente en Excel |
+|----------|-----------|----------------------|
+| **Enmarcar** | Escribir la decisión, el usuario y el objetivo antes del modelo | La pregunta que va en el título del informe |
+| **Unidad de análisis** | Qué es una fila (aquí: una estación en un día) | Qué representa cada fila de la planilla |
+| **Fuga de datos** | Una *feature* que contiene la respuesta o viene del futuro | Una columna que se llenó después del hecho |
+| **Partición temporal** | Entrenar con el pasado, probar con el futuro | Proyectar el último año tapando sus datos |
+| **Pipeline** | Preprocesamiento + modelo en un solo objeto | Una plantilla con las fórmulas encadenadas |
+| **Línea base** | La regla simple que el modelo debe superar | La proyección inercial («igual que ayer») |
+| **F1 / recall / precision** | Métricas para clases raras | Aciertos sobre los casos que importan |
+| **Ficha de modelo + brief** | Documentación técnica + mensaje para quien decide | Anexo metodológico + resumen ejecutivo |
 
 ---
 
-## 4. Antes de empezar: Verificación de prerrequisitos
+## 4. Verificación de Prerrequisitos
 
-### ¿Qué necesito saber?
-
-Checklist de verificación — responde honestamente:
-
-| ¿Puedo…? | Módulo donde lo viste | ¿OK? |
-|---|---|---|
-| Cargar un CSV con `pd.read_csv()` y explorar sus columnas | R2-01 | ☐ |
-| Explicar qué es un target binario y crear uno con una condición | R2-04 | ☐ |
-| Separar train/test con `train_test_split` y explicar por qué | R2-04 | ☐ |
-| Explicar qué es la fuga de datos (*data leakage*) con un ejemplo | R2-07 | ☐ |
-| Armar un `Pipeline` con `ColumnTransformer` + clasificador | R2-08 | ☐ |
-| Explicar por qué accuracy engaña con clases desbalanceadas | R2-07 | ☐ |
-| Calcular e interpretar un F1-score | R2-07 | ☐ |
-
-Si alguna casilla queda vacía, vuelve al módulo correspondiente antes de empezar. Un capstone se construye sobre terreno firme, no sobre memoria frágil.
-
-### Configuración del entorno
-
-Abre `leccion.ipynb` en Google Colab y ejecuta la **celda de preparación** (descarga el CSV si no está local). Debe aparecer `Datos cargados: (7412, 6) filas x columnas`. Si falta alguna librería: `!pip install pandas scikit-learn`.
-
-### Conoce el dataset de ejemplo
-
-`compras_ml.csv` — 7.412 órdenes de compra de alimentos, 6 columnas, sin nulos:
-
-| Columna | Qué contiene |
-|---|---|
-| `cantidad` | Unidades compradas en la orden (0 a 492) |
-| `monto_total` | Monto de la orden en pesos ($100 a $4.947.600; promedio ≈ $108.992) |
-| `categoria` | 12 categorías de alimentos (lácteos, panadería, pescados, bebidas…) |
-| `region_comprador` | 15 regiones de Chile |
-| `tamano_proveedor` | Tamaño del proveedor: Pequeña (5.976), Mediana (1.137), Grande (178), Micro (121) |
-| `tamano_num` | Versión numérica de la columna anterior (1=Micro … 4=Grande) — ⚠️ **fuga** |
-
-El target del ejemplo es **"¿el proveedor es Grande?"**: solo el **2,4%** de las órdenes. Ese desbalance extremo es el corazón pedagógico del capstone.
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Explicar con un ejemplo qué es la fuga de datos | ☐ |
+| Armar un `Pipeline` con `ColumnTransformer` y un clasificador | ☐ |
+| Explicar por qué en datos con fecha no se baraja al separar entrenamiento y prueba | ☐ |
+| Interpretar *recall* y *precision* en palabras de la decisión («de cada 10 episodios, avisamos…») | ☐ |
+| Escribir una ficha de modelo (R2-09) | ☐ |
 
 ---
 
-## 5. Guía paso a paso por sección del notebook
+## 5. Guía Paso a Paso por Sección del Notebook
+
+### Sección 0 · Preparación
+
+🎯 **Objetivo:** Cargar el dataset (ejemplo: 30.674 filas de `aire_diario.csv`).
+
+💡 **Concepto clave:** La variable `CSV` es el único lugar donde cambias el archivo. Si usas datos de tu organismo, revisa antes que no contengan datos personales innecesarios para la pregunta.
 
 ---
 
-### Sección 1 · Enmarca el problema de modelado
+### Sección 1 · Enmarca el problema
 
-🎯 **Objetivo:** Escribir en una frase la **decisión pública** que el modelo va a apoyar y por qué un modelo aporta.
+🎯 **Objetivo:** Escribir la decisión pública, quién usa el modelo y la regla simple contra la que se medirá.
 
-💡 **Concepto clave:** Un modelo sin decisión asociada es un adorno estadístico. El framing responde tres preguntas: *¿qué se predice?, ¿quién usa la predicción?, ¿qué hace distinto gracias a ella?* El ejemplo del módulo: *predecir si una orden la adjudicará un proveedor grande, para entender la concentración del mercado de compras públicas* — útil, por ejemplo, para una unidad de abastecimiento que quiere fomentar la participación de pymes.
+💡 **Concepto clave:** El orden de preferencia de datos es **tu organismo > banco del bootcamp > datos.gob.cl**. El criterio de **Pertinencia** de la rúbrica premia que el proyecto responda una pregunta real de gestión.
 
-⚠️ **Error frecuente:** Enmarcar el problema como "quiero probar machine learning con mis datos". Eso es empezar por la herramienta. Empieza por la decisión: si nadie haría nada distinto con la predicción, no necesitas un modelo — necesitas un buen análisis descriptivo (eso ya lo dominas desde R1).
-
-✅ **Sabes esta sección cuando puedes:** Completar sin dudar la frase: *"Este modelo predice ___ para que ___ pueda ___".*
+⚠️ **Error frecuente:** Empezar por el algoritmo («quiero usar un bosque aleatorio») en vez de por la decisión.
 
 ---
 
-### Sección 2 · Features sin fuga de datos
+### Sección «Tabla de modelado»
 
-🎯 **Objetivo:** Seleccionar variables predictoras honestas, dejando fuera todo lo que "es" la respuesta.
+🎯 **Objetivo:** Entender la tabla de ejemplo: 28.786 filas estación-día, con 4,4% de días seguidos de un episodio.
 
-💡 **Concepto clave:** La **fuga de datos** (*data leakage*) es incluir entre las features información que contiene el target. En este dataset, `tamano_num` es literalmente `tamano_proveedor` en números (Micro=1 … Grande=4). Un modelo entrenado con ella tendría 100% de acierto en el notebook y 0% de utilidad en la realidad. Es como evaluar un concurso público mirando el acta de adjudicación: aciertas siempre, pero no aprendiste nada.
-
-🔍 **Qué hace el código de esta sección:**
-
-```python
-y = (df["tamano_proveedor"] == "Grande").astype(int)
-X = df[FEATURES]
-Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
-```
-
-- La primera línea crea el target binario: 1 si el proveedor es Grande, 0 si no
-- `train_test_split(..., test_size=0.3, ...)` reserva el 30% para prueba: con este dataset, 5.188 filas de entrenamiento y 2.224 de test
-- `stratify=y` garantiza que el 2,4% de positivos se reparta igual en ambos conjuntos — crítico cuando la clase de interés es tan escasa
-- `random_state=42` fija la semilla: cualquiera que corra el notebook obtiene la misma partición
-
-⚠️ **Error frecuente:** Pensar que la fuga siempre es tan obvia como `tamano_num`. En datos reales se disfraza: una columna "estado del trámite" que se llena *después* de la decisión que quieres predecir, o un promedio calculado sobre todo el dataset (incluido el test). Pregunta siempre: *¿esta variable existiría en el momento en que necesito la predicción?*
-
-✅ **Sabes esta sección cuando puedes:** Mirar las 6 columnas del dataset y explicar cuáles son features legítimas, cuáles son el target y cuál es fuga — y por qué.
+💡 **Concepto clave:** La función usa un **calendario completo** por estación (`asfreq("D")`) para que «ayer» y «mañana» sean de verdad el día anterior y el siguiente. La tabla incluye a propósito `pm25_manana`: es la respuesta.
 
 ---
 
-### Sección 3 · Entrena el modelo (pipeline)
+### Sección 2 · Features sin fuga
 
-🎯 **Objetivo:** Armar y entrenar un `Pipeline` que encapsula preprocesamiento + clasificador.
+🎯 **Objetivo:** Elegir solo columnas conocidas **hoy**.
 
-💡 **Concepto clave:** El pipeline es el "procedimiento estándar" del modelo: define en un solo objeto cómo se transforman los datos y cómo se predice. Además de orden, da **seguridad**: como el preprocesamiento se ajusta solo con datos de entrenamiento, el pipeline evita fugas silenciosas en esa etapa. Es la diferencia entre un trámite con protocolo escrito y uno que "cada funcionario hace a su manera".
-
-🔍 **Qué hace el código:**
-
-```python
-pre = ColumnTransformer(
-    [("cat", OneHotEncoder(handle_unknown="ignore"), ["categoria", "region_comprador"])],
-    remainder="passthrough")
-```
-
-- `ColumnTransformer` aplica transformaciones distintas según la columna
-- `OneHotEncoder` convierte las categóricas (12 categorías + 15 regiones) en columnas de 0/1 — tras esta expansión, el modelo trabaja con 29 features
-- `handle_unknown="ignore"` evita que el modelo se caiga si en el test aparece una categoría nueva
-- `remainder="passthrough"` deja pasar las numéricas (`cantidad`, `monto_total`) sin tocarlas
-
-Luego el pipeline une preprocesador y clasificador (`LogisticRegression(max_iter=1000)`) y se entrena con `.fit(Xtr, ytr)` — solo con datos de entrenamiento.
-
-⚠️ **Error frecuente:** Entrenar con `X` completo en vez de `Xtr`. Si el modelo ve los datos de test durante el entrenamiento, la evaluación posterior queda contaminada y el F1 que reportes será una ilusión.
-
-✅ **Sabes esta sección cuando puedes:** Explicarle a un colega qué hace cada pieza del pipeline y por qué las categóricas necesitan one-hot antes de entrar a una regresión logística.
+💡 **Concepto clave:** Si incluyes `pm25_manana`, el F1 en la prueba sube a ≈ 0,99. Ese número no es un logro: es la señal de alarma clásica de la fuga. **Desconfía de los resultados demasiado buenos.**
 
 ---
 
-### Sección 4 · Evalúa honestamente
+### Sección 3 · Partición temporal
 
-🎯 **Objetivo:** Medir el desempeño en el conjunto de **prueba** con una métrica adecuada al desbalance.
+🎯 **Objetivo:** Entrenar con 2020–2024 (24.288 filas) y probar con 2025 (4.498 filas, 154 episodios).
 
-💡 **Concepto clave:** Con solo 2,4% de positivos, un "modelo" que responda siempre "No es Grande" acierta el 97,6% de las veces — accuracy altísima, utilidad nula. Por eso el capstone exige **F1-score**, que combina precisión (de los que marqué como Grande, ¿cuántos lo eran?) y recall (de los Grande reales, ¿cuántos encontré?). Es la métrica que le importa a quien fiscaliza: no sirve un detector que nunca detecta.
-
-🔍 **Qué hace el código:**
-
-```python
-pred = modelo.predict(Xte)
-f1 = f1_score(yte, pred, zero_division=0)
-```
-
-- `modelo.predict(Xte)` genera predicciones sobre las 2.224 filas que el modelo **nunca vio**
-- `f1_score(yte, pred, ...)` compara predicción contra realidad
-- `zero_division=0` evita errores si el modelo no predice ningún positivo
-- Con la solución de referencia, la regresión logística logra un F1 cercano a **0,44** en test — modesto, y eso es parte de la lección
-
-⚠️ **Error frecuente:** Frustrarse por un F1 "bajo" y sentir que fallaste. Un F1 de 0,44 con 2,4% de positivos es un resultado honesto y reportable; un F1 de 0,99 en este problema debería hacerte sospechar de una fuga, no celebrar. En el `profundiza` verás que un árbol de decisión con validación cruzada llega bastante más arriba — comparar modelos es justamente trabajo de científico de datos.
-
-✅ **Sabes esta sección cuando puedes:** Explicar por qué el F1 se calcula sobre `yte` (test) y qué significaría calcularlo sobre `ytr` (entrenamiento).
+💡 **Concepto clave:** El PM2.5 de hoy se parece mucho al de ayer. Si barajas, el modelo se entrena con el día anterior y el siguiente de cada día de prueba: no es la situación que enfrentará en producción.
 
 ---
 
-### Sección 5 · Model card (ficha del modelo)
+### Sección 4 · Entrena el modelo
 
-🎯 **Objetivo:** Completar la ficha que acompaña al modelo cuando lo entregas.
+🎯 **Objetivo:** Pipeline con one-hot (estación, mes) + escalado (numéricas) + regresión logística.
 
-💡 **Concepto clave:** La model card es al modelo lo que la ficha técnica es a un medicamento: dice para qué sirve, en qué dosis, y cuáles son las contraindicaciones. En el Estado, donde un modelo puede afectar derechos de personas, entregarlo sin ficha es negligencia profesional.
-
-🔍 **Estructura de la model card del notebook:**
-
-| Campo | Qué escribes |
-|---|---|
-| **Nombre / versión** | p. ej. `clasificador-proveedor-grande v1` |
-| **Objetivo y uso previsto** | Qué decide y quién lo usa |
-| **Datos de entrenamiento** | Fuente, features usadas (cantidad, monto, categoría, región) |
-| **Métrica y desempeño** | F1 en test y % de la clase positiva (≈ 2,4% en el ejemplo) |
-| **Limitaciones y sesgos** | Grupos donde rinde peor; qué NO predice |
-| **Riesgos / uso responsable** | p. ej. no usar para decisiones punitivas automáticas; siempre con revisión humana |
-
-⚠️ **Error frecuente:** Llenar "Limitaciones" con generalidades ("todo modelo tiene limitaciones"). Sé concreto: *el modelo se entrenó con compras de alimentos; nada garantiza que funcione en otras categorías de compra. Con solo 178 casos positivos, el desempeño por región individual no es confiable.*
-
-✅ **Sabes esta sección cuando puedes:** Entregarle la model card a alguien que no programó el modelo y que esa persona sepa si puede usarlo para su caso — o no.
+💡 **Concepto clave:** Empezar por un modelo **simple y explicable** es una virtud. Si un modelo más complejo no le gana claramente, no lo justifica.
 
 ---
 
-## 6. Guía de los 3 Ejercicios del Notebook
+### Sección 5 · Evalúa contra la línea base
+
+🎯 **Objetivo:** Comparar F1 y *recall* del modelo con los de la persistencia.
+
+💡 **Concepto clave:** Modelo: F1 **0,630**, *recall* **0,552**, *precision* **0,733**. Persistencia: F1 **0,619**, *recall* **0,623**, *precision* **0,615**. El modelo da menos falsas alarmas pero **avisa menos episodios** que la regla simple. ¿Cuál es mejor? Depende de qué error le cuesta más a la decisión — y eso va en el brief.
+
+✅ **Señal de que entendiste:** Puedes explicar en una frase, sin jerga, qué gana y qué pierde el modelo frente a la regla simple.
 
 ---
 
-### Ejercicio 1 · Define X, y y la partición — sin fuga
+### Secciones 6 y 7 · Ficha de modelo y brief
 
-**Objetivo:** Definir la lista `FEATURES` con variables honestas (sin `tamano_num` ni `tamano_proveedor`).
+🎯 **Objetivo:** Documentar para dos públicos: el técnico (ficha) y quien decide (brief).
 
-**Habilidad que entrena:** Detectar y excluir fugas de datos antes de entrenar — la habilidad más valiosa de R2-07.
+💡 **Concepto clave:** La ficha dice **qué no hacer** con el modelo. El brief dice **qué hacer** con el resultado. Ninguno de los dos esconde la línea base.
+
+---
+
+## 6. Guía de los 4 Ejercicios
+
+### Ejercicio 1 — Define FEATURES y el objetivo, sin fuga
 
 **Pistas progresivas:**
+- 🟢 Pista suave: Pregúntate por cada columna: ¿la conozco hoy, antes de que pase mañana?
+- 🟡 Pista media: Todas las columnas con «manana» vienen del futuro.
+- 🔴 Pista directa: `FEATURES = ["estacion", "pm25", "pm25_ayer", "media_7d", "mes"]`.
 
-- 🟢 **Pista suave:** El dataset tiene 6 columnas. Dos de ellas hablan del tamaño del proveedor — y el tamaño es justamente lo que quieres predecir. ¿Cuántas columnas legítimas quedan?
-- 🟡 **Pista media:** Las features honestas son las que describen la **orden de compra**, no al proveedor: cuánto se compró, por cuánto dinero, de qué categoría y desde qué región.
-- 🔴 **Pista directa:** `FEATURES` es una lista de 4 strings con los nombres exactos de las columnas `cantidad`, `monto_total`, `categoria` y `region_comprador`, en ese espíritu (el orden no importa). Nada más.
-
-**Lógica de la solución:** El target se construye desde `tamano_proveedor`, así que ni esa columna ni su gemela numérica `tamano_num` pueden ser features: el modelo estaría "leyendo la respuesta". Las otras cuatro columnas describen la transacción y estarían disponibles al momento de predecir.
-
-**Qué significa el ✅:** La celda verifica que ni `tamano_num` ni `tamano_proveedor` estén en `FEATURES`. Si además la celda anterior imprimió `positivos: 2.4 %`, vas perfecto.
+**¿Qué significa el ✅?** Que tu modelo solo usa información disponible al momento de predecir.
 
 ---
 
-### Ejercicio 2 · Entrena un pipeline
-
-**Objetivo:** Construir el objeto `modelo` como un `Pipeline` (preprocesador + regresión logística) ya entrenado.
-
-**Habilidad que entrena:** Ensamblar pipelines reproducibles de scikit-learn (R2-08) con un clasificador (R2-06).
+### Ejercicio 2 — Separa entrenamiento (≤ 2024) y prueba (2025)
 
 **Pistas progresivas:**
+- 🟢 Pista suave: Una máscara booleana por fecha, y su negación con `~`.
+- 🟡 Pista media: `tabla["fecha"] >= "2025-01-01"` marca la prueba.
+- 🔴 Pista directa: `en_prueba = tabla["fecha"] >= "2025-01-01"`; `Xtr, ytr = X[~en_prueba], y[~en_prueba]`; `Xte, yte = X[en_prueba], y[en_prueba]`.
 
-- 🟢 **Pista suave:** El preprocesador `pre` ya está creado en la celda. Te falta unirlo con un clasificador dentro de un `Pipeline` y llamar al método que entrena.
-- 🟡 **Pista media:** Un `Pipeline` recibe una lista de pares `(nombre, objeto)`: primero el paso `pre`, después un paso con `LogisticRegression(max_iter=1000)`. Recuerda que `.fit()` recibe los datos de **entrenamiento**, no todos.
-- 🔴 **Pista directa:** Son dos pasos encadenables en una sola línea: crea el `Pipeline` con los pasos `("pre", pre)` y `("clf", LogisticRegression(max_iter=1000))`, y entrénalo con `Xtr` e `ytr` usando `.fit()`.
-
-**Lógica de la solución:** El pipeline aplica primero el one-hot a las categóricas y deja pasar las numéricas; luego el clasificador aprende sobre esa matriz transformada. Como `.fit()` se llama sobre el pipeline completo, el preprocesamiento se ajusta solo con datos de entrenamiento — sin fuga.
-
-**Qué significa el ✅:** La celda verifica que `modelo` exista y tenga el método `.predict` — es decir, que sea un estimador entrenado y funcional.
+**¿Qué significa el ✅?** Que todo el entrenamiento ocurre antes que toda la prueba.
 
 ---
 
-### Ejercicio 3 · Calcula el F1 en test
-
-**Objetivo:** Obtener la variable `f1` con el F1-score del modelo sobre el conjunto de prueba.
-
-**Habilidad que entrena:** Evaluar con la métrica correcta para clases desbalanceadas (R2-07).
+### Ejercicio 3 — Entrena el pipeline
 
 **Pistas progresivas:**
+- 🟢 Pista suave: El preprocesamiento (`pre`) ya está; falta unirlo con el clasificador y entrenar.
+- 🟡 Pista media: `Pipeline([("pre", pre), ("clf", ...)])` y luego `.fit(Xtr, ytr)`.
+- 🔴 Pista directa: `modelo = Pipeline([("pre", pre), ("clf", LogisticRegression(max_iter=1000))]).fit(Xtr, ytr)`.
 
-- 🟢 **Pista suave:** Ya tienes `pred` (las predicciones sobre el test) y `yte` (la verdad). Falta la función de `sklearn.metrics` que compara ambas y que ya está importada arriba.
-- 🟡 **Pista media:** La función recibe primero los valores reales, después las predicciones. Agrégale el argumento `zero_division=0` para que no falle si no hay positivos predichos.
-- 🔴 **Pista directa:** Llama a `f1_score` con `yte` y `pred` como argumentos posicionales (en ese orden) y `zero_division=0` como argumento con nombre; asigna el resultado a `f1`.
-
-**Lógica de la solución:** El F1 es la media armónica de precisión y recall sobre la clase positiva. Calculado sobre test, estima cómo se comportaría el modelo con órdenes de compra nuevas. Con este dataset y esta semilla, deberías ver un valor cercano a **0,44** — anótalo, porque va directo a tu model card.
-
-**Qué significa el ✅:** La celda verifica que `f1` sea un número entre 0 y 1, es decir, que calculaste una métrica válida (el chequeo no exige un valor mínimo: la honestidad importa más que el puntaje).
+**¿Qué significa el ✅?** Que el modelo está entrenado y conoce las dos clases (0 y 1).
 
 ---
 
-## 7. Sección especial: el modelo como decisión de política pública
+### Ejercicio 4 — F1 del modelo vs F1 de la persistencia
 
-Un modelo predictivo en el Estado nunca es solo técnica. Antes de dar por cerrado tu capstone, trabaja estas reflexiones:
+**Pistas progresivas:**
+- 🟢 Pista suave: Dos predicciones: la del modelo y la de la regla «hoy > 50».
+- 🟡 Pista media: La regla es `(Xte["pm25"] > 50).astype(int)`.
+- 🔴 Pista directa: `f1_modelo = f1_score(yte, pred)`, `recall_modelo = recall_score(yte, pred)`, `base = (Xte["pm25"] > 50).astype(int)`, `f1_base = f1_score(yte, base)`.
 
-### Reflexión guiada sobre el ejemplo de compras
-
-1. **¿Qué pasaría si este modelo se usara para adjudicar en vez de para entender?** Si alguien lo usara para filtrar proveedores automáticamente, un error dejaría fuera a una pyme legítima. El mismo modelo, otro uso, otro nivel de riesgo — por eso la model card fija el **uso previsto**.
-2. **¿A quién perjudica un falso positivo y a quién un falso negativo?** Marcar como "Grande" a un proveedor pequeño no pesa lo mismo que lo contrario. La métrica que optimizas es una decisión de política, no solo de estadística.
-3. **¿El dato histórico arrastra sesgos?** Si históricamente las regiones extremas compran menos a grandes proveedores, el modelo aprenderá ese patrón. ¿Realidad del mercado o desigualdad que no quieres perpetuar? El dato solo no lo dice.
-
-### Datos que complementarían el análisis
-
-Padrón de proveedores por región (¿la concentración refleja oferta disponible?), historial de cumplimiento de contratos (¿los grandes cumplen mejor, o solo ganan más?) y licitaciones desiertas (demanda no satisfecha que el modelo no ve).
-
-### Pregunta de debate
-
-> Tu modelo alcanza F1 ≈ 0,44 detectando proveedores grandes. La jefatura pregunta: *"¿Lo ponemos en producción para priorizar revisiones?"* ¿Qué necesitas responder antes de decir que sí — sobre la métrica, sobre los sesgos y sobre quién revisa las alertas? ¿Hay algún escenario en que la respuesta correcta sea "este problema no necesita un modelo"?
+**¿Qué significa el ✅?** Que evaluaste como corresponde: en la prueba, con una métrica para clases raras, y contra una línea base.
 
 ---
 
-## 8. Rúbrica de evaluación — cómo interpretar cada criterio
-
-El notebook cierra con una rúbrica de 5 criterios. Así se lee cada uno:
-
-| Criterio | ✅ Cumple | ❌ No cumple |
-|---|---|---|
-| **Framing** | El problema y el uso del modelo están planteados en una frase clara: qué predice, quién lo usa, qué decisión apoya | "Quería probar ML" o un objetivo que nadie usaría para decidir |
-| **Calidad del dato** | Features razonables y disponibles al momento de predecir; dataset entendido (desbalance incluido) | Features elegidas al azar o sin justificación |
-| **Evaluación honesta** | Sin fuga de datos; F1 (no accuracy) por el desbalance; medido en test | `tamano_num` entre las features, o métricas calculadas sobre entrenamiento |
-| **Model card** | Documenta datos, desempeño con cifras, límites concretos y condiciones de uso responsable | Campos vacíos o llenos de generalidades |
-| **Reproducibilidad** | `Runtime > Run all` corre de principio a fin sin errores y las 3 celdas de chequeo muestran ✅ | Celdas que fallan o requieren intervención manual |
-
-> **Entregable completo:** notebook reproducible + modelo entrenado + model card + informe de validación.
+> 🔬 **En la profundización:** tres preguntas que un comité técnico te haría. **¿Cuánto varía?** La validación cruzada temporal (5 pliegues) da F1 entre 0,41 y 0,67 (media 0,59 ± 0,10): una sola cifra esconde mucha variación. **¿A quién le falla?** Entre las estaciones con al menos 10 episodios en 2025, el *recall* va de 0,67 (Cerro Navia) a 0,48 (Rancagua I y Nielol): equidad territorial. **¿Qué error preferimos?** Con `class_weight="balanced"` el *recall* sube de 0,55 a 0,94, pero las alertas pasan de 116 a 397 y la *precision* cae a 0,37: una decisión de política, no técnica.
 
 ---
 
-## 9. Conexión con `profundiza.ipynb`
+## 7. Autoevaluación Final
 
-| Aspecto | `leccion.ipynb` | `profundiza.ipynb` 🔬 |
-|---|---|---|
-| **Enfoque** | Ciclo completo: framing → features → pipeline → F1 → model card | Robustez: validación cruzada e importancia de variables |
-| **Modelo** | Regresión logística | Árbol de decisión (`max_depth=6`) |
-| **Ejercicios** | 3 con chequeo automático | 2 con chequeo automático |
-| **Obligatorio** | ✅ Sí — es el entregable del capstone | ☐ Opcional, muy recomendado |
+**Pregunta 1:** Tu modelo obtiene F1 = 0,99 en la prueba. ¿Qué haces primero?
 
-En el `profundiza` descubrirás dos cosas valiosas: que un solo split puede engañar (el 5-fold CV entrega cinco mediciones de F1 en vez de una — con el árbol, la media ronda 0,90) y que `feature_importances_` revela **qué variables pesan más**. Ambas van derecho a fortalecer tu model card y tu informe de validación.
+- A) Celebrar y desplegarlo
+- B) Buscar una fuga de datos: alguna *feature* que contenga la respuesta o venga del futuro ✅
+- C) Probar un modelo más complejo
+- D) Reportarlo tal cual
 
----
-
-## 10. Autoevaluación Final
-
-Responde estas preguntas antes de dar por terminado el capstone:
-
-**1. ¿Por qué `tamano_num` no puede estar en `FEATURES`?**
-
-- a) Porque es una columna numérica y el modelo solo acepta texto
-- b) Porque codifica el target: usarla es fuga de datos ✅
-- c) Porque tiene valores nulos
-- d) Porque scikit-learn no admite más de 4 features
-
-*Respuesta correcta: b) — `tamano_num` es el tamaño del proveedor en números (Grande=4). Es la respuesta disfrazada: el modelo "acertaría" en el notebook y fracasaría en la realidad, donde ese dato no existe antes de la predicción.*
+**Explicación:** En el ejemplo, incluir `pm25_manana` produce exactamente ese número. Un resultado demasiado bueno es una pregunta, no una respuesta.
 
 ---
 
-**2. Con solo 2,4% de casos positivos, ¿por qué el F1 es mejor métrica que el accuracy?**
+**Pregunta 2:** ¿Por qué no usar `train_test_split` al azar con datos diarios de PM2.5?
 
-- a) Porque el F1 siempre da valores más altos
-- b) Porque el accuracy no funciona con variables categóricas
-- c) Porque un modelo que nunca predice la clase positiva logra ~97,6% de accuracy sin detectar nada ✅
-- d) Porque el F1 es más rápido de calcular
+- A) Porque es más lento
+- B) Porque días vecinos (muy parecidos) quedarían a ambos lados y la evaluación sería optimista respecto del uso real ✅
+- C) Porque scikit-learn no lo permite con fechas
+- D) Porque la prueba quedaría muy chica
 
-*Respuesta correcta: c) — Con clases desbalanceadas, el accuracy premia al modelo inútil que siempre dice "No". El F1 obliga a rendir en la clase que importa: precisión y recall sobre los positivos.*
-
----
-
-**3. ¿Qué garantiza `stratify=y` en el `train_test_split`?**
-
-- a) Que el test tenga exactamente 42 filas positivas
-- b) Que la proporción de positivos (≈ 2,4%) sea la misma en train y test ✅
-- c) Que las filas queden ordenadas por monto
-- d) Que no haya duplicados en el test
-
-*Respuesta correcta: b) — Sin estratificar, con una clase tan escasa el azar podría dejar casi todos los positivos en un solo conjunto, y la evaluación perdería sentido.*
+**Explicación:** En producción, el modelo predice el futuro. La prueba debe imitar esa situación.
 
 ---
 
-**4. ¿Por qué entrenar dentro de un `Pipeline` ayuda a evitar fugas?**
+**Pregunta 3:** El modelo tiene F1 0,630 y la persistencia 0,619. ¿Qué dice el brief?
 
-- a) Porque el pipeline elimina automáticamente las columnas sospechosas
-- b) Porque el preprocesamiento se ajusta solo con datos de entrenamiento cuando haces `.fit(Xtr, ytr)` ✅
-- c) Porque el pipeline encripta los datos
-- d) Porque impide usar más de un modelo a la vez
+- A) «El modelo es mejor», sin más
+- B) Que el modelo apenas supera a la regla simple, que da menos falsas alarmas pero avisa menos episodios, y qué haría falta para mejorarlo ✅
+- C) Nada sobre la persistencia, para no confundir
+- D) Que el proyecto fracasó
 
-*Respuesta correcta: b) — Si transformaras los datos completos antes de separar train/test, información del test se filtraría al entrenamiento. El pipeline aplica cada transformación en el momento correcto, con los datos correctos.*
-
----
-
-**5. ¿Cuál es el propósito principal de la model card?**
-
-- a) Demostrar cuánto código sabes escribir
-- b) Reemplazar el notebook como entregable técnico
-- c) Documentar qué hace el modelo, cómo rinde, sus límites y las condiciones de uso responsable ✅
-- d) Registrar los hiperparámetros para reproducir el entrenamiento
-
-*Respuesta correcta: c) — La model card es el contrato entre quien construye el modelo y quien lo usa. Sin ella, alguien podría aplicar el modelo fuera de su ámbito y tomar decisiones injustas con toda confianza.*
+**Explicación:** La comparación con la línea base es el dato más útil para quien decide.
 
 ---
 
-## 11. Glosario del Módulo
+**Pregunta 4:** En la profundización, el *recall* varía entre estaciones. ¿Por qué importa en el sector público?
 
-| Término técnico | Definición simple | Equivalente en tu trabajo |
-|---|---|---|
-| **Fuga de datos (leakage)** | Incluir en las features información que contiene la respuesta | Calificar un concurso mirando el acta de adjudicación |
-| **Target (y)** | La variable que el modelo aprende a predecir | La casilla del formulario que quieres anticipar |
-| **Feature (X)** | Variable de entrada que el modelo usa para predecir | Los antecedentes disponibles antes de resolver |
-| **`train_test_split`** | Separa los datos en entrenamiento y prueba | Guardar expedientes bajo llave para auditar después |
-| **`stratify`** | Mantiene la proporción de clases en ambos conjuntos | Una muestra que respeta la composición del universo |
-| **Desbalance de clases** | La clase de interés es muy minoritaria (aquí 2,4%) | Buscar las pocas licitaciones irregulares entre miles correctas |
-| **`OneHotEncoder`** | Convierte categorías en columnas de 0/1 | Transformar "Región" en 15 casillas de sí/no |
-| **`Pipeline`** | Encadena preprocesamiento y modelo en un solo objeto | Un protocolo escrito que todos ejecutan igual |
-| **F1-score** | Media armónica de precisión y recall sobre la clase positiva | Qué tan bien detectas los casos que importan, sin inflar alertas |
-| **Validación cruzada** | Evaluar con varios splits en vez de uno | Pedir cinco contramuestras antes de firmar el informe |
-| **Model card** | Ficha del modelo: objetivo, datos, desempeño, límites, uso responsable | La ficha técnica que acompaña a un medicamento |
-| **Uso responsable** | Condiciones bajo las cuales el modelo puede (y no puede) usarse | El reglamento de uso de un sistema institucional |
+- A) No importa si el promedio es bueno
+- B) Porque un modelo que avisa peor en ciertas comunas distribuye desigualmente la protección ✅
+- C) Porque hay que eliminar esas estaciones
+- D) Porque el modelo está mal entrenado
+
+**Explicación:** La equidad territorial es parte de la evaluación de un modelo público, y va en la ficha como limitación.
 
 ---
 
-## 12. Has llegado al final de la Rama R2 🎓
+**Pregunta 5:** ¿Qué agrega el criterio de **Pertinencia** de la rúbrica?
 
-Si completaste este capstone con las 3 celdas en ✅, una model card honesta y un notebook que corre de punta a punta, demostraste algo que pocos funcionarios pueden mostrar: **sabes construir un modelo predictivo responsable, de los datos a la ficha de entrega**.
+- A) Puntos por usar el modelo más moderno
+- B) Reconocimiento a proyectos que usan datos del propio organismo o responden una pregunta real de gestión ✅
+- C) Puntos por la cantidad de datos
+- D) Nada: es opcional
 
-### Certificación
-
-Al aprobar el capstone según la rúbrica de 5 criterios, obtienes la **certificación de la rama R2 · Científico de Datos** de Formación Pública. No es un diploma de asistencia: certifica un proyecto real, evaluado, que cualquiera puede revisar.
-
-### Tu portafolio es tu credencial
-
-Sube tu capstone a GitHub (recuerda: **solo con datos anonimizados o con el dataset de ejemplo**). Un repositorio con tus capstones de R1 y R2 — notebooks reproducibles, model card, informe — vale más que cualquier línea en un currículum: es evidencia verificable, no promesa.
-
-### ¿Qué sigue?
-
-| Opción | Para quién | Qué encontrarás |
-|---|---|---|
-| **Rama R3 · IA Aplicada** | Quieres llevar modelos de lenguaje y IA generativa a problemas de tu organismo | Prompting riguroso, RAG sobre documentos públicos, automatización responsable |
-| **Comunidad Formación Pública** | Quieres seguir aprendiendo con otros funcionarios | Comparte tu capstone, revisa los de otros, encuentra colaboradores en otros servicios |
-| **Consolidar R2** | Quieres afianzar antes de seguir | Repite el capstone con otro problema de tu institución: cada iteración te hace mejor |
-
-**Pregunta motivadora para lo que sigue:** Ya sabes hacer que un modelo prediga a partir de datos estructurados. ¿Y si pudieras hacer que una IA lea los miles de documentos, oficios y resoluciones de tu servicio y te ayude a responder con esa evidencia? Eso es lo que construyes en la rama R3.
+**Explicación:** El capstone vale más cuando deja una herramienta o un aprendizaje útil para tu servicio.
 
 ---
 
-*Formación Pública Chile · Licencia CC BY 4.0*
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **Capstone** | Proyecto integrador que demuestra la competencia de la rama | El trabajo de título del bootcamp |
+| **Enmarcar** | Definir decisión, usuario y objetivo antes del modelo | Los términos de referencia de un estudio |
+| **Fuga de datos** | Información de la respuesta o del futuro dentro de las *features* | Evaluar un programa con datos que se produjeron por el mismo programa |
+| **Partición temporal** | Pasado para entrenar, futuro para probar | Validar una proyección contra el año cerrado |
+| **Persistencia** | Línea base «mañana igual que hoy» | La proyección inercial |
+| **Recall** | De los casos que importan, cuántos detectas | Cobertura de un programa de alerta |
+| **Precision** | De tus alertas, cuántas eran ciertas | Focalización: cuántos alertados lo necesitaban |
+| **`class_weight`** | Hacer que los errores en la clase rara pesen más | Priorizar no dejar a nadie sin aviso |
+| **Ficha de modelo** | Documento técnico del modelo, con límites y usos no recomendados | Anexo metodológico |
+| **Brief** | Mensaje de una plana para quien decide | Minuta para la jefatura |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+Con el R2-CAP cierras la rama **Científico de Datos**: llevaste un problema público desde la pregunta hasta un modelo evaluado con honestidad, documentado y comunicado. Esta es la base para la certificación en ciencia de datos aplicada al sector público.
+
+Si quieres seguir, la rama **R3 · IA aplicada** trabaja con texto, modelos de lenguaje, RAG y agentes — siempre con la misma disciplina que aprendiste aquí: medir contra una línea base, documentar límites y mantener a un humano en el bucle. Y si tu modelo de capstone resultó útil, el paso siguiente es **R2-09** en la vida real: desplegarlo con monitoreo.
+
+> 💡 **Pregunta para reflexionar:** Si tu modelo le gana por poco a la regla simple, ¿vale la pena el costo de mantenerlo? ¿Qué dato nuevo cambiaría esa respuesta?

@@ -1,385 +1,252 @@
-# 📘 Guía de Aprendizaje — R2-02 · SQL para *features*
+# Guía de Aprendizaje — R2-02 · SQL para *features*
+
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R2 · Científico de Datos · Módulo 2 · Semana 4
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Nombre del módulo** | R2-02 · SQL para *features* (D8) |
-| **Pista / Rama** | R2 — Científico/a de Datos · Línea B |
-| **Duración estimada** | 3–4 horas (Semana 9) |
-| **Nivel** | Intermedio |
-| **Prerrequisitos** | R2-00 y R2-01 completados; conocimiento básico de SQL (consultas SELECT, WHERE, GROUP BY del tronco común M5). |
-| **Competencia de salida** | Construir con SQL una tabla analítica (una fila por entidad, varias columnas de *features*) lista para entrenar un modelo, usando agregaciones, lógica condicional, rezago temporal y entendiendo qué es el *data leakage*. |
-| **Dataset** | `sismos.csv` — 15 últimos sismos publicados por el Centro Sismológico Nacional (CSN), Universidad de Chile, capturados el 2026-06-18. |
-| **Entregable** | Las 4 celdas de chequeo del `leccion.ipynb` muestran ✅. |
+|-------|---------|
+| **Módulo** | R2-02 · SQL para *features* |
+| **Rama** | R2 — Científico de Datos |
+| **Duración estimada** | 3–4 horas |
+| **Nivel** | Intermedio — requiere R2-01 |
+| **Prerrequisitos** | `groupby`, fechas, faltantes; SQL básico (`SELECT`, `WHERE`) |
+| **Competencia de salida** | A partir de mediciones en bruto, construir con SQL una tabla analítica (una fila por entidad, una columna por *feature*) lista para un modelo, cuidando la fuga de información |
+| **Entregable** | Las 4 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `aire_diario.csv` — PM2.5 diario de 14 estaciones SINCA, 2020–2025 (30.674 días-estación), cargado en SQLite. Profundización: `sismos.csv` — 1.601 sismos M ≥ 4,5 en Chile, 2020–2025 (catálogo USGS) |
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-En el Estado constantemente se acumulan tablas de **eventos**: registros de prestaciones de salud, solicitudes ciudadanas, licitaciones adjudicadas, denuncias recibidas, multas cursadas. Cada fila es un evento, pero un modelo de datos no trabaja con eventos: trabaja con **entidades** y sus atributos.
+Un modelo que anticipe episodios críticos de contaminación —para activar a tiempo una restricción o una alerta sanitaria— no «ve» el cielo: ve **columnas**. El PM2.5 de ayer, la media de la última semana, cuántos días de alerta tuvo la estación el invierno pasado. Fabricar esas columnas (*features*) es el 80 % del trabajo de ciencia de datos, y SQL es la herramienta con la que se hace en las bases institucionales.
 
-¿Cómo pasas de miles de eventos a una tabla útil para análisis o predicción? Con SQL y la fabricación de *features*. Este módulo te enseña exactamente eso, usando datos sísmicos reales del CSN como campo de práctica.
+En este módulo pasas de **consultar** datos a **fabricar variables** sobre el registro real del SINCA, usando los umbrales oficiales del **D.S. 12/2011 del MMA**: 50 µg/m³ como valor de la norma de 24 horas y los niveles de episodio crítico **Alerta (80–109)**, **Preemergencia (110–169)** y **Emergencia (≥ 170 µg/m³)**. Al etiquetar cada día descubrirás que, entre 2020 y 2025, las 14 estaciones registraron **238 días-estación en nivel de alerta, 84 en preemergencia y 2 en emergencia**.
 
-La lógica es directamente aplicable a:
-
-- **Prestaciones de salud:** una fila por persona, con *features* como número de atenciones, promedio de días de espera, tipo de prestación más frecuente.
-- **Licitaciones:** una fila por organismo, con *features* como monto promedio adjudicado, proporción de licitaciones desiertas, categorías más usadas.
-- **Seguridad ciudadana:** una fila por comuna, con *features* como denuncias por tipo, tendencia mes a mes.
-
-> 🏛️ **Idea clave:** SQL no es solo para consultar lo que ya existe. En ciencia de datos, SQL es la herramienta que construye las variables que los modelos necesitan para aprender.
+Y aprenderás la trampa número uno de la ciencia de datos: la **fuga de información**. Una media móvil que incluye el día que quieres predecir hace que el modelo parezca genial en pruebas y fracase en la realidad.
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía sector público |
-|---|---|---|
-| ***Feature* (característica)** | Columna que describe una entidad y que un modelo puede usar para aprender | Indicador de un servicio público (ej. tasa de aprobación de licitaciones) |
-| **Tabla analítica (ABT)** | Tabla con una fila por entidad y una columna por *feature* | Tablero de indicadores por organismo o región |
-| **Entidad** | La unidad de análisis; tendrá una fila en la tabla final | Región, organismo, beneficiario, proveedor |
-| `GROUP BY` + agregación | Resume muchas filas en una por grupo | Tabla dinámica con totales y promedios por categoría |
-| `COUNT(*)` | Cuenta cuántos eventos hay en cada grupo | Número de licitaciones por región |
-| `AVG()`, `MAX()` | Promedio y máximo dentro de cada grupo | Monto promedio o mayor gasto por organismo |
-| `CASE WHEN ... THEN ... END` | Lógica condicional para crear etiquetas | Clasificar proveedores por tamaño o tipo |
-| `LAG()` | Función de ventana: trae el valor de la fila anterior | Mirar el mes anterior en un registro cronológico |
-| `OVER (ORDER BY ...)` | Define la ventana de tiempo para `LAG` | Ordenar por fecha antes de mirar hacia atrás |
-| ***Data leakage*** | Usar información del futuro como *feature* predictiva | Incluir el resultado en los indicadores que se usan para predecirlo |
-| `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` | Cuenta cuántos registros cumplen una condición dentro de un grupo | Contar cuántos eventos de un tipo ocurrieron en cada zona |
+| Concepto | ¿Qué hace? | Equivalente en Excel |
+|----------|-----------|----------------------|
+| ***Feature*** | Columna que describe una entidad y que un modelo usa | Una columna calculada de la planilla |
+| **Tabla analítica (ABT)** | Una fila por entidad, una columna por *feature* | La tabla resumen que va al informe |
+| **`GROUP BY`** | Resume muchas filas por grupo | Tabla dinámica |
+| **`COUNT(col)`** | Cuenta solo filas con dato | `=CONTAR()` (ignora vacíos) |
+| **`strftime('%m', fecha)`** | Extrae el mes de una fecha | `=MES()` |
+| **`CASE WHEN`** | Etiqueta según reglas | `=SI(...; SI(...))` anidado |
+| **`LAG() OVER (...)`** | Valor de la fila anterior dentro de un grupo | Referencia a la celda de arriba |
+| **`AVG() OVER (ROWS ...)`** | Media móvil sobre filas vecinas | `=PROMEDIO()` de las 7 celdas de arriba, arrastrado |
+| ***Data leakage*** | Usar información del futuro como *feature* | Ver la respuesta antes de la prueba |
 
 ---
 
 ## 4. Verificación de Prerrequisitos
 
-| ¿Puedo...? | ✅ Listo | 🔄 Revisar |
-|---|---|---|
-| Escribir un `SELECT` con `WHERE` y `GROUP BY` en SQL | ✅ | Repasa el módulo M5 del tronco común |
-| Usar `AVG()`, `COUNT(*)` y `MAX()` en SQL | ✅ | Si no los conoces, dedica 20 min al recap del notebook |
-| Trabajar en Colab con pandas y `pd.read_sql_query` | ✅ | Revisa R2-00 si esto te parece nuevo |
-| Entender qué es una tabla de *eventos* vs. una tabla de *entidades* | ✅ | Piensa: eventos = filas de Excel; entidades = resumen por categoria |
-| No tener miedo de ver `NULL` en resultados SQL | ✅ | `NULL` es simplemente “no hay dato”, no es un error |
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Escribir un `SELECT ... FROM ... WHERE ...` simple | ☐ |
+| Explicar qué hace `groupby` en pandas | ☐ |
+| Explicar por qué un `NaN` (o `NULL`) no es lo mismo que un 0 | ☐ |
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### 🔷 Sección 0 — Preparación del entorno
+### Sección 0 · Preparación
 
-**🎯 Objetivo:** Cargar el CSV de sismos, crear una base de datos SQLite en memoria y definir la función `correr()` para ejecutar consultas.
+🎯 **Objetivo:** Cargar `aire_diario.csv` y copiarlo a una tabla `aire` de SQLite en memoria con `df.to_sql`.
 
-**💡 Concepto clave:** SQLite es una base de datos que vive completamente en la memoria del computador. No necesitas instalar nada: Python la incluye. Aquí se crea una base temporal donde se vuelca el CSV, y se define `correr(sql)` que ejecuta cualquier consulta y devuelve un DataFrame.
-
-**🔍 Qué hace el código:**
-1. Descarga `sismos.csv` si no está disponible localmente.
-2. Lo carga con `pd.read_csv()` y lo vuelca a SQLite con `.to_sql()`.
-3. Define `correr(sql)` como atajo para `pd.read_sql_query(sql, con)`.
-
-**⚠️ Error frecuente:** No ejecutar esta celda primero. Todas las consultas siguientes dependen de que `con` y `correr` existan.
-
-**✅ Señal de comprensión:** Ves el mensaje `Listo. Tabla 'sismos' creada con 15 eventos reales` y la tabla aparece debajo con sus columnas.
+💡 **Concepto clave:** `correr(sql)` ejecuta una consulta y devuelve un DataFrame. Desde aquí todo es SQL; pandas solo muestra resultados. Los `NaN` de pandas se convierten en `NULL` en SQL.
 
 ---
 
-### 🔷 Sección 1 — La idea central: de eventos a *features*
+### Sección 1 · La idea central: de mediciones a *features*
 
-**🎯 Objetivo:** Entender el viaje conceptual del módulo antes de escribir código.
+🎯 **Objetivo:** Entender las tres palabras del módulo: observación en bruto (un día-estación), entidad (la estación) y tabla analítica (una fila por estación).
 
-**💡 Concepto clave:** Una *feature* es una columna descriptiva que un modelo puede usar para aprender. El viaje de hoy es: `tabla de sismos (1 fila = 1 sismo)` → SQL → `tabla analítica (1 fila = 1 región, varias *features*)`. Cada región tendrá como atributos cuántos sismos tuvo, cuál fue la magnitud promedio, etc.
-
-**🔍 Qué hace el código:** Esta sección es solo teoría y setup. No hay `TODO` aquí.
-
-**⚠️ Error frecuente:** Saltarse la lectura conceptual e ir directo a los ejercicios. Los bloques de texto de esta sección explican el *por qué* de cada herramienta. Vale la pena leerlos.
-
-**✅ Señal de comprensión:** Puedes explicar con tus palabras la diferencia entre un **evento** y una **entidad**, y por qué necesitas transformar unos en otros.
+💡 **Concepto clave:** El viaje es de 30.674 filas a 14 filas con muchas columnas. Ese «achicar ampliando» es el corazón del feature engineering.
 
 ---
 
-### 🔷 Sección 2 — *Features* de agregación con `GROUP BY`
+### Sección 2 · *Features* de agregación con `GROUP BY`
 
-**🎯 Objetivo:** Construir un resumen por región con 5 columnas: `region`, `n_sismos`, `magnitud_promedio`, `magnitud_maxima`, `profundidad_promedio`.
+🎯 **Objetivo:** Una fila por estación y mes con días medidos, promedio y máximo de PM2.5.
 
-**💡 Concepto clave:** `GROUP BY` junta todas las filas que comparten un valor (por ejemplo, todos los sismos de la misma región) y aplica funciones de agregación a cada grupo. El resultado tiene **una fila por grupo**. Es exactamente igual a una tabla dinámica de Excel, pero escrito en SQL y mucho más potente.
+💡 **Concepto clave:** Se puede agrupar por algo **calculado**: `CAST(strftime('%m', fecha) AS INTEGER)` da el mes. El resultado tiene **168 filas** (14 × 12). `COUNT(pm25)` cuenta solo días con dato (29.644 en total), a diferencia de `COUNT(*)` (30.674).
 
-**🔍 Qué hace el código:**
-- `GROUP BY region` agrupa todos los sismos de cada región.
-- `COUNT(*)` cuenta cuántos sismos hay en cada grupo.
-- `AVG(magnitud)` calcula el promedio de magnitud por grupo.
-- `MAX(magnitud)` devuelve la mayor magnitud registrada en cada grupo.
-- `ROUND(..., 2)` redondea a 2 decimales para que sea legible.
-- `ORDER BY n_sismos DESC` ordena de mayor a menor.
-
-**⚠️ Error frecuente:** Olvidar el `AS` para nombrar las columnas. Si no usas `AS n_sismos`, la celda de chequeo no encontrará la columna porque su nombre automático sería algo como `COUNT(*)`.
-
-**✅ Señal de comprensión:** La tabla resultante tiene 6 filas (una por región) y `n_sismos` suma exactamente 15.
+⚠️ **Error frecuente:** Poner `fecha` suelta en el `SELECT` junto a un `GROUP BY estacion, mes`: cada grupo tiene muchas fechas.
 
 ---
 
-### 🔷 Sección 3 — *Features* condicionales con `CASE WHEN`
+### Sección 3 · *Features* condicionales con `CASE WHEN`
 
-**🎯 Objetivo:** Clasificar cada sismo según su profundidad: superficial, intermedio o profundo.
+🎯 **Objetivo:** Etiquetar cada día como `sin dato`, `emergencia`, `preemergencia`, `alerta`, `sobre norma` o `bajo norma`.
 
-**💡 Concepto clave:** `CASE WHEN` es el `SI()` de Excel pero en SQL. Le dices: *si la profundidad es menor a 70 km, entonces escribe 'superficial'*. SQL evalúa las condiciones de arriba hacia abajo y se queda con la primera que se cumple. Es ideal para convertir números en etiquetas útiles.
+💡 **Concepto clave:** El `CASE` se queda con la **primera** condición verdadera, así que los umbrales van de mayor a menor. Y el `NULL` va primero: un `NULL` no cumple ninguna comparación y caería en el `ELSE` como «bajo norma». Resultado real: 28.365 bajo norma, 1.030 sin dato, 955 sobre norma (50–79), 238 alerta, 84 preemergencia, 2 emergencia.
 
-**🔍 Qué hace el código:**
-```sql
-CASE
-    WHEN profundidad_km < 70   THEN 'superficial'
-    WHEN profundidad_km <= 300 THEN 'intermedio'
-    ELSE 'profundo'
-END AS profundidad_tipo
-```
-- Primera condición: profundidad menor a 70 km → superficial.
-- Si no cumple lo anterior y es menor o igual a 300 → intermedio.
-- Todo lo demás → profundo.
-
-**⚠️ Error frecuente:** Poner las condiciones en orden incorrecto. Si pones primero `< 300` y luego `< 70`, todos los sismos menores a 70 entrarán en la primera condición y nunca se clasificarán como superficiales.
-
-**✅ Señal de comprensión:** La tabla resultante tiene 15 filas (una por sismo) y la columna `profundidad_tipo` muestra solo `'superficial'` o `'intermedio'` para estos datos (en nuestra muestra no hay sismos muy profundos).
+⚠️ **Error frecuente:** Ordenar los umbrales al revés: con `WHEN pm25 > 50` primero, el día de 284 µg/m³ quedaría como «sobre norma».
 
 ---
 
-### 🔷 Sección 4 — *Features* temporales con `LAG`
+### Sección 4 · *Features* temporales con funciones de ventana
 
-**🎯 Objetivo:** Agregar a cada sismo la magnitud del sismo inmediatamente anterior como *feature* de rezago.
+🎯 **Objetivo:** Agregar a cada día `pm25_ayer` (`LAG`) y `pm25_media_7d` (media de los 7 días **anteriores**).
 
-**💡 Concepto clave:** `LAG` es una **función de ventana**: en vez de colapsar filas como `GROUP BY`, mantiene todas las filas y agrega información de las filas vecinas. `LAG(magnitud) OVER (ORDER BY fecha_hora)` dice: *ordena los sismos por fecha y para cada uno, trae la magnitud del que ocurrió antes*. Es como tener una columna extra que dice “¿qué pasó justo antes?”.
+💡 **Concepto clave:** `PARTITION BY estacion` separa las series; `ORDER BY fecha` les da sentido temporal; `ROWS BETWEEN 7 PRECEDING AND 1 PRECEDING` excluye el día actual. Como el registro tiene exactamente un día por fila en cada estación (2.191 días), «7 filas» = «7 días». `AVG` ignora los `NULL` dentro de la ventana.
 
-**🔍 Qué hace el código:**
-- `ORDER BY fecha_hora` dentro del `OVER` establece el orden cronológico.
-- `LAG(magnitud)` trae el valor de la fila anterior en ese orden.
-- La primera fila queda con `NULL` porque no tiene fila anterior.
+⚠️ **Error frecuente:** Escribir `ROWS BETWEEN 6 PRECEDING AND CURRENT ROW`: la media incluiría el PM2.5 de hoy, que es justamente lo que querrías predecir → **fuga de información**.
 
-**⚠️ Error frecuente:** Olvidar el `ORDER BY` dentro del `OVER(...)`. Sin ordenamiento explícito, “la fila anterior” no tiene significado y el resultado es impredecible.
-
-**✅ Señal de comprensión:** La primera fila (el sismo más antiguo) tiene `NULL` en `magnitud_anterior` y la segunda fila tiene el valor de magnitud de la primera.
+✅ **Señal de que entendiste:** Puedes explicar por qué el primer día de cada estación tiene `pm25_ayer` nulo y por qué eso es correcto.
 
 ---
 
-### 🔷 Sección 5 — La tabla analítica completa
+### Sección 5 · La tabla analítica
 
-**🎯 Objetivo:** Construir la tabla analítica final: una fila por región con `n_sismos`, `magnitud_promedio`, `n_superficiales` y `n_profundos`.
+🎯 **Objetivo:** Una fila por estación con `n_dias`, `pm25_promedio`, `dias_sobre_norma`, `dias_alerta_o_peor` y `pm25_invierno`.
 
-**💡 Concepto clave:** El truco clave de este ejercicio es `SUM(CASE WHEN condicion THEN 1 ELSE 0 END)`. Cada sismo que cumple la condición aporta un `1`; los demás aportan `0`. Al sumar dentro de cada grupo, obtienes el conteo de los que cumplen. Es como levantar la mano en una asamblea: cuento cuántas manos levantadas hay en cada región.
-
-**🔍 Qué hace el código:**
-- `SUM(CASE WHEN profundidad_km < 70 THEN 1 ELSE 0 END) AS n_superficiales` cuenta los superficiales.
-- `SUM(CASE WHEN profundidad_km >= 70 THEN 1 ELSE 0 END) AS n_profundos` cuenta los de 70+ km.
-- `GROUP BY region` agrupa todo por región.
-
-**⚠️ Error frecuente:** Que `n_superficiales + n_profundos` no sume el total de sismos de la región. Eso significa que las condiciones no son mutuamente excluyentes y exhaustivas.
-
-**✅ Señal de comprensión:** La tabla tiene 6 filas, `n_sismos` suma 15, `n_superficiales` suma 6 y `n_profundos` suma 9.
+💡 **Concepto clave:** `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` cuenta días que cumplen una condición; `AVG(CASE WHEN mes entre 5 y 8 THEN pm25 END)` —sin `ELSE`— promedia solo el invierno. La tabla lo deja claro: **Cerro Navia** lidera en días sobre 50 (332), **Las Encinas Temuco** en días de alerta o peor (131), y ambas promedian cerca de **47,5 µg/m³ en invierno** frente a 24–27 µg/m³ en todo el año. Seis estaciones (Alto Hospicio, Antofagasta, Copiapó Sivica, Coquimbo, Cuncumen y Concón) tienen **0** días sobre la norma.
 
 ---
 
-## 6. Guía de Ejercicios
+### Reflexión final
 
-### ✍️ Ejercicio 1 — Resumen sísmico por región
-
-**Habilidad que desarrolla:** Construir *features* de agregación con `GROUP BY`.
-
-**Pista 1 (conceptual):** Necesitas comprimir 15 filas de sismos en 6 filas, una por región. ¿Qué cláusula SQL agrupa filas por categoría?
-
-**Pista 2 (técnica):** La estructura es `SELECT region, COUNT(*) AS n_sismos, AVG(magnitud) AS magnitud_promedio, ... FROM sismos GROUP BY region`. ¿Qué funciones necesitas para la magnitud máxima y la profundidad promedio?
-
-**Pista 3 (casi solución):** Los nombres de columna deben ser exactamente: `region`, `n_sismos`, `magnitud_promedio`, `magnitud_maxima`, `profundidad_promedio`. Usa `ROUND(..., 2)` para redondear los promedios. No olvides `ORDER BY n_sismos DESC`.
-
-**Lógica de solución:** `SELECT region, COUNT(*) AS n_sismos, ROUND(AVG(magnitud), 2) AS magnitud_promedio, MAX(magnitud) AS magnitud_maxima, ROUND(AVG(profundidad_km), 2) AS profundidad_promedio FROM sismos GROUP BY region ORDER BY n_sismos DESC`.
+Para focalizar fiscalización de calefacción a leña, la columna clave no es `pm25_promedio` sino `pm25_invierno` o `dias_alerta_o_peor`. Una *feature* nueva que valdría la pena: días de alerta del invierno anterior, o el PM2.5 promedio con temperatura mínima bajo 0 °C.
 
 ---
 
-### ✍️ Ejercicio 2 — Clasificar cada sismo por profundidad
+## 6. Guía de los 4 Ejercicios
 
-**Habilidad que desarrolla:** Crear *features* condicionales con `CASE WHEN`.
+### Ejercicio 1 — Features por estación y mes
 
-**Pista 1 (conceptual):** Necesitas una columna nueva que no existe en la tabla, basada en una regla: si la profundidad cumple ciertas condiciones, asigna una etiqueta.
+**Pistas progresivas:**
+- 🟢 Pista suave: Agrupa por dos cosas: la estación y el mes extraído de la fecha.
+- 🟡 Pista media: `CAST(strftime('%m', fecha) AS INTEGER) AS mes` en el `SELECT` y `GROUP BY estacion, mes`.
+- 🔴 Pista directa: `COUNT(pm25) AS n_dias, ROUND(AVG(pm25), 1) AS pm25_promedio, MAX(pm25) AS pm25_maximo ... GROUP BY estacion, mes ORDER BY estacion, mes`.
 
-**Pista 2 (técnica):** `CASE WHEN ... THEN ... WHEN ... THEN ... ELSE ... END AS nombre_columna` es la estructura. El orden de las condiciones importa: empieza por la más restrictiva.
-
-**Pista 3 (casi solución):** Primero `< 70` es superficial, luego `<= 300` es intermedio, y todo lo demás es profundo. Devuelve `id`, `lugar`, `profundidad_km` y la nueva columna `profundidad_tipo`, ordenado por `id`.
-
-**Lógica de solución:** Usar `CASE WHEN profundidad_km < 70 THEN 'superficial' WHEN profundidad_km <= 300 THEN 'intermedio' ELSE 'profundo' END AS profundidad_tipo` en el SELECT, sin GROUP BY porque se evalúa por fila.
-
----
-
-### ✍️ Ejercicio 3 — La magnitud del sismo anterior
-
-**Habilidad que desarrollas:** Crear *features* temporales de rezago con `LAG`.
-
-**Pista 1 (conceptual):** Quieres una columna nueva que diga “¿cuál fue la magnitud del sismo que ocurrió justo antes de este?”. Eso requiere mirar la fila anterior, no agregar un grupo.
-
-**Pista 2 (técnica):** `LAG(columna) OVER (ORDER BY columna_orden)` es la sintaxis. El `OVER` define la ventana; el `ORDER BY` dentro del `OVER` define cuál es “la fila anterior”.
-
-**Pista 3 (casi solución):** Devuelve `id`, `fecha_hora`, `magnitud` y `LAG(magnitud) OVER (ORDER BY fecha_hora) AS magnitud_anterior`. La primera fila tendrá `NULL` en `magnitud_anterior`, lo cual es correcto.
-
-**Lógica de solución:** Usar función de ventana `LAG` con `ORDER BY fecha_hora` dentro del `OVER`, sin GROUP BY.
+**¿Qué significa el ✅?** Que tienes 168 filas, que `n_dias` suma exactamente los 29.644 días con dato y que el máximo es 284.
 
 ---
 
-### ✍️ Ejercicio 4 — Tu primera tabla analítica
+### Ejercicio 2 — Etiquetar cada día con su nivel de episodio
 
-**Habilidad que desarrollas:** Combinar agregación y lógica condicional para construir la tabla analítica completa.
+**Pistas progresivas:**
+- 🟢 Pista suave: Primero el caso sin dato; después los umbrales del más alto al más bajo.
+- 🟡 Pista media: `WHEN pm25 >= 170 THEN 'emergencia'` va antes que `WHEN pm25 >= 110 ...`.
+- 🔴 Pista directa: `WHEN pm25 IS NULL THEN 'sin dato' WHEN pm25 >= 170 THEN 'emergencia' WHEN pm25 >= 110 THEN 'preemergencia' WHEN pm25 >= 80 THEN 'alerta' WHEN pm25 > 50 THEN 'sobre norma' ELSE 'bajo norma' END AS nivel`.
 
-**Pista 1 (conceptual):** Necesitas una tabla con 6 filas (una por región) y columnas que cuenten sismos por tipo. ¿Cómo cuentas, dentro de un grupo, solo los que cumplen una condición?
-
-**Pista 2 (técnica):** El truco es `SUM(CASE WHEN condicion THEN 1 ELSE 0 END)`. Combina `GROUP BY region` con este patrón para cada tipo.
-
-**Pista 3 (casi solución):** Las columnas necesarias son `region`, `n_sismos` (COUNT), `magnitud_promedio` (AVG), `n_superficiales` (SUM CASE < 70) y `n_profundos` (SUM CASE >= 70). Ordena por `n_sismos DESC`.
-
-**Lógica de solución:** Combinar `GROUP BY region` con `COUNT(*)`, `AVG()`, y dos `SUM(CASE WHEN ...)` para los dos tipos de profundidad.
+**¿Qué significa el ✅?** Que cada nivel tiene exactamente los días que le corresponden según el D.S. 12/2011 (2 emergencia, 84 preemergencia, 238 alerta).
 
 ---
 
-## 7. Sección en Profundidad: Ejercicio 4 — La tabla analítica y su impacto en política pública
+### Ejercicio 3 — El PM2.5 de ayer y la media de la semana previa
 
-El ejercicio 4 es el más estratégico porque **produce el producto final de un científico de datos**: la tabla analítica (ABT). Entender bien este concepto es lo que separa a alguien que “hace SQL” de alguien que “prepara datos para modelos”.
+**Pistas progresivas:**
+- 🟢 Pista suave: Ambas columnas usan `OVER (PARTITION BY ... ORDER BY ...)`; la media necesita además el marco de filas.
+- 🟡 Pista media: `LAG(pm25) OVER (PARTITION BY estacion ORDER BY fecha)`.
+- 🔴 Pista directa: `ROUND(AVG(pm25) OVER (PARTITION BY estacion ORDER BY fecha ROWS BETWEEN 7 PRECEDING AND 1 PRECEDING), 1) AS pm25_media_7d`.
 
-### ¿Qué hace especial a una tabla analítica?
-
-Tiene tres propiedades:
-1. **Una fila por entidad:** cada fila representa la unidad sobre la que se quiere decidir o predecir.
-2. **Una columna por *feature*:** cada columna es un atributo calculado, no un dato crudo.
-3. **Lista para un modelo:** ningún modelo de ML puede trabajar con eventos crudos directamente; necesita esta transformación.
-
-### Aplicaciones directas en el Estado chileno
-
-| Dominio público | Eventos crudos | Entidad | *Features* posibles |
-|---|---|---|---|
-| Compras públicas | Órdenes de compra | Organismo | nº licitaciones, monto promedio, % adjudicado |
-| Salud | Consultas médicas | Beneficiario | visitas al año, promedio de días de espera |
-| Educación | Evaluaciones | Estudiante | promedio SIMCE, asistencia, tipo de establecimiento |
-| Seguridad | Denuncias | Comuna | denuncias por tipo, variación respecto al año anterior |
-| Sísmico (este módulo) | Eventos sísmicos | Región | nº sismos, magnitud promedio, sismos superficiales |
-
-### El concepto de *data leakage* aplicado al sector público
-
-Si quisieras predecir si un organismo va a tener problemas de ejecución presupuestaria, **no podrías usar el porcentaje de ejecución del mismo año** como *feature*: eso es exactamente lo que intentas predecir. Ese error se llama *data leakage* y es muy común en modelos construidos sin rigor metodológico.
-
-> 🚨 **Regla de oro:** las *features* solo pueden contener información que estaba disponible **antes** del momento que intentas predecir.
+**¿Qué significa el ✅?** Que tus dos *features* coinciden fila a fila con un cálculo independiente en pandas — y que la media **no** usa el día actual.
 
 ---
 
-## 8. Conexión con profundiza.ipynb
+### Ejercicio 4 — Tu primera tabla analítica
 
-Este módulo tiene un `profundiza.ipynb` que va más allá del *cómo* y entra en el *por qué*.
+**Pistas progresivas:**
+- 🟢 Pista suave: Una fila por estación = `GROUP BY estacion`. Para contar días que cumplen algo, suma unos y ceros.
+- 🟡 Pista media: `SUM(CASE WHEN pm25 > 50 THEN 1 ELSE 0 END) AS dias_sobre_norma`.
+- 🔴 Pista directa: `ROUND(AVG(CASE WHEN CAST(strftime('%m', fecha) AS INTEGER) BETWEEN 5 AND 8 THEN pm25 END), 1) AS pm25_invierno` y `ORDER BY dias_sobre_norma DESC`.
 
-### Comparativa leccion vs. profundiza
-
-| Tema | `leccion.ipynb` | `profundiza.ipynb` |
-|---|---|---|
-| Foco | Construir *features* con SQL | Entender qué hace buena a una *feature* |
-| *Data leakage* | Mencionado, conceptual | Profundizado: leakage temporal y de objetivo |
-| Correción punto-en-el-tiempo | No aborda | Explicada con ejercicios |
-| Granularidad del tablón | Uno fijo (región) | Debate sobre cómo elegir la entidad correcta |
-| Complejidad | ⭐⭐⭐ Intermedio | ⭐⭐⭐⭐ Avanzado-conceptual |
-
-### Guía de decisión
-
-```
-¿Tienes las 4 celdas en ✅?
-    ├── No → Termina la lección principal primero.
-    └── Sí → ¿Te interesa construir modelos predictivos con rigor?
-              ├── Sí → El profundiza es imprescindible para ti.
-              └── No → Avanza a R2-03. Los conceptos básicos ya los tienes.
-```
+**¿Qué significa el ✅?** Que armaste la ABT: 14 filas, 1.279 días sobre norma y 324 de alerta o peor en total, ordenada de más a menos expuesta.
 
 ---
 
-## 9. Autoevaluación Final
-
-**Pregunta 1:** ¿Qué es una *feature* en el contexto de machine learning?
-
-- a) Una fila de la tabla original de eventos
-- b) Una columna que describe una entidad y que un modelo puede usar para aprender
-- c) El resultado que quieres predecir
-- d) Un parámetro del modelo
-
-✅ **Respuesta correcta: b)**
-**Explicación:** Las *features* son los atributos de la entidad que el modelo recibe como entrada. No son los eventos crudos ni el resultado a predecir, sino las variables descriptivas construidas para el modelo.
+> 🔬 **En la profundización:** el mismo oficio sobre los **1.601 sismos M ≥ 4,5** de Chile 2020–2025 (catálogo USGS). *Features* por **zona y año** (24 filas), etiquetas de profundidad (584 superficiales, 1.017 intermedios, ninguno profundo) y la bandera `es_fuerte` (35 sismos M ≥ 6), **días desde el sismo anterior** en la misma zona con `julianday` + `LAG` (una *feature* punto-en-el-tiempo correcta; «días hasta el próximo» sería *leakage*) y una herramienta nueva, la **CTE** (`WITH`), para agregar una *feature* de ventana: en el norte hay un sismo M ≥ 4,5 cada 2,4 días en promedio; en la zona austral, cada 185.
 
 ---
 
-**Pregunta 2:** En una consulta `GROUP BY region`, ¿puedes pedir la columna `lugar` directamente en el `SELECT`?
+## 7. Autoevaluación Final
 
-- a) Sí, siempre que uses `ORDER BY`
-- b) Sí, si la tabla tiene pocas filas
-- c) No, porque cada región tiene varios lugares y SQL no sabría cuál mostrar
-- d) Sí, si usas `DISTINCT`
+**Pregunta 1:** ¿Qué es una tabla analítica (ABT)?
 
-✅ **Respuesta correcta: c)**
-**Explicación:** Con `GROUP BY`, cada columna en el `SELECT` debe estar en el `GROUP BY` o dentro de una función de agregación. Si agrupas por región pero pides `lugar`, SQLite dará error o un resultado incorrecto.
+- A) La tabla cruda tal como viene del sistema
+- B) Una fila por entidad y una columna por *feature*, lista para un modelo ✅
+- C) Un gráfico de resumen
+- D) La tabla con todas las fechas
 
----
-
-**Pregunta 3:** ¿Qué hace `SUM(CASE WHEN profundidad_km < 70 THEN 1 ELSE 0 END)`?
-
-- a) Suma las profundidades menores a 70
-- b) Cuenta cuántos sismos tienen profundidad menor a 70 km
-- c) Filtra los sismos superficiales
-- d) Promedia la profundidad de los sismos superficiales
-
-✅ **Respuesta correcta: b)**
-**Explicación:** El `CASE WHEN` asigna 1 a los que cumplen y 0 a los que no. El `SUM` suma esos 1s, obteniendo el conteo de los que cumplían la condición. Es el patrón estándar para contar condicionalmente en SQL.
+**Explicación:** La ABT es el producto final del feature engineering: lo que se le entrega al modelo.
 
 ---
 
-**Pregunta 4:** ¿Qué diferencia hay entre `LAG` y `GROUP BY`?
+**Pregunta 2:** ¿Cuál es la diferencia entre `COUNT(*)` y `COUNT(pm25)`?
 
-- a) `LAG` es más rápido que `GROUP BY`
-- b) `GROUP BY` colapsa filas en grupos; `LAG` mantiene todas las filas y mira a la fila anterior
-- c) `LAG` solo funciona con fechas
-- d) No hay diferencia, hacen lo mismo
+- A) Ninguna
+- B) `COUNT(*)` cuenta filas; `COUNT(pm25)` solo las filas con PM2.5 no nulo ✅
+- C) `COUNT(pm25)` suma los valores
+- D) `COUNT(*)` ignora los nulos
 
-✅ **Respuesta correcta: b)**
-**Explicación:** `GROUP BY` reduce muchas filas a una por grupo. `LAG` es una función de ventana: mantiene el mismo número de filas y agrega una columna que mira a la fila anterior en el orden definido.
-
----
-
-**Pregunta 5:** ¿Qué es el *data leakage*?
-
-- a) Un error de conexión a la base de datos
-- b) Cuando el dataset tiene valores nulos
-- c) Usar información del futuro o del resultado como *feature* predictiva
-- d) Cuando dos tablas tienen columnas con el mismo nombre
-
-✅ **Respuesta correcta: c)**
-**Explicación:** El *leakage* ocurre cuando las *features* contienen información que no estaría disponible en el momento de la predicción real. El modelo aparece excelente en entrenamiento pero falla en producción porque “trampeaba” con datos del futuro.
+**Explicación:** Con 1.030 días sin dato, la diferencia es de 30.674 vs 29.644.
 
 ---
 
-## 10. Glosario del Módulo
+**Pregunta 3:** En un `CASE WHEN`, ¿por qué se trata `pm25 IS NULL` primero?
 
-| Término | Definición simple | Equivalente sector público / Excel |
-|---|---|---|
-| ***Feature* / Característica** | Variable descriptiva de una entidad para un modelo | Indicador en un tablero de control |
-| **Tabla analítica (ABT)** | Tabla final: una fila por entidad, columnas son *features* | Dashboard con una fila por organismo y sus indicadores |
-| **Entidad** | Unidad de análisis (lo que tendrá una fila en la tabla final) | Región, organismo, proveedor, beneficiario |
-| **Evento** | Registro crudo en la tabla de origen | Una orden de compra, una consulta médica, un sismo |
-| `GROUP BY` | Agrupa filas por una columna y aplica funciones | Tabla dinámica de Excel por categoría |
-| `CASE WHEN` | Lógica condicional en SQL | Función `SI()` de Excel |
-| `LAG()` | Función de ventana que trae el valor de la fila anterior | “Mes anterior” en un registro cronológico |
-| `OVER (ORDER BY ...)` | Define el orden para funciones de ventana | Ordenar por fecha antes de calcular diferencias |
-| **Rezago / *Lag*** | Valor de una observación anterior usado como *feature* | Valor del mes pasado en un informe de tendencias |
-| ***Data leakage*** | Usar información del futuro como *feature* | Incluir el resultado final en los indicadores que lo predicen |
-| `SUM(CASE WHEN ...)` | Cuenta filas que cumplen una condición dentro de un grupo | CONTAR.SI() en Excel |
-| **SQLite** | Base de datos liviana que funciona en memoria | Una base de datos que no necesita servidor |
+- A) Por estética
+- B) Porque un `NULL` no cumple ninguna comparación y caería en el `ELSE`, quedando mal etiquetado ✅
+- C) Porque SQL lo exige
+- D) Porque es más rápido
+
+**Explicación:** Sin ese caso, un día sin medición quedaría como «bajo norma»: un dato inventado.
 
 ---
 
-## 11. Conexión con el Módulo Siguiente
+**Pregunta 4:** Quieres predecir el PM2.5 de hoy. ¿Qué *feature* tiene fuga de información?
 
-En R2-02 construiste una **tabla analítica**: la materia prima que alimenta un modelo de machine learning. Eso es exactamente lo que usarás en el siguiente paso.
+- A) `LAG(pm25)` (el PM2.5 de ayer)
+- B) La media de los 7 días anteriores (`7 PRECEDING AND 1 PRECEDING`)
+- C) La media de los últimos 7 días incluyendo hoy (`6 PRECEDING AND CURRENT ROW`) ✅
+- D) El mes del año
 
-**El siguiente módulo es R2-03 · Estadística para modelar.**
+**Explicación:** La C contiene el valor que se quiere predecir. En pruebas parece excelente; en operación, ese dato no existe todavía.
 
-Antes de entrenar un modelo hay que entender los datos que le estás pasando. En R2-03 aprenderás a:
+---
 
-- **Describir y explorar** datos: distribuciones, medidas de tendencia central, dispersión.
-- **Detectar correlaciones:** qué variables se mueven juntas y qué implica eso para un modelo.
-- **Identificar variables relevantes** usando estadístrica antes de entrenar.
+**Pregunta 5:** ¿Qué hace `PARTITION BY estacion` dentro de `LAG(...) OVER (...)`?
 
-> 🔗 **Conexión pedagógica:** R2-02 te enseña a *fabricar* las variables; R2-03 te enseña a *entenderlas* antes de meterlas en un modelo. Un buen científico/a de datos siempre analiza sus *features* antes de entrenar.
+- A) Ordena las estaciones alfabéticamente
+- B) Hace que cada estación tenga su propia serie: el «ayer» de una estación nunca viene de otra ✅
+- C) Agrupa y colapsa las filas por estación
+- D) Filtra una estación
 
-¡Sigue con todo! Ya estás construyendo los cimientos del machine learning con datos públicos reales 🚀
+**Explicación:** A diferencia de `GROUP BY`, una ventana no colapsa filas; `PARTITION BY` solo define dentro de qué grupo se mira.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| ***Feature*** | Columna que describe una entidad | Un indicador de gestión |
+| **Entidad** | La unidad de análisis (una fila en la ABT) | La estación, la comuna, el establecimiento |
+| **ABT** | Tabla analítica: una fila por entidad | La tabla resumen del informe |
+| **Episodio crítico** | Nivel de PM2.5 de 24 h que activa medidas (D.S. 12/2011) | Alerta, preemergencia, emergencia ambiental |
+| **Función de ventana** | Cálculo sobre filas vecinas sin colapsar la tabla | Fórmula arrastrada que mira celdas de arriba |
+| ***Lag* (rezago)** | Valor de una observación anterior | «El dato de ayer» |
+| **Media móvil** | Promedio de una ventana que se desplaza | Promedio de los últimos 7 días |
+| ***Data leakage*** | Usar información del futuro como *feature* | Evaluar con la respuesta a la vista |
+| **CTE (`WITH`)** | Tabla temporal con nombre dentro de una consulta | Una hoja auxiliar de cálculo |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R2-02 fabricaste *features* con SQL —agregaciones, etiquetas de episodio, rezagos y medias móviles sin fuga— y las reuniste en una tabla analítica por estación.
+
+En **R2-03 · Estadística para modelar** vas a medir con rigor lo que hoy resumiste: distribuciones, intervalos de confianza y pruebas de hipótesis para saber si una diferencia entre estaciones o temporadas es real o puro ruido. Y en **R2-04**, una tabla como la que armaste hoy será la entrada de tu primer modelo.
+
+> 💡 **Pregunta para reflexionar:** En los indicadores de tu servicio, ¿hay alguno que se calcula con datos que en el momento de decidir todavía no existían? Eso también es *leakage*.

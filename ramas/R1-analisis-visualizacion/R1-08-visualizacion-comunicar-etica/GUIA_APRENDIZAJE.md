@@ -1,7 +1,7 @@
 # Guía de Aprendizaje — R1-08 · Visualización para comunicar + ética
 
 **Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
-Rama R1 · Analista de Datos · Módulo 8 de 10 · Semana 9
+Rama R1 · Analista de Datos · Módulo 8 · Semana 9
 
 ---
 
@@ -10,153 +10,103 @@ Rama R1 · Analista de Datos · Módulo 8 de 10 · Semana 9
 | Campo | Detalle |
 |-------|---------|
 | **Módulo** | R1-08 · Visualización para comunicar + ética |
-| **Pista** | R1 — Análisis y Visualización |
-| **Duración estimada** | 75–90 minutos |
-| **Nivel** | Intermedio |
-| **Prerrequisitos** | R1-07 · Visualización exploratoria |
+| **Rama** | R1 — Análisis y Visualización |
+| **Duración estimada** | 90 minutos |
+| **Nivel** | Intermedio — requiere R1-07 (visualización exploratoria) |
+| **Prerrequisitos** | `groupby`, `ax.bar`, el patrón `fig, ax = plt.subplots()` |
 | **Competencia de salida** | Comunicar un hallazgo con un gráfico claro y honesto para una audiencia directiva |
-| **Dataset** | Compras públicas por región — ChileCompra (`compras_ml.csv`) |
-| **Entregable** | 4 celdas de chequeo con ✅ |
+| **Entregable** | Las 4 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `matricula.csv` — matrícula oficial 2025 por región (MINEDUC). Profundización: `aire_diario.csv` — PM2.5 por estación (SINCA) |
 
 ---
 
 ## 2. ¿Para qué me sirve esto como funcionario público?
 
-Hasta ahora aprendiste a explorar datos para entender. Este módulo es sobre el siguiente paso: **comunicar lo que encontraste a otros**, especialmente a quienes toman decisiones.
+En R1-07 hiciste gráficos para ti. Este módulo es sobre gráficos **para otros**: la minuta que sube a la jefatura, la lámina de la cuenta pública, el informe que llega a la prensa.
 
-En el Estado, los informes, presentaciones y reportes de gestión se basan en gráficos. Un gráfico mal construido puede llevar a conclusiones equivocadas, aunque los datos sean correctos. El engaño visual más común —truncar el eje Y— aparece constantemente en presentaciones de organismos públicos, medios de comunicación y reportes de ministerios.
+Y ahí cambia todo, porque un gráfico público tiene **consecuencias**. Un eje truncado puede convertir una diferencia del 2% entre dependencias en un abismo visual; un ranking sin fuente puede instalar una conclusión errada; un color mal elegido puede acusar sin datos. En el Estado, el gráfico ES la comunicación oficial — y la honestidad visual no es una preferencia estética, es integridad pública.
 
-Aprender a hacer gráficos honestos no es solo una habilidad técnica: es un **compromiso ético con la ciudadanía y con quienes toman decisiones basadas en tu trabajo**.
-
-### Conexión con el dataset
-
-Los datos del módulo muestran el **gasto en compras públicas por región** (ChileCompra). Con ellos practicarás preguntas como: ¿qué regiones concentran más gasto? ¿Cómo presentar esa diferencia sin inflarla ni minimizarla?
+Este módulo te da las cuatro reglas mínimas del gráfico honesto (eje desde 0, título que se entiende solo, etiquetas, anotación del mensaje) y te entrena para reconocer el engaño visual más común, con el mismo dato mostrado de las dos maneras.
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía sector público |
-|-----------------|-----------|------------------------|
-| `ax.set_ylim(bottom=0)` | Fuerza que el eje Y parta desde cero | Un informe financiero que no oculta la escala real del gasto |
-| `ax.set_title(...)` | Agrega título al gráfico | El nombre del cuadro en un informe de gestión |
-| `ax.set_xlabel/ylabel(...)` | Etiqueta los ejes | Las columnas rotuladas en una tabla de Excel |
-| `ax.annotate(...)` | Señala un dato clave con texto | El resaltado con color amarillo en un documento Word |
-| Eje truncado vs. desde 0 | Comparación ética/visual | La diferencia entre un dato real y uno presentado de forma engañosa |
+| Regla | ¿Por qué importa? | Herramienta |
+|-------|-------------------|-------------|
+| **Eje Y desde 0** | El eje truncado exagera diferencias pequeñas | `ax.set_ylim(bottom=0)` |
+| **Título que afirma** | El gráfico debe entenderse sin ti al lado | `ax.set_title(...)` |
+| **Etiquetas de ejes** | Sin unidades, el número no significa nada | `ax.set_xlabel/ylabel` |
+| **Anotar el mensaje** | Guiar la mirada al hallazgo | `ax.annotate(...)` |
+| **Comparar versiones** | Ver el engaño entrena a no cometerlo | dos `ax` lado a lado |
 
 ---
 
 ## 4. Verificación de Prerrequisitos
 
-Antes de empezar, confirma que puedes hacer lo siguiente:
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Crear un gráfico con `fig, ax = plt.subplots()` | ☐ |
+| Hacer barras con `ax.bar(etiquetas, valores)` | ☐ |
+| Agrupar con `groupby(...).sum()` y ordenar con `sort_values()` | ☐ |
 
-| ¿Puedo...? | Sí / Revisar |
-|-----------|-------------|
-| Crear un gráfico de barras con `matplotlib` | Del módulo R1-07 |
-| Usar `groupby` + `sum` para agrupar datos | Del módulo R1-03 |
-| Cargar un CSV con `pd.read_csv` | Del módulo R1-02 |
-| Entender `fig, ax = plt.subplots(...)` | Del módulo R1-07 |
-
-Si alguna respuesta es "revisar", vuelve un momento al módulo correspondiente antes de continuar.
+Si respondiste No a alguna, vuelve a R1-07 antes de continuar.
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### Sección de Preparación: Cargar los datos
+### Sección 0 · Preparación
 
-🎯 **Objetivo:** dejar listos los datos que usarás en todos los ejercicios.
+🎯 **Objetivo:** Construir la serie con la que trabajarás todo el módulo: matrícula total por región, las 6 mayores.
 
-💡 **Concepto clave:** el código de preparación agrupa el gasto por región y toma el top 6. Es el mismo patrón de `groupby` + `sort_values` que ya conoces.
+💡 **Concepto clave:** `groupby("region")["mat_total"].sum()` colapsa los 10.945 establecimientos en 16 filas regionales; `.sort_values(ascending=False).head(6)` se queda con el top 6. Toda la lección usa esta misma serie `g` — el foco del módulo no es calcular, es **comunicar**.
 
-🔍 **¿Qué hace el código?**
-- `df.groupby("region_comprador")["monto_total"].sum()` → suma el gasto de todas las órdenes por región
-- `.sort_values(ascending=False).head(6)` → ordena de mayor a menor y toma solo las 6 primeras
-- El resultado se guarda en `g`, que usarás como insumo en los 4 ejercicios
-
-⚠️ **Error frecuente:** modificar `g` en un ejercicio y olvidar que el siguiente la usa fresca. Si algo sale raro, vuelve a ejecutar la celda de preparación.
-
-✅ **Sabes esta sección cuando puedes:** ejecutar la celda y leer correctamente qué región tiene mayor gasto total.
+✅ **Señal de que entendiste:** Ves 6 regiones con sus totales, encabezadas por la Metropolitana.
 
 ---
 
-### Sección 1: El eje Y empieza en cero
+### Sección 1 · El eje Y empieza en cero
 
-🎯 **Objetivo:** comprender por qué truncar el eje Y es el engaño visual más común y cómo evitarlo.
+🎯 **Objetivo:** Dibujar barras cuyo eje vertical parte de 0.
 
-💡 **Concepto clave — El eje truncado:** cuando el eje Y no parte desde cero, las diferencias entre barras se ven exageradas. Una región que gasta el doble que otra parece gastar diez veces más. Esto ocurre frecuentemente en noticias y presentaciones porque visualmente "resalta" las diferencias, pero distorsiona la realidad.
+💡 **Concepto clave:** La barra codifica el valor con su **altura**. Si el eje parte en otro número, las alturas dejan de ser proporcionales a los valores y el ojo lee diferencias infladas. Por eso la regla profesional es: barras, siempre desde 0 (para líneas la discusión es distinta, pero eso viene después).
 
-🔍 **¿Qué hace el código?**
-- `ax.bar(g.index, g.values, color="#4240e5")` → dibuja las barras con los datos
-- El TODO pide que agregues: `ax.set_ylim(bottom=0)` → fuerza que el eje empiece desde cero
-- `plt.xticks(rotation=45, ha="right")` → rota las etiquetas del eje X para que no se superpongan
+⚠️ **Error frecuente:** Creer que matplotlib parte de 0 por defecto. A veces sí, pero no está garantizado: `set_ylim(bottom=0)` lo hace explícito y auditable.
 
-⚠️ **Error frecuente:** escribir `ax.ylim(0)` en vez de `ax.set_ylim(bottom=0)`. El método correcto es `set_ylim`.
-
-✅ **Sabes esta sección cuando puedes:** explicar a un colega por qué un gráfico con eje truncado puede ser engañoso, aunque los datos sean reales.
+✅ **Señal de que entendiste:** `ax.get_ylim()[0]` devuelve `0.0`.
 
 ---
 
-### Sección 2: Título y etiquetas — que se entienda solo
+### Sección 2 · Título y etiquetas
 
-🎯 **Objetivo:** hacer que un gráfico comunique por sí mismo, sin necesidad de explicación oral.
+🎯 **Objetivo:** Que el gráfico se entienda sin explicación oral.
 
-💡 **Concepto clave — Autonomía del gráfico:** en el trabajo del Estado, un gráfico muchas veces viaja solo: se adjunta a un correo, se pega en un informe, se proyecta en una reunión sin que estés presente. Si no tiene título ni etiquetas, la audiencia no sabe qué está mirando.
+💡 **Concepto clave:** La prueba del pasillo: si alguien encuentra tu lámina impresa en el pasillo, ¿entiende qué está viendo? Necesita saber **qué** se mide (título), **dónde** (eje x) y **en qué unidad** (eje y). Un buen título afirma («Matrícula escolar por región, 2025»), no describe vagamente («Gráfico de barras»).
 
-🔍 **¿Qué hace el código?**
-- `ax.set_title("...")` → el título principal del gráfico; debe responder "¿qué muestra este gráfico?"
-- `ax.set_xlabel("...")` → etiqueta del eje horizontal (aquí: las regiones)
-- `ax.set_ylabel("...")` → etiqueta del eje vertical (aquí: el monto en pesos)
-
-Un título bien escrito tiene tres elementos: **qué** se mide, **dónde/quiénes**, **cuándo** (si aplica). Ejemplo: *"Gasto en compras públicas por región — Top 6 — 2023"*.
-
-⚠️ **Error frecuente:** poner un título genérico como "Gráfico 1" o dejar la etiqueta del eje Y vacía. La celda de chequeo verifica que los tres elementos existan y no estén vacíos.
-
-✅ **Sabes esta sección cuando puedes:** mostrar el gráfico a un colega que no vio los datos y él entiende de qué trata sin que tengas que explicarle nada.
+✅ **Señal de que entendiste:** Los tres textos existen y el título incluye el año del dato.
 
 ---
 
-### Sección 3: Anotar el dato clave
+### Sección 3 · Anotar el dato clave
 
-🎯 **Objetivo:** guiar la mirada de la audiencia al mensaje central del gráfico.
+🎯 **Objetivo:** Señalar dentro del gráfico el mensaje principal.
 
-💡 **Concepto clave — La anotación como argumento:** un gráfico exploratorio te ayuda a ti a descubrir patrones. Un gráfico comunicativo debe destacar el hallazgo principal. `ax.annotate(...)` es la herramienta para poner una flecha o texto que diga "mira aquí".
+💡 **Concepto clave:** `ax.annotate(texto, xy=punto_señalado, xytext=posición_del_texto, arrowprops=...)` dibuja el texto y una flecha. La anotación convierte un gráfico neutro en un gráfico con **mensaje**: no «aquí están los datos» sino «mira esto». `g.idxmax()` te da el nombre de la región con el máximo — así la anotación se actualiza sola si cambian los datos.
 
-🔍 **¿Qué hace el código?**
-- `g.idxmax()` → devuelve el nombre de la región con mayor gasto (el índice donde está el máximo)
-- `ax.annotate("texto", xy=(posición_flecha), xytext=(posición_texto))` → dibuja texto con flecha apuntando a la barra más alta
-- La celda de chequeo verifica que `ax.texts` tenga al menos un elemento (es decir, que hayas anotado algo)
+⚠️ **Error frecuente:** Confundir `xy` (a dónde apunta la flecha) con `xytext` (dónde queda el texto).
 
-Un ejemplo de uso básico:
-```python
-ax.annotate(
-    f"Mayor gasto:\n{g.idxmax()}",
-    xy=(0, g.max()),          # donde apunta la flecha (posición x=0 si es la primera barra)
-    xytext=(1, g.max() * 0.9) # donde está el texto
-)
-```
-
-⚠️ **Error frecuente:** confundir `xy` (dónde apunta la flecha) con `xytext` (dónde aparece el texto). Si el texto queda encima de la barra, ajusta `xytext` para moverlo a un lugar visible.
-
-✅ **Sabes esta sección cuando puedes:** agregar una anotación que señale la región con mayor gasto y explica brevemente qué significa ese dato.
+✅ **Señal de que entendiste:** `ax.texts` no está vacío y la flecha apunta a la barra correcta.
 
 ---
 
-### Sección 4: Engañoso vs. honesto, lado a lado
+### Sección 4 · Engañoso vs honesto
 
-🎯 **Objetivo:** ver con tus propios ojos la diferencia ética y visual entre un gráfico con eje truncado y uno honesto.
+🎯 **Objetivo:** Construir el mismo gráfico dos veces: con eje truncado y desde cero.
 
-💡 **Concepto clave — La ética es visual:** este ejercicio no es técnicamente difícil, pero es el más importante del módulo. Ver los dos gráficos juntos hace evidente que el eje truncado distorsiona la percepción de las diferencias, aunque los datos sean idénticos. En el Estado, comunicar con integridad es parte del servicio público.
+💡 **Concepto clave:** El truncado (`bottom=g.min()*0.98`) hace ver la sexta región como si casi no tuviera estudiantes comparada con la primera — cuando la diferencia real es visible pero no abismal. Poner ambos lado a lado es la vacuna: una vez que ves el truco, lo reconoces en cualquier informe. La diferencia entre ambos gráficos **no es de datos** — los datos son idénticos — es de **decisión editorial**.
 
-🔍 **¿Qué hace el código?**
-- `fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))` → crea dos gráficos lado a lado
-- `ax1` ya está configurado con el eje truncado (`g.min() * 0.98`), que exagera diferencias
-- El TODO pide que configures `ax2` con `ax2.set_ylim(bottom=0)` para que sea honesto
-- La variable `honesto_desde_cero` guarda si el eje de `ax2` parte desde cero (la celda de chequeo la usa)
-
-⚠️ **Error frecuente:** olvidar asignar `honesto_desde_cero = ax2.get_ylim()[0] == 0`. Esta línea ya está en el código del notebook; solo asegúrate de no borrarla.
-
-✅ **Sabes esta sección cuando puedes:** explicar a alguien la diferencia entre los dos gráficos y por qué el de la derecha es más honesto.
+✅ **Señal de que entendiste:** Puedes explicar por qué el gráfico truncado no es «más claro» sino menos honesto, aunque «se vea mejor».
 
 ---
 
@@ -164,182 +114,140 @@ ax.annotate(
 
 ### Ejercicio 1 — Dibuja barras con el eje desde 0
 
-**Habilidad que entrena:** aplicar la regla fundamental de honestidad en gráficos de barras.
+**Objetivo:** Hacer explícito el punto de partida del eje Y.
+**Habilidad que entrena:** `ax.set_ylim(bottom=0)`.
 
 **Pistas progresivas:**
-- 🟡 *Pista suave:* ¿qué método de `ax` controla los límites del eje Y?
-- 🟠 *Pista media:* el método empieza con `set_` y termina con `lim`. Recibe el argumento `bottom`.
-- 🔴 *Pista directa:* la línea que necesitas es `ax.set_ylim(bottom=0)`.
+- 🟢 Pista suave: El límite inferior del eje Y es configurable con un método de `ax`.
+- 🟡 Pista media: El método es `set_ylim` y acepta el argumento `bottom`.
+- 🔴 Pista directa: `ax.set_ylim(bottom=0)`.
 
-**Lógica de la solución:** `ax.set_ylim(bottom=0)` fija el límite inferior del eje Y en exactamente cero, sin importar cuál sea el valor mínimo de los datos. La celda de chequeo verifica que `ax.get_ylim()[0] == 0`.
+**¿Qué significa el ✅?** Que `ax.get_ylim()[0] == 0`: el eje efectivamente parte de cero.
 
 ---
 
 ### Ejercicio 2 — Agrega título y etiquetas
 
-**Habilidad que entrena:** hacer que un gráfico se entienda sin explicación externa.
+**Objetivo:** Hacer que el gráfico se sostenga solo.
+**Habilidad que entrena:** `set_title`, `set_xlabel`, `set_ylabel`.
 
 **Pistas progresivas:**
-- 🟡 *Pista suave:* necesitas tres métodos de `ax`, uno para el título y dos para los ejes.
-- 🟠 *Pista media:* los métodos son `set_title`, `set_xlabel` y `set_ylabel`. Cada uno recibe un string con el texto.
-- 🔴 *Pista directa:* `ax.set_title("Gasto por región")`, `ax.set_xlabel("Región")`, `ax.set_ylabel("Monto total (CLP)")`.
+- 🟢 Pista suave: Son tres métodos de `ax`, uno para cada texto.
+- 🟡 Pista media: `ax.set_title("...")`, `ax.set_xlabel("...")`, `ax.set_ylabel("...")`.
+- 🔴 Pista directa: `ax.set_title("Matrícula escolar por región, 2025 (top 6)"); ax.set_xlabel("Región"); ax.set_ylabel("Estudiantes matriculados")`.
 
-**Lógica de la solución:** la celda de chequeo verifica que `ax.get_title() != ""` y que ambos ejes tengan etiqueta no vacía. Lo que escribas como texto es tuyo, siempre que no esté vacío.
+**¿Qué significa el ✅?** Que los tres textos son no vacíos. El check no evalúa la calidad del título — eso es criterio tuyo: que afirme, no que describa.
 
 ---
 
-### Ejercicio 3 — Anota la región de mayor gasto
+### Ejercicio 3 — Anota la región con más estudiantes
 
-**Habilidad que entrena:** guiar la mirada de la audiencia al hallazgo principal.
+**Objetivo:** Guiar la mirada al mensaje.
+**Habilidad que entrena:** `ax.annotate` con flecha.
 
 **Pistas progresivas:**
-- 🟡 *Pista suave:* ¿cómo sabes cuál es la región de mayor gasto? El objeto `g` ya está ordenado.
-- 🟠 *Pista media:* usa `g.idxmax()` para obtener el nombre de la región y `g.max()` para su valor. El método de anotación es `ax.annotate(...)`.
-- 🔴 *Pista directa:* `ax.annotate(g.idxmax(), xy=(0, g.max()), xytext=(2, g.max() * 0.85))` — ajusta las coordenadas según cómo se vea.
+- 🟢 Pista suave: `annotate` necesita el texto, el punto al que apunta (`xy`) y dónde poner el texto (`xytext`).
+- 🟡 Pista media: El punto señalado es la primera barra: `xy=(0, g.max())`. El texto, un poco a la derecha y más abajo.
+- 🔴 Pista directa: `ax.annotate(f"Más estudiantes: {g.idxmax()}", xy=(0, g.max()), xytext=(1, g.max()*0.9), arrowprops=dict(arrowstyle="->"))`.
 
-**Lógica de la solución:** `ax.annotate` agrega un texto al gráfico y opcionalmente una flecha. La celda de chequeo verifica que `len(ax.texts) > 0`, es decir, que exista al menos un texto añadido manualmente.
+**¿Qué significa el ✅?** Que existe al menos un texto anotado sobre el gráfico.
 
 ---
 
-### Ejercicio 4 — Construye las dos versiones (engañosa vs. honesta)
+### Ejercicio 4 — Construye las dos versiones
 
-**Habilidad que entrena:** reconocer la diferencia ética entre gráficos con eje truncado y gráficos honestos.
+**Objetivo:** Ver el mismo dato con eje truncado y desde cero, lado a lado.
+**Habilidad que entrena:** Subplots múltiples, y el ojo crítico.
 
 **Pistas progresivas:**
-- 🟡 *Pista suave:* el gráfico engañoso (`ax1`) ya está hecho. ¿Qué le falta a `ax2`?
-- 🟠 *Pista media:* `ax2` necesita que su eje Y parta desde cero. Revisa el Ejercicio 1.
-- 🔴 *Pista directa:* agrega `ax2.set_ylim(bottom=0)` en el espacio del TODO.
+- 🟢 Pista suave: La versión engañosa ya está construida en `ax1`. A `ax2` le falta una sola línea.
+- 🟡 Pista media: Es la misma línea del ejercicio 1, aplicada a `ax2`.
+- 🔴 Pista directa: `ax2.set_ylim(bottom=0)`.
 
-**Lógica de la solución:** la celda de chequeo verifica dos condiciones simultáneas: `honesto_desde_cero` (que `ax2` parte en 0) y `ax1.get_ylim()[0] > 0` (que `ax1` efectivamente está truncado). Ambas deben cumplirse para el ✅.
-
----
-
-## 7. El Ejercicio 4 en Profundidad: Ética Visual en el Estado
-
-El ejercicio 4 es el más importante del módulo porque toca un tema que va más allá del código: **la responsabilidad ética de quien comunica datos públicos**.
-
-### ¿Por qué importa el eje desde cero en el sector público?
-
-Imagina un informe de gestión que muestra el gasto de dos ministerios. Con eje truncado, la diferencia parece enorme. Con eje desde cero, es moderada. La decisión presupuestaria que tome un directivo basándose en ese gráfico puede ser completamente distinta.
-
-### Reflexión guiada
-
-Observa los dos gráficos que generaste:
-
-- **¿Cuántas veces más grande parece la región de mayor gasto en el gráfico truncado comparado con el honesto?**
-- **Si fueras un jefe de servicio viendo solo el gráfico de la izquierda, ¿qué decisión podrías tomar que sería diferente si vieras el de la derecha?**
-- **¿En qué situaciones podría alguien truncar el eje "sin querer"?** (respuesta: muchas herramientas, incluyendo Excel, ajustan automáticamente el eje al rango de los datos)
-
-### Pregunta de debate
-
-> ¿Qué otros tipos de engaño visual conoces además del eje truncado? ¿Cómo los detectarías en un informe que recibes?
-
-Pistas para explorar: gráficos de torta con más de 6 categorías, escalas logarítmicas sin aviso, tamaño de burbujas no proporcional al valor, colores que exageran contrastes.
+**¿Qué significa el ✅?** Que `ax2` parte de 0 y `ax1` no: tienes el par engañoso/honesto completo para comparar.
 
 ---
 
-## 8. Conexión con el Notebook `profundiza.ipynb`
-
-| Aspecto | `leccion.ipynb` (nivel práctico) | `profundiza.ipynb` (nivel teórico) |
-|---------|----------------------------------|-------------------------------------|
-| Enfoque | Ejercicios guiados con chequeo automático | Exploración libre con más herramientas |
-| Anotaciones | `ax.annotate` básico | Flechas con estilo, cajas de texto |
-| Ética visual | Eje truncado vs. desde cero | Catálogo extendido de engaños visuales |
-| Audiencias | Directivos y pares del servicio | Ciudadanía, medios, rendición de cuentas |
-| Tiempo estimado | 75–90 min | 45–60 min adicionales |
-
-**¿Cuándo ir al profundiza?** Cuando ya completaste los 4 ✅ y quieres aprender a hacer gráficos más pulidos para presentaciones formales, o cuando necesitas argumentar sobre ética de datos en una reunión.
+> 🔬 **En la profundización** cambia el dominio: **PM2.5 promedio por estación SINCA** (un adelanto de la rama R2, donde ese dataset es el ancla). Destacarás con color la estación más contaminada, pondrás etiquetas de valor sobre las barras y escribirás `revisar_grafico()`: un checklist de honestidad automatizado que puedes reutilizar en cualquier informe futuro.
 
 ---
 
-## 9. Autoevaluación Final
+## 7. Autoevaluación Final
 
-**1. ¿Por qué un gráfico de barras debe tener el eje Y desde cero?**
+**Pregunta 1:** ¿Por qué las barras deben partir de 0?
 
-- a) Porque matplotlib lo requiere por defecto
-- b) Porque truncar el eje exagera las diferencias y puede llevar a decisiones incorrectas ✅
-- c) Porque facilita el cálculo automático de porcentajes
-- d) Porque mejora el rendimiento del código
+- A) Por convención estética
+- B) Porque la barra codifica el valor con su altura: si el eje parte en otro número, las alturas dejan de ser proporcionales y las diferencias se exageran ✅
+- C) Porque matplotlib da error si no
+- D) Para que quepa el título
 
-*Explicación:* el truncamiento distorsiona la percepción visual. Las barras parecen más o menos diferentes de lo que los datos realmente muestran. Es un problema ético, no solo estético.
-
----
-
-**2. ¿Qué método de matplotlib se usa para forzar que el eje Y parta desde cero?**
-
-- a) `ax.ylim(0)`
-- b) `ax.set_axis(0)`
-- c) `ax.set_ylim(bottom=0)` ✅
-- d) `ax.zero_y(True)`
-
-*Explicación:* `set_ylim(bottom=0)` es el método estándar. El argumento `bottom` fija el límite inferior; `top` fijaría el superior.
+**Explicación:** El lector compara alturas, no lee números. Truncar el eje rompe la proporción altura/valor, que es todo el contrato visual del gráfico de barras.
 
 ---
 
-**3. ¿Qué hace `ax.annotate("texto", xy=(...), xytext=(...))`?**
+**Pregunta 2:** ¿Cuál es el mejor título para el gráfico de este módulo?
 
-- a) Cambia el color de una barra específica
-- b) Agrega una etiqueta al eje X
-- c) Escribe texto con una flecha apuntando a una posición del gráfico ✅
-- d) Guarda el gráfico como imagen
+- A) «Gráfico de barras»
+- B) «Datos de matrícula»
+- C) «Matrícula escolar por región, 2025 (top 6)» ✅
+- D) «Figura 1»
 
-*Explicación:* `xy` es donde apunta la flecha (el dato), `xytext` es donde se muestra el texto. Si se omite `xytext`, el texto queda encima del punto `xy`.
-
----
-
-**4. Un colega te manda un gráfico de barras donde la región A parece tener el doble de gasto que la región B. ¿Qué verificas primero?**
-
-- a) El tipo de gráfico usado
-- b) El color de las barras
-- c) Si el eje Y parte desde cero o está truncado ✅
-- d) El tamaño del archivo CSV
-
-*Explicación:* el primer control de calidad en cualquier gráfico de barras es revisar el origen del eje Y. Si no parte desde cero, la proporción visual no refleja la proporción real de los datos.
+**Explicación:** El título debe decir qué se mide, dónde y cuándo. «Figura 1» y «Gráfico de barras» describen el formato, no el contenido; «Datos de matrícula» omite el corte y el año.
 
 ---
 
-**5. ¿Cuál de las siguientes afirmaciones sobre ética en visualización es correcta?**
+**Pregunta 3:** ¿Qué diferencia hay entre `xy` y `xytext` en `annotate`?
 
-- a) Solo importa la honestidad si el gráfico se publica en medios
-- b) El truncamiento del eje solo afecta gráficos de más de 10 barras
-- c) Comunicar con integridad visual es parte de la responsabilidad del funcionario público ✅
-- d) Matplotlib trunca automáticamente todos los ejes para mejorar la visualización
+- A) Son sinónimos
+- B) `xy` es el punto al que apunta la flecha; `xytext` es donde se ubica el texto ✅
+- C) `xy` es para el eje x y `xytext` para el eje y
+- D) `xytext` solo funciona sin flecha
 
-*Explicación:* en el Estado, los gráficos apoyan decisiones de política pública, asignación de recursos y rendición de cuentas. Un gráfico engañoso —aunque sea por descuido— puede derivar en decisiones incorrectas con impacto real en la ciudadanía.
-
----
-
-## 10. Glosario del Módulo
-
-| Término | Definición simple | Equivalente en sector público |
-|---------|------------------|------------------------------|
-| **Eje Y** | El eje vertical de un gráfico | La escala de valores en una tabla de Excel |
-| **Eje truncado** | Eje que no parte desde cero, exagerando diferencias | Un indicador de gestión mostrado solo en el rango "bueno" |
-| **`set_ylim(bottom=0)`** | Fija el límite inferior del eje Y en cero | Pedir que el informe muestre la escala completa |
-| **`set_title`** | Agrega un título al gráfico | El encabezado de un cuadro en un informe de gestión |
-| **`set_xlabel` / `set_ylabel`** | Etiqueta los ejes horizontal y vertical | Los encabezados de columnas y filas en una tabla |
-| **`annotate`** | Agrega texto o flecha señalando un punto del gráfico | El comentario escrito a mano en un gráfico impreso |
-| **`g.idxmax()`** | Devuelve el índice del valor máximo de una Serie | "La región con el mayor presupuesto ejecutado" |
-| **`g.max()`** | Devuelve el valor máximo de una Serie | El valor de la celda más alta en una columna de Excel |
-| **`ax.texts`** | Lista de los textos anotados manualmente en el gráfico | Los comentarios y notas de un documento Word |
-| **`plt.subplots(1, 2)`** | Crea dos gráficos lado a lado | Dos tablas comparativas en la misma hoja de Excel |
-| **Ética visual** | Compromiso de representar datos sin distorsión intencional ni accidental | Integridad en la elaboración de informes públicos |
-| **Audiencia directiva** | Personas que toman decisiones basadas en el gráfico | Jefe de servicio, directivos DIPRES, comité de gestión |
+**Explicación:** La anotación tiene dos anclas: el dato señalado (`xy`) y la posición del rótulo (`xytext`); `arrowprops` dibuja la flecha entre ambos.
 
 ---
 
-## 11. Conexión con el Módulo Siguiente
+**Pregunta 4:** Un informe muestra la diferencia de matrícula entre dos dependencias con un eje que parte en 45.000. Las barras se ven una al doble de la otra, pero los valores son 46.000 y 47.000. ¿Qué es esto?
 
-### Lo que viene: R1-09 · Dashboards ligeros con Gradio
+- A) Un gráfico correcto porque los números son verdaderos
+- B) Un engaño visual por eje truncado: los datos son ciertos pero la percepción inducida es falsa ✅
+- C) Un error de matplotlib
+- D) Una técnica recomendada para destacar diferencias
 
-En R1-08 aprendiste a hacer **un gráfico honesto y comunicativo**. En R1-09 vas a dar el siguiente salto: construir un **tablero interactivo** donde el usuario puede filtrar los datos y ver los gráficos actualizarse en tiempo real.
+**Explicación:** La mentira visual no necesita datos falsos: basta romper la proporción. La diferencia real es ~2%; la percibida, ~100%.
 
-Usarás todo lo que aprendiste hasta aquí:
-- `filtrar` datos con pandas (de R1-02 y R1-04)
-- Calcular KPIs y agrupar (de R1-03 y R1-06)
-- Hacer gráficos comunicativos (de R1-07 y R1-08)
-- Envolver todo en una interfaz con Gradio
+---
 
-### Pregunta motivadora
+**Pregunta 5:** ¿Cuál de estos elementos NO es parte del mínimo ético de un gráfico público?
 
-> Tienes todos los ingredientes. ¿Puedes imaginar un tablero donde un directivo de tu servicio pueda filtrar el gasto por región y por categoría con un solo clic, sin saber nada de Python? Eso es exactamente lo que vas a construir.
+- A) Eje de barras desde 0
+- B) Título y unidades claras
+- C) Fuente del dato
+- D) Colores corporativos de la institución ✅
+
+**Explicación:** Los colores institucionales son deseables pero no éticos: un gráfico puede ser perfectamente honesto en blanco y negro. Eje, rotulación y fuente sí son el piso mínimo.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **Eje truncado** | Eje Y que no parte de 0 | El engaño visual más común en informes |
+| **`set_ylim(bottom=0)`** | Fija el inicio del eje Y | Garantía de proporcionalidad |
+| **Título que afirma** | Dice el hallazgo, no el formato | El asunto de un oficio bien escrito |
+| **Anotación** | Texto + flecha dentro del gráfico | El destacado de la minuta |
+| **`idxmax()`** | Índice (nombre) del valor máximo | «¿Quién lidera el ranking?» |
+| **Engaño visual** | Percepción falsa con datos verdaderos | Falta a la integridad pública |
+| **Checklist de honestidad** | Verificación automática del mínimo ético | Pauta de revisión antes de publicar |
+| **Prueba del pasillo** | ¿Se entiende el gráfico sin su autor al lado? | Estándar de un documento oficial |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R1-08 aprendiste a comunicar con integridad: eje desde 0, título que afirma, etiquetas, anotación, y el ojo entrenado contra el eje truncado.
+
+En **R1-09 · Dashboards ligeros** darás el último paso de la rama antes del capstone: convertir tus gráficos en una **aplicación interactiva con Gradio** que cualquier persona puede usar desde el navegador — sin instalar nada — para explorar los datos por sí misma.
+
+> 💡 **Pregunta para reflexionar:** Busca un gráfico publicado por una institución pública esta semana (prensa, redes, informes). Pásale mentalmente el `revisar_grafico()`: ¿eje desde 0?, ¿título que afirma?, ¿unidades? ¿Pasa el checklist?

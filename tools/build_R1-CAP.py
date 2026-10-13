@@ -1,8 +1,10 @@
 """build_R1-CAP.py — Capstone de la rama R1 (Análisis y Visualización).
 
 Proyecto-plantilla (no lección suelta): recorre el ciclo cargar→limpiar→analizar→
-visualizar→comunicar sobre datos del propio organismo (ejemplo: compras_ml.csv),
-termina en una figura honesta + brief de una plana, con rúbrica. Convención de la casa.
+visualizar→comunicar, termina en una figura honesta + brief de una plana, con
+rúbrica. Rearmado 2026: la plantilla usa matricula.csv (MINEDUC) como ejemplo y
+ofrece un banco de datasets curados; lo ideal es que el estudiante use datos de
+su propio organismo. Convención de la casa.
 
 Uso:  /opt/anaconda3/bin/python tools/build_R1-CAP.py
 """
@@ -17,11 +19,21 @@ IMPORTS = "import pandas as pd\nimport matplotlib.pyplot as plt"
 
 ENMARCA = '''## 1. Enmarca el problema
 
-Antes de tocar el dato, escribe en una frase la **pregunta de gestión** que vas a responder con
-datos de **tu organismo**. Ejemplo guía (compras públicas): *¿en qué regiones y categorías se
-concentra el gasto, y qué decisión habilita ese hallazgo?*
+Antes de tocar el dato, escribe en una frase la **pregunta de gestión** que vas a responder.
+Ejemplo guía (matrícula escolar): *¿dónde se concentran los establecimientos rurales chicos,
+y qué decisión de apoyo habilita ese hallazgo?*
 
-> En este capstone usamos `compras_ml.csv` como ejemplo; reemplázalo por los datos de tu organismo.'''
+**Elige tu dataset** (en este orden de preferencia):
+
+1. **Datos de tu propio organismo** — el capstone vale el doble si responde una pregunta real
+   de tu servicio.
+2. El **banco del bootcamp** (todos reales y ya curados, en `data/` del repositorio):
+   `matricula.csv` (matrícula escolar 2025, MINEDUC) · `aire_diario.csv` (PM2.5 diario por
+   estación, SINCA) · `sismos.csv` (catálogo USGS 2020–2025) · `fichas.csv` (trámites de
+   ChileAtiende) · `reclamos.csv` (reclamos de consumo, SERNAC).
+3. Cualquier dataset de **datos.gob.cl** (ya sabes usar su API, R1-01).
+
+> Esta plantilla usa `matricula.csv` como ejemplo; reemplázalo por el tuyo.'''
 
 EJ = [
  ("## 2. Carga y limpia",
@@ -41,23 +53,23 @@ assert len(df_limpio) <= len(df)''',
 
  ("## 3. Analiza",
   "Resume el dato para responder tu pregunta. Una función reutilizable que agrega por una dimensión.",
-  "Escribe `resumen_gasto`",
-  '''def resumen_gasto(d, por="region_comprador"):
-    return (d.groupby(por)["monto_total"]
+  "Escribe `resumen_matricula`",
+  '''def resumen_matricula(d, por="region"):
+    return (d.groupby(por)["mat_total"]
               .agg(["sum", "mean", "count"])
               .sort_values("sum", ascending=False))
 
-tabla = resumen_gasto(df_limpio)
+tabla = resumen_matricula(df_limpio)
 print(tabla.head(3))''',
-  '''def resumen_gasto(d, por="region_comprador"):
-    # TODO: agrupa por 'por' y agrega monto_total con sum, mean y count; ordena por sum desc
+  '''def resumen_matricula(d, por="region"):
+    # TODO: agrupa por 'por' y agrega mat_total con sum, mean y count; ordena por sum desc
     return ...
 
-tabla = resumen_gasto(df_limpio)
+tabla = resumen_matricula(df_limpio)
 print(tabla.head(3))''',
   '''assert "sum" in tabla.columns
-assert len(tabla) == df_limpio["region_comprador"].nunique()''',
-  "d.groupby(por)['monto_total'].agg(['sum','mean','count']).sort_values('sum', ascending=False).",
+assert len(tabla) == df_limpio["region"].nunique()''',
+  "d.groupby(por)['mat_total'].agg(['sum','mean','count']).sort_values('sum', ascending=False).",
   None),
 
  ("## 4. Visualiza (honesto)",
@@ -67,7 +79,7 @@ assert len(tabla) == df_limpio["region_comprador"].nunique()''',
 fig, ax = plt.subplots(figsize=(7, 4))
 ax.bar(top.index, top["sum"], color="#4240e5")
 ax.set_ylim(bottom=0)
-ax.set_title("Gasto por región (top 6)"); ax.set_xlabel("Región"); ax.set_ylabel("Gasto total (CLP)")
+ax.set_title("Matrícula por región, 2025 (top 6)"); ax.set_xlabel("Región"); ax.set_ylabel("Estudiantes matriculados")
 plt.xticks(rotation=45, ha="right"); plt.tight_layout()
 plt.show()''',
   '''top = tabla.head(6)
@@ -93,7 +105,9 @@ Completa este **brief** (lo que leería quien decide). Es tu entregable principa
 >
 > **Recomendación accionable:** _(qué debería hacer el organismo con esto)_
 >
-> **Límites y ética:** _(qué NO dice este dato; sesgos o cautelas)_'''
+> **Límites y ética:** _(qué NO dice este dato; sesgos o cautelas. Ejemplo con matrícula:
+> el dato es de abril de 2025 y no captura el movimiento durante el año; «matrícula» no es
+> «asistencia».)_'''
 
 RUBRICA = '''## Rúbrica de evaluación
 
@@ -104,22 +118,23 @@ RUBRICA = '''## Rúbrica de evaluación
 | **Honestidad / ética** | Eje desde 0, sin engaños; se declaran límites del dato. |
 | **Reproducibilidad** | El notebook corre de principio a fin sin pasos manuales. |
 | **Comunicación** | El brief de una plana es claro y accionable. |
+| **Pertinencia** | (Bonus) El dataset es del propio organismo o responde una pregunta real de gestión. |
 
-> **Entregable:** notebook reproducible + figura honesta + brief de una plana, sobre datos de tu organismo.'''
+> **Entregable:** notebook reproducible + figura honesta + brief de una plana.'''
 
 
 def build_leccion(con_sol):
     nb = h.new_notebook()
     cells = [
-        h.header_cell("R1-CAP", "Capstone — análisis sobre datos de tu organismo", "A", "Analista de Datos", "11–12",
+        h.header_cell("R1-CAP", "Capstone — análisis sobre datos de tu organismo", "R1", "Analista de Datos", "11–12",
                       ["Recorrer el ciclo completo: **cargar → limpiar → analizar → visualizar → comunicar**.",
                        "Producir una **figura honesta** y un **brief de una plana**.",
-                       "Trabajar sobre **datos de tu propio organismo**.",
+                       "Trabajar sobre **datos de tu propio organismo** (o del banco del bootcamp).",
                        "Entregar un notebook **reproducible**."],
                       "ejecutar un análisis de datos público de punta a punta y comunicarlo con integridad.",
-                      "compras públicas (ejemplo) o el dataset de tu organismo.",
+                      "matrícula escolar 2025 (ejemplo) o el dataset de tu organismo.",
                       n_checks=3),
-        h.setup_cell("compras_ml.csv", IMPORTS),
+        h.setup_cell("matricula.csv", IMPORTS),
         h.md(ENMARCA),
     ]
     for i, (sec_t, sec_b, ej_t, sol, todo, chk, hint, viz) in enumerate(EJ, 1):
@@ -137,50 +152,50 @@ def build_leccion(con_sol):
 
 PROF_PREP = '''import pandas as pd, os, urllib.request
 import matplotlib.pyplot as plt
-CSV = "compras_ml.csv"
+CSV = "matricula.csv"
 if not os.path.exists(CSV):
-    urllib.request.urlretrieve("https://raw.githubusercontent.com/formacionpublica-bootcamp/bootcamp/main/data/compras_ml.csv", CSV)
+    urllib.request.urlretrieve("https://raw.githubusercontent.com/formacionpublica-bootcamp/bootcamp/main/data/matricula.csv", CSV)
 df = pd.read_csv(CSV).dropna().drop_duplicates()
 print("Datos:", df.shape)'''
 
 PROF_EJ = [
  ("## 1. Segunda dimensión de análisis",
-  "Un hallazgo robusto se ve desde más de un ángulo. Resume también por categoría.",
-  "Gasto por categoría",
-  '''por_categoria = df.groupby("categoria")["monto_total"].sum().sort_values(ascending=False)
-print(por_categoria.head(3))''',
-  '''# TODO: gasto total por categoria, ordenado desc
-por_categoria = ...
-print(por_categoria.head(3))''',
-  '''assert len(por_categoria) == df["categoria"].nunique()''',
-  "df.groupby('categoria')['monto_total'].sum().sort_values(ascending=False)."),
+  "Un hallazgo robusto se ve desde más de un ángulo. Resume también por dependencia.",
+  "Matrícula por dependencia",
+  '''por_dependencia = df.groupby("dependencia")["mat_total"].sum().sort_values(ascending=False)
+print(por_dependencia.head(3))''',
+  '''# TODO: matrícula total por dependencia, ordenada desc
+por_dependencia = ...
+print(por_dependencia.head(3))''',
+  '''assert len(por_dependencia) == df["dependencia"].nunique()''',
+  "df.groupby('dependencia')['mat_total'].sum().sort_values(ascending=False)."),
 
  ("## 2. Exporta la figura para el brief",
   "Guarda la figura como PNG para pegarla en tu informe.",
   "Guarda la figura",
-  '''top = df.groupby("region_comprador")["monto_total"].sum().sort_values(ascending=False).head(6)
+  '''top = df.groupby("region")["mat_total"].sum().sort_values(ascending=False).head(6)
 fig, ax = plt.subplots(figsize=(7, 4))
 ax.bar(top.index, top.values, color="#4240e5"); ax.set_ylim(bottom=0)
-fig.savefig("figura_gasto_region.png", dpi=120, bbox_inches="tight")
-existe = os.path.exists("figura_gasto_region.png")
+fig.savefig("figura_matricula_region.png", dpi=120, bbox_inches="tight")
+existe = os.path.exists("figura_matricula_region.png")
 print("guardada:", existe)''',
-  '''top = df.groupby("region_comprador")["monto_total"].sum().sort_values(ascending=False).head(6)
+  '''top = df.groupby("region")["mat_total"].sum().sort_values(ascending=False).head(6)
 fig, ax = plt.subplots(figsize=(7, 4))
 ax.bar(top.index, top.values, color="#4240e5"); ax.set_ylim(bottom=0)
-# TODO: guarda la figura como "figura_gasto_region.png"
+# TODO: guarda la figura como "figura_matricula_region.png"
 ...
-existe = os.path.exists("figura_gasto_region.png")
+existe = os.path.exists("figura_matricula_region.png")
 print("guardada:", existe)''',
   '''assert existe''',
-  "fig.savefig('figura_gasto_region.png', dpi=120, bbox_inches='tight')."),
+  "fig.savefig('figura_matricula_region.png', dpi=120, bbox_inches='tight')."),
 ]
 
 PROF_HEADER = '''# R1-CAP · Capstone — Profundización (opcional) 🔬
 
-**Formación Pública — Línea A · Analista de Datos · Notebook de profundización**
+**Formación Pública — Rama R1 · Analista de Datos · Notebook de profundización**
 
 Opcional. Refuerza tu capstone: una **segunda dimensión** de análisis y **exportar** la figura para
-pegarla en el brief. Mismos datos de compras públicas.
+pegarla en el brief. Mismos datos de matrícula escolar.
 
 > Cada ejercicio termina en una **celda de chequeo** con ✅ / pista.'''
 
@@ -209,8 +224,10 @@ def main():
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-CAP-capstone-analisis/leccion.ipynb)
 
-Proyecto final de la rama R1: recorre cargar→limpiar→analizar→visualizar→comunicar sobre datos del
-propio organismo (ejemplo: `compras_ml.csv`), terminando en una figura honesta + un brief de una plana.
+Proyecto final de la rama R1: recorre cargar→limpiar→analizar→visualizar→comunicar, terminando
+en una figura honesta + un brief de una plana. La plantilla usa la matrícula escolar 2025
+(`matricula.csv`) como ejemplo; lo ideal es usar **datos de tu propio organismo** o el banco
+del bootcamp (`matricula`, `aire_diario`, `sismos`, `fichas`, `reclamos`).
 
 - `leccion.ipynb` — plantilla con `TODO`; el notebook se autoverifica (✅).
 - Incluye **rúbrica** de evaluación. `profundiza.ipynb` — opcional 🔬.

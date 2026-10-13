@@ -1,0 +1,20 @@
+name: Revisar fuentes de datos
+
+# Mensual: confirma que las fuentes públicas siguen vivas y avisa (job en rojo →
+# correo de GitHub) cuando hay datos oficiales más nuevos que los del curso.
+
+on:
+  schedule:
+    - cron: "0 12 1 * *"   # día 1 de cada mes, 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - run: python tools/check_fuentes.py

@@ -1,40 +1,20 @@
 # R1-04 · Limpieza de datos
 
-Quinto módulo (tronco común) del **Bootcamp de Datos para Funcionarios Públicos — Formación Pública**.
-Módulo compartido. Modalidad autoguiada, se ejecuta en Google Colab.
-
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-04-limpieza-de-datos/leccion.ipynb)
 
-> 📖 **¿Trabado o quieres ir paso a paso?** Abre la [**Guía de Aprendizaje**](GUIA_APRENDIZAJE.md)
-> del módulo: pistas progresivas 🟢🟡🔴, errores frecuentes, analogías con Excel y autoevaluación.
+Dejar un dataset sucio listo para analizar: **diagnóstico** (`info`, `isna`, `duplicated`,
+`value_counts`), **texto** (`.str.strip().str.title()`), **sinónimos** con diccionario
+(`replace`/`map`), la **trampa del punto de miles** (`"2.425"` no es 2,425), **imposibles** a
+`NaN` sin inventar, **duplicados**, una función `limpiar()` reutilizable y una **auditoría**
+contra la fuente oficial.
 
-## ¿Qué vas a aprender?
-A dejar un dataset sucio listo para analizar: diagnosticar problemas (faltantes, duplicados, tipos), normalizar texto (`.str.strip()`, `.str.capitalize()`), convertir texto a número, resolver valores faltantes (`dropna`/`fillna`) y eliminar duplicados (`drop_duplicates`), todo empaquetado en una función de limpieza reutilizable.
+**Datos.** `matricula_sucia.csv`: 1.545 establecimientos de la matrícula oficial 2025 (MINEDUC)
+con errores típicos de planilla inyectados con semilla fija (regiones escritas de 23 formas,
+dependencias abreviadas, rural como «Sí/No/0/1», comunas en MAYÚSCULAS con espacios, matrícula
+como texto con «s/i» y punto de miles, -1 imposibles, 45 filas pegadas dos veces). Se audita
+contra `matricula.csv` (cifra oficial) por RBD. La profundización usa `aire_nuevos.csv`:
+PM2.5 diario de 14 estaciones SINCA, ene–sep 2026, con faltantes **reales**.
 
-## Datos
-Caso conductor: **compras públicas (ChileCompra)**. Se usa una cifra real y actual — los **rubros más comprados por el Estado en 2026** con su monto bruto — tomada del portal oficial *Datos Abiertos* de la Dirección ChileCompra (datos-abiertos.chilecompra.cl). Se presenta como un *export crudo* con los defectos típicos de los datos autodeclarados (espacios, mayúsculas, monto como texto, un faltante y una fila duplicada). Las cifras son las oficiales reales.
-
-## Contenido
-- `leccion.ipynb` — teoría + ejercicios + celdas de chequeo (para el estudiante).
-- `solucion.ipynb` — soluciones de referencia (uso interno).
-- `profundiza.ipynb` — **notebook opcional de profundización teórica** (ver abajo).
-- `profundiza_solucion.ipynb` — solución del profundiza (uso interno).
-- `README.md` — esta presentación.
-
-## Cómo se cursa
-1. Abre `leccion.ipynb` con el botón **Open in Colab**.
-2. Lee y ejecuta cada sección.
-3. Resuelve los cinco ejercicios y ejecuta sus celdas de chequeo hasta ver ✅.
-
-## 🔬 Profundización (opcional)
-¿Quieres entender el *porqué* y no solo el *cómo*? El notebook **`profundiza.ipynb`** va un nivel más
-hondo en teoría: por qué **limpiar no es neutral** (cada paso codifica un supuesto), los tres tipos de
-dato faltante (**MCAR / MAR / MNAR**) y el **sesgo** que mete cada estrategia (**eliminar filas vs.
-imputar media/mediana**), las **trampas de la normalización de texto** (siglas y categorías que se
-funden), y la **procedencia / linaje** del dato y la reproducibilidad (*garbage in, garbage out*).
-Con 4 ejercicios conceptuales auto-corregidos.
-
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-04-limpieza-de-datos/profundiza.ipynb)
-
-## Licencia
-Contenido bajo **CC BY 4.0**.
+- `leccion.ipynb` — completa los `TODO`; cada ejercicio se autoverifica (✅).
+- `profundiza.ipynb` — opcional 🔬: faltantes reales por estación, al azar vs en bloque, comparación justa, nota metodológica.
+- [`GUIA_APRENDIZAJE.md`](GUIA_APRENDIZAJE.md) — pistas progresivas, errores frecuentes y autoevaluación.

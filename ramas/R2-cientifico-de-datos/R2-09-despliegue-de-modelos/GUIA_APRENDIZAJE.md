@@ -1,344 +1,300 @@
-# 📘 Guía de Aprendizaje — R2-09 · Despliegue de modelos
+# Guía de Aprendizaje — R2-09 · Despliegue, ficha de modelo y monitoreo
+
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R2 · Científico de Datos · Módulo 9 · Semana 15
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Nombre del módulo** | R2-09 · Despliegue de modelos |
-| **Pista / Rama** | R2 — Científico/a de Datos |
-| **Duración estimada** | 2–3 horas |
-| **Semana** | Semana 13–14 |
-| **Nivel** | Intermedio |
-| **Prerrequisitos** | R2-08 (pipelines reproducibles) — el archivo `modelo_compras.joblib` debe existir |
-| **Competencia de salida** | Dejar tu modelo usable por otra persona: función de predicción con validación de entrada, scoring por lotes y archivo de resultados |
-| **Dataset** | `compras_ml.csv` + `compras_nuevas.csv` — órdenes de compra de alimentos, ChileCompra |
-| **Entregable** | Las 4 celdas de chequeo del notebook mostrando ✅ + archivo `predicciones_monto.csv` |
+|-------|---------|
+| **Módulo** | R2-09 · Despliegue, ficha de modelo y monitoreo |
+| **Rama** | R2 — Científico de Datos |
+| **Duración estimada** | 120 minutos (lección) + 45 minutos (profundización opcional) |
+| **Nivel** | Intermedio — requiere R2-07 y R2-08 |
+| **Prerrequisitos** | Pipelines de scikit-learn, `joblib`, MAE, partición temporal, recall/precision |
+| **Competencia de salida** | Dejar un modelo usable y vigilado: predicción en línea con validación, puntuación por lotes sin inventar, entregable, monitoreo de desempeño y *drift*, y ficha de modelo honesta |
+| **Entregable** | Las 7 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `aire_diario.csv` (PM2.5 diario, 14 estaciones SINCA, 2020–2025) para entrenar y probar; `aire_nuevos.csv` (enero–septiembre 2026) como datos de **producción** que el modelo nunca vio |
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-Entrenaste el modelo, lo evaluaste, lo guardaste. Hasta aquí tú puedes usarlo. Pero el valor real en el Estado surge cuando **otras personas pueden usarlo sin saber de machine learning**. El analista de la unidad de compras que recibe un Excel con 500 órdenes nuevas y necesita la estimación de monto. El jefe de unidad que envía una solicitud y espera que el sistema valide los datos antes de procesar. El equipo de control que quiere revisar un mes de predicciones en bloque.
+La mayoría de los modelos que se construyen en el Estado **nunca se usan**: quedan en el computador de quien los hizo, en un cuaderno que solo esa persona sabe ejecutar. Desplegar es la diferencia entre un ejercicio y una herramienta: que un equipo de gestión ambiental, una SEREMI o un municipio pueda pedirle al modelo «¿cómo estará el aire mañana en esta estación?» y recibir una respuesta **confiable, documentada y vigilada**.
 
-Este módulo te enseña a construir esa "interfaz" entre tu modelo y el mundo: funciones claras, con validación, que no se caen con datos raros, y que exportan resultados en formatos que la administración pública ya conoce (CSV, que cualquiera abre en Excel).
-
-**Lo concreto que aprenderás:**
-- Cómo hacer una **función de predicción** que cualquier colega puede llamar.
-- Cómo hacer **predicción por lotes**: procesar una tabla entera de golpe.
-- Cómo **validar la entrada**: rechazar valores imposibles antes de que lleguen al modelo.
-- Cómo **exportar los resultados** a un CSV listo para compartir.
-
-**Una nota importante:** en este módulo NO montas un servidor ni una API real en internet. Aprendes los conceptos y construyes las funciones que son el corazón de cualquier despliegue. Llevar eso a producción completa (con servidor, monitoreo, etc.) es trabajo de un equipo técnico especializado, y aquí entenderás qué implica ese siguiente paso.
-
-**Conexión con el dataset real:** `compras_nuevas.csv` simula el lote de órdenes que llegaría al final del mes. Procesar esa tabla y exportar `predicciones_monto.csv` es exactamente el flujo de trabajo que podría automatizarse en un servicio público.
+Este módulo usa un caso real: un pronóstico del PM2.5 del día siguiente para 14 estaciones del SINCA, entrenado con 2020–2024 y puesto en «producción» sobre los datos de **2026**. Y la producción real trae sorpresas: El Bosque (Santiago) dejó de reportar entre abril de 2025 y abril de 2026, Copiapó perdió el 40% de sus días, y una de cada siete filas de 2026 no se puede predecir porque falta el dato de hoy o de ayer. Aquí aprenderás a **no inventar** cuando falta el dato, a **comparar con justicia** cuando el desempeño cambia, y a escribir la **ficha** que le dice a quien decide para qué sirve el modelo y para qué no.
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía en el sector público |
-|---|---|---|
-| **Predicción en línea (online)** | Llega un caso, se responde al instante | Funcionario que llena formulario y el sistema entrega estimación en segundos |
-| **Predicción por lotes (batch)** | Llega una tabla de miles de casos, se procesan todos de una vez | Procesar el cierre mensual de órdenes de compra en una sola ejecución |
-| **Función de predicción** | Función que recibe parámetros y devuelve la estimación | Formulario digital que calcula automáticamente el valor estimado |
-| **Validación de entrada** | Comprobar que los datos recibidos están en rangos válidos antes de predecir | Control de integridad de datos antes de ingresar una solicitud al sistema |
-| **Diccionario de respuesta** | Estructura `{"ok": True/False, "resultado": ...}` que comunica éxito o error | Notificación de sistema que dice "solicitud aprobada" o "error: dato inválido" |
-| **Scoring por lotes** | Aplicar el modelo a una tabla entera con `modelo.predict(tabla)` | Ejecutar una macro de Excel sobre toda la planilla de una vez |
-| **API web (conceptual)** | Servicio en internet que expone la función de predicción vía URL | Servicio web de ChileCompra al que otros sistemas se conectan para consultar |
-| **Monitoreo (conceptual)** | Vigilar si las predicciones siguen siendo buenas con el tiempo | Auditoría periódica del modelo: ¿sigue prediciendo bien con datos recientes? |
-| **Reentrenamiento (conceptual)** | Actualizar el modelo con datos más recientes cuando se desajusta | Actualizar las tablas de parámetros de gestión cada año con datos frescos |
+| Concepto | ¿Qué hace? | Equivalente en Excel |
+|----------|-----------|----------------------|
+| **Artefacto (`joblib`)** | El modelo entrenado guardado en un archivo, listo para cargarse en otro lugar | Una planilla «plantilla» con las fórmulas ya armadas |
+| **Predicción en línea** | Una función que recibe un caso y devuelve la predicción | Una celda con fórmula donde escribes los datos y ves el resultado |
+| **Validación de entrada** | Rechazar con un mensaje claro los datos imposibles o faltantes | Validación de datos (lista desplegable, rango permitido) |
+| **Puntuación por lotes** | Predecir una tabla entera de un viaje | Arrastrar la fórmula a toda la columna |
+| **`estado = "sin_prediccion"`** | Marcar la fila que no se pudo predecir, en vez de inventar | Dejar visible el `#N/A` en vez de rellenarlo con cero |
+| **Monitoreo de desempeño** | Comparar el error en producción con el de la prueba | Comparar la proyección con lo ejecutado, mes a mes |
+| ***Drift*** | Cambio en la distribución de los datos de entrada | Notar que este mes la planilla llegó con muchas celdas vacías |
+| **Ficha de modelo** | Documento que acompaña al modelo: qué hace, cuánto se equivoca, para qué no usarlo | La hoja «Léame» de una planilla oficial |
 
 ---
 
 ## 4. Verificación de Prerrequisitos
 
-Antes de empezar este módulo, responde honestamente:
-
-| ¿Puedo...? | Estado |
-|---|---|
-| Cargar un CSV con pandas | ✅ Sí / 🔄 Revisar R2-00 |
-| Crear y entrenar un Pipeline de scikit-learn | ✅ Sí / 🔄 Revisar R2-08 |
-| Guardar y recargar un modelo con `joblib.dump` / `joblib.load` | ✅ Sí / 🔄 Revisar R2-08 |
-| Usar `modelo.predict()` sobre un DataFrame | ✅ Sí / 🔄 Revisar R2-08 |
-| Definir una función en Python con `def` y `return` | ✅ Sí / 🔄 Revisar R2-00 |
-| Exportar un DataFrame a CSV con `to_csv()` | ✅ Sí / 🔄 Revisar R2-01 |
-
-Si tienes más de dos "Revisar", prioriza R2-08 que es el prerrequisito directo de este módulo.
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Explicar qué hace un `Pipeline` y por qué se guarda completo con `joblib` | ☐ |
+| Calcular un MAE con `mean_absolute_error` y explicar qué significa en las unidades del dato | ☐ |
+| Explicar por qué en datos temporales se entrena con el pasado y se prueba con el futuro | ☐ |
+| Distinguir *recall* de *precision* (solo para la profundización) | ☐ |
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### 🔷 Sección: Preparación y las dos formas de usar un modelo
+### Sección 0 · Preparación y el modelo que vas a desplegar
 
-🎯 **Objetivo:** cargar el entorno, reentrenar el pipeline del módulo anterior, y entender la diferencia entre predicción en línea y por lotes.
+🎯 **Objetivo:** Cargar la historia (30.674 filas, 2020-01-01 → 2025-12-30) y los datos nuevos (3.808 filas, 2026-01-01 → 2026-09-29), y reconstruir el modelo.
 
-💡 **Concepto clave — dos flujos de trabajo distintos en el Estado:**
-La predicción **en línea** responde una solicitud individual al instante: un funcionario llena un formulario y el sistema devuelve el monto estimado mientras espera. La predicción **por lotes** procesa un archivo completo: al cierre del mes, se suben las 5.000 órdenes nuevas y el sistema las puntea todas de una vez. Ambos flujos comparten el mismo modelo, pero tienen requisitos distintos de código.
+💡 **Concepto clave:** La celda del modelo ya viene hecha: es una variante más simple del pipeline de R2-08, **sin meteorología** (solo 7 de 14 estaciones la miden), reconstruida aquí para que el módulo no dependa de otro archivo. Fíjate en tres decisiones de oficio: (1) la receta de *features* es **una sola función** (`construir_features`) que se usa igual al entrenar y en producción; (2) la partición es **temporal**: entrena con 2020–2024 y prueba con 2025; (3) el modelo se guarda en `modelo_pm25.joblib` y **se vuelve a cargar**, como lo haría otro equipo. El modelo logra un MAE de **3,94 µg/m³** en la prueba 2025, frente a **4,19** de la línea base «mañana = hoy»: le gana, pero por poco. Ese dato irá a la ficha.
 
-🔍 **Qué hace el código:**
-- Recrea el pipeline del módulo anterior (StandardScaler + KNeighborsRegressor).
-- Carga `compras_nuevas.csv` (el lote de órdenes que se procesará en los ejercicios).
-- No hay TODO en esta sección: ejecutar y observar.
-
-⚠️ **Error frecuente:** no tener `compras_nuevas.csv` disponible. Si estás en Colab, asegúrate de subirlo junto con `compras_ml.csv`. El notebook intenta descargarlo automáticamente desde GitHub.
-
-✅ **Señal de comprensión:** el print dice "Modelo cargado y entrenado exitosamente" y puedes distinguir los dos escenarios de uso (uno a uno vs. por lotes).
+⚠️ **Error frecuente:** Pensar que, si el modelo vive en el cuaderno, ya está desplegado. Desplegar es que **otra persona u otro sistema** pueda usarlo sin ti.
 
 ---
 
-### 🔷 Sección 1: La función de predicción, el corazón del despliegue
+### Sección 1 · La función de predicción
 
-🎯 **Objetivo:** crear `predecir_monto(cantidad, tamano_num)` — una función que cualquier persona puede llamar para obtener una estimación de monto.
+🎯 **Objetivo:** Envolver `modelo.predict` en una función que reciba los datos de un caso y devuelva un número.
 
-💡 **Concepto clave — encapsular la complejidad:**
-Una buena función de predicción esconde la complejidad del modelo detrás de una interfaz simple. Quien la llama no necesita saber que hay un KNN con escalado dentro: solo escribe `predecir_monto(100, 2)` y obtiene la respuesta. Es el mismo principio que un formulario web del Estado: el usuario llena campos simples y el sistema hace el trabajo internamente.
-
-🔍 **Qué hace el código:**
-- La función recibe `cantidad` y `tamano_num` como parámetros individuales.
-- Construye internamente el DataFrame que el pipeline necesita: `pd.DataFrame({"cantidad": [cantidad], "tamano_num": [tamano_num]})`.
-- Llama a `modelo.predict(...)`, toma el primer (y único) elemento, y lo redondea a 1 decimal.
-
-⚠️ **Error frecuente:** no poner los valores en listas dentro del DataFrame. `pd.DataFrame({"cantidad": 100})` falla; debe ser `pd.DataFrame({"cantidad": [100]})` — pandas espera iterables, no escalares.
-
-✅ **Señal de comprensión:** `predecir_monto(100, 2)` devuelve un número real (no 0.0) y es aproximadamente el mismo valor que el pipeline entrenado predice para esos parámetros.
+💡 **Concepto clave:** Como el pipeline incluye el codificador de la estación, la función no transforma nada a mano. Para Cerro Navia con 60 µg/m³ hoy, 55 ayer, media semanal de 48 y mes 6, el modelo estima unos 50 µg/m³ para mañana.
 
 ---
 
-### 🔷 Sección 2: Puntuación por lotes
+### Sección 2 · Validar la entrada
 
-🎯 **Objetivo:** crear `predecir_lote(tabla)` — una función que agrega la columna `monto_estimado` a una tabla completa.
+🎯 **Objetivo:** Rechazar estaciones desconocidas, valores faltantes, valores fuera de rango y meses inválidos, con un mensaje claro.
 
-💡 **Concepto clave — el modelo procesa tablas enteras de una vez:**
-No hace falta llamar a `predecir_monto` cien veces para cien órdenes. El método `modelo.predict(tabla)` puede recibir una tabla de cualquier tamaño y devuelve todas las predicciones en un array. Es como aplicar una fórmula de Excel a toda la columna en vez de celda por celda: el resultado es el mismo, pero mucho más rápido y menos propenso a errores.
+💡 **Concepto clave:** El bosque aleatorio de scikit-learn (desde la versión 1.4) **acepta NaN sin reclamar** y entrega un número igual. Es decir: sin validación, el modelo **inventa en silencio**. Y una estación desconocida no produce error (el codificador la ignora): produce una predicción «promedio» que nadie pidió. La validación no es burocracia: es lo que impide que un sistema responda tonterías con cara de seguridad.
 
-🔍 **Qué hace el código:**
-- Recibe una tabla (DataFrame) con columnas `cantidad` y `tamano_num`.
-- Agrega una columna nueva `monto_estimado` con las predicciones del modelo, redondeadas a 1 decimal.
-- Devuelve la tabla completa con la nueva columna.
-
-⚠️ **Error frecuente:** modificar la tabla original en vez de trabajar con una copia. El código ya incluye `resultado = tabla.copy()` para proteger el DataFrame original. Si eliminas esa línea, puedes alterar datos que se usan en otras partes del notebook.
-
-✅ **Señal de comprensión:** `compras_predichas` tiene una columna `monto_estimado` y exactamente la misma cantidad de filas que `compras_nuevas`.
+⚠️ **Error frecuente:** Usar `v == np.nan` para detectar faltantes. `NaN` no es igual a nada, ni siquiera a sí mismo: usa `pd.isna(v)`.
 
 ---
 
-### 🔷 Sección 3: Un despliegue robusto valida la entrada
+### Sección 3 · Puntuación por lotes en producción
 
-🎯 **Objetivo:** crear `predecir_seguro(cantidad, tamano_num)` — una función que valida los rangos de entrada antes de predecir y devuelve un diccionario estructurado.
+🎯 **Objetivo:** Predecir todas las filas de 2026 que traen los datos completos y marcar el resto como `sin_prediccion`.
 
-💡 **Concepto clave — el modelo no debe caerse con datos raros:**
-En el Estado, los datos llegan de sistemas heredados, formularios manuales, integraciones entre plataformas. Una `cantidad` de -5, un `tamano_num` de 99 o un campo en blanco son completamente posibles. Un despliegue que falla con esos datos es inutilizable. La solución es validar la entrada antes de predecir y devolver un mensaje claro cuando algo está mal. El diccionario de respuesta (`{"ok": True/False, ...}`) es la forma estándar en que los servicios web comunican éxito o error.
+💡 **Concepto clave:** De las 3.808 filas de 2026, **542 (14,2%) no se pueden predecir** porque falta el PM2.5 de hoy, de ayer o de la semana. No se reparten parejo: El Bosque (51%), Copiapó (44%), Concón (37%) y Coquimbo (27%) concentran casi todos los huecos. Un lote que «rellena» esos huecos con un promedio entregaría pronósticos que parecen datos y no lo son.
 
-🔍 **Qué hace el código:**
-- Verifica que `cantidad` esté entre 1 y 500, y que `tamano_num` esté entre 1 y 4.
-- Si cualquier valor está fuera de rango: devuelve `{"ok": False, "error": "Valores fuera de rango"}`.
-- Si todo está bien: devuelve `{"ok": True, "monto_estimado": predecir_monto(cantidad, tamano_num)}`.
-
-⚠️ **Error frecuente:** usar `and` en vez de `or` en las condiciones de invalidez. Si escribes `cantidad < 1 and tamano_num > 4`, solo detectarás el caso donde AMBOS están mal al mismo tiempo. Con `or` detectas cualquiera de los dos.
-
-✅ **Señal de comprensión:** `predecir_seguro(100, 2)["ok"] == True` y `predecir_seguro(800, 2)["ok"] == False`. La función maneja ambos casos sin lanzar excepciones.
+✅ **Señal de que entendiste:** Puedes explicar por qué es mejor una fila vacía y marcada que una predicción inventada.
 
 ---
 
-### 🔷 Sección 4: Entregar el resultado
+### Sección 4 · Entregar el resultado
 
-🎯 **Objetivo:** guardar `compras_predichas` en un archivo CSV listo para compartir.
+🎯 **Objetivo:** Guardar `predicciones_pm25_2026.csv` con la columna `fecha_objetivo` (el día pronosticado) y el `estado` de cada fila.
 
-💡 **Concepto clave — el CSV como formato de entrega en la administración:**
-El resultado final de un proceso de scoring en el Estado casi siempre es un archivo. El CSV es el mínimo común múltiplo: cualquier funcionario puede abrirlo en Excel, cualquier sistema puede importarlo. `to_csv("predicciones_monto.csv", index=False)` exporta el DataFrame sin el índice (que no tiene significado y solo agrega una columna extra confusa).
-
-🔍 **Qué hace el código:**
-- `compras_predichas.to_csv("predicciones_monto.csv", index=False)` guarda la tabla con predicciones en disco.
-- El parámetro `index=False` evita que pandas agregue una columna numérica extra que no tiene significado de negocio.
-
-⚠️ **Error frecuente:** no incluir `index=False`. El archivo resultante tendrá una columna extra con números 0, 1, 2... que confunde a quienes abren el archivo en Excel.
-
-✅ **Señal de comprensión:** el archivo `predicciones_monto.csv` existe, tiene la columna `monto_estimado` y el mismo número de filas que `compras_nuevas`.
+💡 **Concepto clave:** Quien recibe el archivo no tiene tu cuaderno. Si la columna dice `fecha` sin más, ¿es el día del dato o el día pronosticado? Un buen entregable **no obliga a adivinar**.
 
 ---
 
-## 6. Guía de Ejercicios
+### Sección 5 · Monitoreo de desempeño
 
-### ✍️ Ejercicio 1 — Tu función de predicción
+🎯 **Objetivo:** Calcular el MAE en 2026 y compararlo con la prueba de los **mismos meses** y con la línea base.
 
-**Habilidad:** encapsular la predicción del pipeline en una función reutilizable.
+💡 **Concepto clave:** El MAE de 2026 (**4,92**) es mayor que el de la prueba 2025 completa (**3,94**). ¿Se rompió el modelo? No tan rápido: 2026 cubre enero–septiembre, que incluye el invierno, cuando el PM2.5 es más alto y más difícil de pronosticar. Contra la prueba 2025 de **enero–septiembre** (**4,58**), la diferencia es mucho menor. Y el modelo **sigue ganándole** a la línea base en 2026 (**5,03**). Moraleja: comparar el error de un período con el de otro solo vale si los períodos son comparables.
+
+✅ **Señal de que entendiste:** Puedes explicar por qué comparar 4,92 con 3,94 sería injusto con el modelo.
+
+---
+
+### Sección 6 · *Drift* de los datos de entrada
+
+🎯 **Objetivo:** Comparar, por estación, la proporción de días sin dato en la historia y en 2026, y listar las estaciones con más de 20% de faltantes en 2026.
+
+💡 **Concepto clave:** El desempeño se conoce con un día de atraso; la entrada se puede vigilar **el mismo día**. Cuatro estaciones superan el 20% de faltantes en 2026: **Concón, Copiapó, Coquimbo y El Bosque**. Copiapó pasó de 2,5% a 40%. La tabla también muestra cambios de nivel: Concón promedia 18,7 µg/m³ en 2026 contra 13,5 en enero–septiembre de la historia. Eso no es un error del modelo, pero es una señal para mirar.
+
+---
+
+### Sección 7 · La ficha de modelo
+
+🎯 **Objetivo:** Completar la ficha con frases reales y con los números verificados (MAE de prueba, de línea base y de 2026).
+
+💡 **Concepto clave:** Una ficha honesta dice lo incómodo: que el modelo le gana **por poco** a «mañana = hoy», que no usa meteorología (solo 7 de 14 estaciones la miden), que no predice si falta el dato de hoy, y que **no debe** decretar episodios por sí solo.
+
+---
+
+### Sección 8 · (Opcional) Gradio
+
+La celda arma una app con `predecir_seguro` por dentro. Está protegida: si Gradio no está instalado, solo muestra un aviso. En Colab: `!pip -q install gradio` y descomenta `demo.launch(share=True)`.
+
+---
+
+## 6. Guía de los 7 Ejercicios
+
+### Ejercicio 1 — Escribe `predecir_pm25`
 
 **Pistas progresivas:**
-1. 🟡 *Pista 1 (orientación):* la función recibe dos números y debe devolver uno. Internamente necesita construir un DataFrame, pasarlo al modelo, y extraer la predicción.
-2. 🟠 *Pista 2 (técnica):* el DataFrame debe tener exactamente las columnas con que el modelo fue entrenado: `"cantidad"` y `"tamano_num"`. Los valores deben estar en listas: `{"cantidad": [cantidad], "tamano_num": [tamano_num]}`.
-3. 🔴 *Pista 3 (estructura):* dentro de la función: (1) `entrada = pd.DataFrame({"cantidad": [cantidad], "tamano_num": [tamano_num]})`, (2) `resultado = modelo.predict(entrada)[0]`, (3) `return round(float(resultado), 1)`.
+- 🟢 Pista suave: La tabla `entrada` ya está armada; solo falta pedirle la predicción al modelo.
+- 🟡 Pista media: `modelo.predict(entrada)` devuelve un arreglo de un elemento; tómalo con `[0]`.
+- 🔴 Pista directa: `return round(float(modelo.predict(entrada)[0]), 1)`.
 
-**Lógica de solución:** creas un DataFrame de una fila con las columnas correctas, lo pasas al pipeline (que aplica el escalado y predice), extraes el primer elemento del array resultado, y lo redondeas a 1 decimal.
+**¿Qué significa el ✅?** Que tu función devuelve un número igual al del modelo para un caso de prueba.
 
 ---
 
-### ✍️ Ejercicio 2 — Puntuar un lote
-
-**Habilidad:** aplicar el modelo a una tabla completa y agregar la columna de predicciones.
+### Ejercicio 2 — Escribe `predecir_seguro`
 
 **Pistas progresivas:**
-1. 🟡 *Pista 1 (orientación):* la tabla `compras_nuevas` ya tiene las columnas `cantidad` y `tamano_num`. El modelo puede recibir toda la tabla de una vez.
-2. 🟠 *Pista 2 (técnica):* `modelo.predict(tabla[["cantidad", "tamano_num"]])` devuelve un array con una predicción por fila. Ese array se puede asignar directamente a una nueva columna del DataFrame.
-3. 🔴 *Pista 3 (estructura):* dentro de la función: `resultado["monto_estimado"] = modelo.predict(tabla[["cantidad", "tamano_num"]]).round(1)`. Luego `return resultado`.
+- 🟢 Pista suave: Son tres revisiones antes de predecir: ¿falta algo?, ¿está en rango?, ¿el mes existe?
+- 🟡 Pista media: `any(pd.isna(v) for v in valores)` detecta faltantes; `all(0 <= v <= 1000 for v in valores)` revisa el rango.
+- 🔴 Pista directa: Agrega `if any(pd.isna(v) for v in valores): return {"ok": False, "error": "Dato faltante"}`, luego `if not all(0 <= v <= 1000 for v in valores): return {...}` y `if mes not in range(1, 13): return {...}`.
 
-**Lógica de solución:** el pipeline recibe la tabla con las columnas de features, predice para todas las filas a la vez, y el resultado (array de predicciones) se agrega como nueva columna `monto_estimado`.
+**¿Qué significa el ✅?** Que el caso bueno predice y los cuatro casos malos (faltante, negativo, mes 13, estación inventada) se rechazan.
 
 ---
 
-### ✍️ Ejercicio 3 — Validar la entrada
-
-**Habilidad:** agregar validación de rangos a la función de predicción.
+### Ejercicio 3 — Escribe `puntuar_lote` y aplícalo a 2026
 
 **Pistas progresivas:**
-1. 🟡 *Pista 1 (orientación):* la función debe verificar DOS condiciones antes de predecir: que `cantidad` esté entre 1 y 500, y que `tamano_num` esté entre 1 y 4. Si alguna falla, devuelve un diccionario con `"ok": False`.
-2. 🟠 *Pista 2 (técnica):* la estructura de respuesta es un diccionario Python. Para el caso de error: `{"ok": False, "error": "Valores fuera de rango"}`. Para el caso correcto: `{"ok": True, "monto_estimado": predecir_monto(cantidad, tamano_num)}`.
-3. 🔴 *Pista 3 (estructura):* `if not (1 <= cantidad <= 500) or not (1 <= tamano_num <= 4): return {"ok": False, "error": "Valores fuera de rango"}`. Después del if: `return {"ok": True, "monto_estimado": predecir_monto(cantidad, tamano_num)}`.
+- 🟢 Pista suave: `completo` ya marca qué filas traen todos los datos. Predice solo esas.
+- 🟡 Pista media: Usa `resultado.loc[completo, "pm25_predicho"] = ...` y, adentro, `resultado.loc[completo, FEATURES]`.
+- 🔴 Pista directa: `resultado.loc[completo, "pm25_predicho"] = modelo.predict(resultado.loc[completo, FEATURES]).round(1)` y `n_sin_prediccion = int((pred_2026["estado"] == "sin_prediccion").sum())`.
 
-**Lógica de solución:** primero validar (con `if` + `return` temprano), luego predecir. Este patrón se llama "fail fast": si algo está mal, retornas inmediatamente con el error, sin llegar al código de predicción.
+**¿Qué significa el ✅?** Que predijiste exactamente las filas completas (3.266) y contaste las 542 que no se pueden predecir.
 
 ---
 
-### ✍️ Ejercicio 4 — Generar el archivo de predicciones
-
-**Habilidad:** exportar el resultado del scoring por lotes a un CSV.
+### Ejercicio 4 — Genera `predicciones_pm25_2026.csv`
 
 **Pistas progresivas:**
-1. 🟡 *Pista 1 (orientación):* ya tienes `compras_predichas` (el DataFrame con la columna `monto_estimado`). Solo necesitas guardarlo en disco con un nombre específico.
-2. 🟠 *Pista 2 (técnica):* pandas tiene el método `.to_csv(nombre_archivo, index=False)`. El parámetro `index=False` evita que se agregue una columna numérica extra sin significado.
-3. 🔴 *Pista 3 (estructura):* `compras_predichas.to_csv("predicciones_monto.csv", index=False)`. Eso es todo. El chequeo verifica que el archivo exista y tenga la columna correcta.
+- 🟢 Pista suave: Primero la columna nueva, después guardar.
+- 🟡 Pista media: Sumarle un día a una fecha: `+ pd.Timedelta(days=1)`.
+- 🔴 Pista directa: `entregable["fecha_objetivo"] = entregable["fecha"] + pd.Timedelta(days=1)` y `entregable.to_csv("predicciones_pm25_2026.csv", index=False)`.
 
-**Lógica de solución:** una sola línea de código. La clave es recordar el nombre exacto del archivo (`predicciones_monto.csv`) y el parámetro `index=False`.
-
----
-
-## 7. Profundización: El despliegue en el contexto del Estado digital
-
-Lo que construiste en este módulo — función de predicción con validación, scoring por lotes, archivo de resultados — es la base sobre la que se construyen los despliegues más avanzados.
-
-**Las tres formas de despliegue y su relevancia para el Estado:**
-
-**1. Scoring por lotes (lo que hiciste):**
-Ideal para procesos periódicos: cierre mensual de órdenes, actualización semanal de rankings de proveedores, estimación trimestral de presupuestos. El proceso se ejecuta como un script, genera un CSV, y ese CSV alimenta informes y dashboards.
-
-**2. API web (el siguiente nivel):**
-Una API expone la función `predecir_seguro` a través de una URL. Otros sistemas (el portal de ChileCompra, el sistema de gestión de contratos de un ministerio) pueden consultarla en tiempo real. La implementación típica usa Flask o FastAPI. El cuerpo de la API es literalmente tu función `predecir_seguro` envuelta en un endpoint HTTP.
-
-**3. App web simple (Gradio):**
-Permite que personas no técnicas usen el modelo a través de una página web con campos de formulario. Una analista de la unidad de compras puede escribir `cantidad: 200, tamano_num: 2` y ver el resultado sin saber nada de Python.
-
-**Lo más importante: cuidar el modelo en el tiempo.**
-
-Un modelo entrenado en datos de 2023 puede degradarse en 2025 si los patrones de compra cambiaron. Los dos pilares del mantenimiento son:
-- **Monitoreo:** comparar periódicamente las predicciones con los valores reales. Si el MAE empieza a crecer, es señal de degradación.
-- **Reentrenamiento:** volver a entrenar el modelo con datos frescos. Con el pipeline de R2-08, el proceso es reproducible y documentado.
-
-**Transparencia como requisito público:** cualquier modelo usado para apoyar decisiones en el Estado debe tener una **model card** que documente qué datos usó, cuál es su desempeño, sus limitaciones, y quién responde por él. Esto conecta directamente con el módulo R2-CAP.
+**¿Qué significa el ✅?** Que el archivo existe, tiene la fecha pronosticada explícita y una fila por cada fila de producción.
 
 ---
 
-## 8. Conexión con el cuaderno siguiente
+### Ejercicio 5 — MAE en 2026 vs prueba (mismos meses) vs línea base
 
-| Tema | En `leccion.ipynb` | Lo que viene en R2-10 y R2-CAP |
-|---|---|---|
-| Predicción sobre datos estáticos | Tabla con órdenes ya existentes | En R2-10: datos ordenados en el tiempo (series temporales) |
-| Modelo de regresión | Predice montos de compras individuales | En R2-CAP: ciclo completo con tu propio dataset y model card |
-| Validación de entrada | Rangos numéricos simples | En R2-CAP: documentación completa de limitaciones del modelo |
-| Despliegue básico | Función + CSV | Conceptual: API, Gradio, monitoreo, reentrenamiento |
+**Pistas progresivas:**
+- 🟢 Pista suave: Son tres MAE: modelo en 2026, modelo en la prueba de enero a septiembre, y «mañana = hoy» en 2026.
+- 🟡 Pista media: `mean_absolute_error(real, predicho)`; el filtro de meses es `prueba["fecha"].dt.month <= 9`.
+- 🔴 Pista directa: `mae_2026 = mean_absolute_error(con_verdad["pm25_manana"], con_verdad["pm25_predicho"])`; `prueba_mismos_meses = prueba[prueba["fecha"].dt.month <= 9]`; `mae_prueba_mismos_meses = mean_absolute_error(prueba_mismos_meses[OBJETIVO], modelo.predict(prueba_mismos_meses[FEATURES]))`; `mae_ingenuo_2026 = mean_absolute_error(con_verdad["pm25_manana"], con_verdad["pm25_hoy"])`.
 
----
-
-## 9. Autoevaluación Final
-
-**Pregunta 1:** ¿Cuál es la diferencia entre predicción en línea y por lotes?
-
-- a) La predicción en línea usa un modelo mejor
-- b) **La predicción en línea responde un caso al instante; el lote procesa muchos casos a la vez ✅**
-- c) El lote es más preciso que la predicción individual
-- d) Son lo mismo, solo cambia el nombre
-
-**Explicación:** el mismo modelo puede usarse para ambos. La diferencia es el flujo de trabajo: en línea es una consulta puntual en tiempo real; por lotes es un proceso periódico que procesa muchos casos de una vez.
+**¿Qué significa el ✅?** Que sabes medir el desempeño en producción y ponerlo en contexto: 4,92 en 2026 vs 4,58 en la prueba comparable vs 5,03 de la línea base.
 
 ---
 
-**Pregunta 2:** Tu función `predecir_monto` recibe `cantidad=100` y `tamano_num=2`. ¿Cómo debe construir el DataFrame para el pipeline?
+### Ejercicio 6 — Compara faltantes entre historia y 2026
 
-- a) `pd.DataFrame([100, 2])`
-- b) `pd.DataFrame({"cantidad": 100, "tamano_num": 2})`
-- c) **`pd.DataFrame({"cantidad": [100], "tamano_num": [2]})` ✅**
-- d) `pd.DataFrame([[100, 2]])`
+**Pistas progresivas:**
+- 🟢 Pista suave: Copia la línea de `falt_hist` y cambia `historia` por `nuevos`.
+- 🟡 Pista media: Para filtrar una Serie: `falt_2026[falt_2026 > 0.20]`; los nombres están en `.index`.
+- 🔴 Pista directa: `falt_2026 = nuevos["pm25"].isna().groupby(nuevos["estacion"]).mean()` y `estaciones_alerta = sorted(falt_2026[falt_2026 > 0.20].index)`.
 
-**Explicación:** pandas necesita iterables para crear DataFrames con nombres de columna. `[100]` es una lista de un elemento; `100` solo es un escalar y genera error. La opción d) crea un DataFrame pero sin nombres de columna, lo que rompería el pipeline.
-
----
-
-**Pregunta 3:** ¿Por qué `predecir_seguro` devuelve un diccionario en vez de solo el número?
-
-- a) Porque los diccionarios son más rápidos que los números
-- b) **Para comunicar tanto el resultado como si la predicción fue exitosa o falló la validación ✅**
-- c) Por convención de Python
-- d) Porque joblib requiere diccionarios
-
-**Explicación:** el diccionario `{"ok": True/False, ...}` permite que quien llama la función sepa si tuvo éxito y, en caso de falla, cuál fue el error. Es el patrón estándar de respuesta en APIs web (JSON) y en integraciones entre sistemas.
+**¿Qué significa el ✅?** Que detectaste las 4 estaciones con más de 20% de días sin dato en 2026.
 
 ---
 
-**Pregunta 4:** Exportas `compras_predichas` con `to_csv("predicciones_monto.csv")` (sin `index=False`). ¿Qué problema genera?
+### Ejercicio 7 — Completa la ficha de modelo
 
-- a) El archivo no se crea
-- b) Los datos se corrompen
-- c) **Se agrega una columna extra numérica sin significado (el índice del DataFrame) ✅**
-- d) El archivo es demasiado grande
+**Pistas progresivas:**
+- 🟢 Pista suave: Cada `...` es una frase entre comillas o un número redondeado.
+- 🟡 Pista media: Los números ya están calculados: `mae_prueba` (setup) y `mae_2026` (ejercicio 5).
+- 🔴 Pista directa: `"mae_prueba": round(mae_prueba, 2)`, `"mae_2026": round(mae_2026, 2)`, y escribe frases de al menos una línea en `uso_previsto`, `no_usar_para` y `limitaciones`.
 
-**Explicación:** por defecto, pandas incluye el índice del DataFrame (0, 1, 2, 3...) como primera columna del CSV. Esa columna no tiene significado de negocio y confunde a quienes abren el archivo en Excel. `index=False` la elimina.
-
----
-
-**Pregunta 5:** ¿Por qué es importante el monitoreo de un modelo en producción en el Estado?
-
-- a) Para que el código no tenga bugs
-- b) Para cumplir con la ley de datos
-- c) **Porque los patrones en los datos cambian con el tiempo y el modelo puede degradarse sin darse cuenta ✅**
-- d) Para mejorar la velocidad del servidor
-
-**Explicación:** un modelo entrenado con datos de 2023 puede volverse impreciso en 2025 si los proveedores, las categorías de compra, o los montos cambiaron significativamente. El monitoreo detecta esa degradación antes de que cause problemas en decisiones reales.
+**¿Qué significa el ✅?** Que la ficha tiene todas las secciones y sus números calzan con los verificados.
 
 ---
 
-## 10. Glosario del Módulo
-
-| Término técnico | Definición simple | Equivalente en sector público / Excel |
-|---|---|---|
-| **Despliegue (deployment)** | Hacer que el modelo sea usado por otros en la práctica | Publicar un formulario o servicio para que otros lo usen |
-| **Predicción en línea** | Una consulta, una respuesta, al instante | Funcionario llena formulario, sistema responde en tiempo real |
-| **Predicción por lotes** | Tabla de muchos casos procesados de una vez | Correr una macro sobre toda la planilla de cierre mensual |
-| **Función de predicción** | Función que recibe parámetros y devuelve estimación | Formulario con cálculo automático encapsulado |
-| **Validación de entrada** | Verificar que los datos recibidos están en rangos válidos | Control de integridad antes de ingresar al sistema |
-| **Diccionario de respuesta** | Estructura `{"ok": True, "resultado": ...}` | Respuesta estructurada del sistema: éxito o error con detalle |
-| **Batch scoring** | Aplicar el modelo a una tabla entera en una ejecución | Ejecución masiva de fórmulas sobre toda la planilla |
-| **API web** | Servicio accesible vía URL que expone la predicción | Servicio web al que otros sistemas se conectan para consultar |
-| **Gradio** | Librería para crear apps web simples de ML sin servidor | Formulario web autogenerado para que no-técnicos usen el modelo |
-| **Monitoreo** | Vigilar si las predicciones siguen siendo buenas con el tiempo | Auditoría periódica del modelo contra la realidad |
-| **Reentrenamiento** | Actualizar el modelo con datos más recientes | Actualizar las tablas de parámetros con datos del año en curso |
-| **Model card** | Documento que describe el modelo, sus datos, límites y uso responsable | Ficha técnica del instrumento de gestión con sus condiciones de uso |
+> 🔬 **En la profundización:** dos preguntas de equipo de producción. **¿Dónde se degrada?** El MAE por estación muestra que El Bosque pasa de 2,12 en la prueba a 9,06 en 2026 (4,3 veces) — y el «por qué» no está en el modelo sino en la prueba: El Bosque **no tuvo ni un día de invierno** en la prueba 2025 porque dejó de reportar en abril. **¿Cuándo alertar?** Con umbral 50 el modelo detecta solo el 55% de los días que superaron la norma en 2025; eligiendo el umbral con 2025 para lograr *recall* ≥ 0,80 (resulta **39 µg/m³**) y evaluándolo recién en 2026, detecta el 80% de los 176 días sobre la norma, con *precision* de 0,51.
 
 ---
 
-## 11. Conexión con el Módulo Siguiente
+## 7. Autoevaluación Final
 
-**Módulo siguiente:** R2-10 · Series temporales
+**Pregunta 1:** ¿Por qué la receta de *features* debe ser una sola función usada al entrenar y en producción?
 
-Con este módulo completaste el tronco principal del ciclo de machine learning: datos → features → modelo → evaluación → pipeline → despliegue. Eso es un logro enorme.
+- A) Para ahorrar líneas de código
+- B) Porque si las recetas difieren, el modelo recibe datos con otro significado y se equivoca sin avisar ✅
+- C) Porque scikit-learn lo exige
+- D) Para que el modelo entrene más rápido
 
-R2-10 abre una nueva dimensión: el **tiempo**. Hasta ahora cada fila de datos era independiente (una orden de compra no "sabía nada" de la orden anterior). En una serie temporal, el orden importa: el gasto de enero predice algo sobre febrero, y la tendencia de los últimos 5 años dice algo sobre el año que viene.
-
-**Serás capaz de:** cargar la serie de gasto anual de ChileCompra, graficarla, medir su crecimiento, construir tres tipos de pronóstico y elegir el mejor con backtest.
-
-**Preconcepto clave para llevar:** en R2-10, el "modelo" ya no es un clasificador ni un regresor de scikit-learn — son fórmulas matemáticas simples (promedio de crecimiento, regresión lineal) aplicadas a una secuencia temporal. La evaluación honesta (hold-out / backtest) sigue siendo el mismo principio que aprendiste en R2-07.
+**Explicación:** Si en producción la «media de 7 días» se calcula distinto (por ejemplo, incluyendo el día de mañana o saltándose los huecos), el modelo no lanza error: simplemente predice mal.
 
 ---
 
-*Guía elaborada para el Bootcamp de Datos para Funcionarios Públicos de Chile · Formación Pública*
-*Contenido bajo licencia CC BY 4.0*
+**Pregunta 2:** Llega una fila de producción sin el PM2.5 de hoy. ¿Qué hace un buen despliegue?
+
+- A) Rellenar con el promedio histórico y predecir
+- B) Predecir igual: el modelo acepta NaN
+- C) No predecir esa fila y marcarla (`sin_prediccion`) para que se vea y se cuente ✅
+- D) Borrar la fila del archivo
+
+**Explicación:** Rellenar o predecir con NaN produce un número que parece un pronóstico y no lo es. Borrar la fila esconde el problema. Marcarla lo deja auditable.
+
+---
+
+**Pregunta 3:** El MAE en 2026 (enero–septiembre) es 4,92 y el de la prueba 2025 (año completo) es 3,94. ¿Qué concluyes primero?
+
+- A) El modelo se rompió y hay que reentrenarlo ya
+- B) Hay que comparar con la prueba de los mismos meses, porque el invierno es más difícil ✅
+- C) Que 2026 fue un año con más contaminación
+- D) Nada: el MAE no sirve para monitorear
+
+**Explicación:** Con la prueba de enero–septiembre (4,58) la brecha se achica mucho, y el modelo sigue ganándole a la línea base. Monitorear es comparar con justicia.
+
+---
+
+**Pregunta 4:** ¿Qué tipo de *drift* puedes detectar el mismo día, sin esperar a conocer la verdad?
+
+- A) La caída del MAE
+- B) Los cambios en los datos de entrada, como la proporción de faltantes por estación ✅
+- C) El error de la línea base
+- D) Ninguno: todo monitoreo requiere esperar
+
+**Explicación:** El desempeño necesita el valor real (que llega después); la entrada se puede vigilar en cuanto llega.
+
+---
+
+**Pregunta 5:** ¿Qué debe decir la ficha de un modelo que le gana por poco a la línea base?
+
+- A) Omitirlo para no restarle confianza
+- B) Decirlo con los números, junto con sus límites y los usos que NO se recomiendan ✅
+- C) Reportar solo el MAE del modelo
+- D) Reportar el mejor MAE entre todos los meses
+
+**Explicación:** La ficha existe para que quien decide sepa cuánto confiar. Esconder la línea base es vender humo.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **Despliegue** | Poner un modelo a trabajar para otras personas o sistemas | Pasar un piloto a operación |
+| **Artefacto** | El archivo con el modelo entrenado (`.joblib`) | La versión aprobada de una planilla de cálculo |
+| **En línea / por lotes** | Predecir un caso al instante / una tabla de un viaje | Atención de ventanilla / proceso masivo de cierre de mes |
+| **Validación de entrada** | Rechazar datos imposibles o faltantes con un mensaje claro | El formulario que no deja enviar un RUT inválido |
+| **Producción** | Uso real, con datos que el modelo nunca vio | La operación diaria del servicio |
+| **Monitoreo** | Vigilar el desempeño y los datos del modelo en el tiempo | El control de gestión mensual |
+| ***Drift*** | Cambio en los datos (o en la relación con el objetivo) respecto del entrenamiento | «Este año la población que atendemos cambió» |
+| **Línea base** | La regla simple que el modelo debe superar («mañana = hoy») | La proyección inercial |
+| **Ficha de modelo** | Documento con uso, datos, desempeño, límites y responsable | La ficha técnica de un indicador |
+| **Norma de PM2.5** | 50 µg/m³ como concentración de 24 horas (D.S. 12/2011 del MMA) | El estándar de calidad que fiscaliza la autoridad ambiental |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R2-09 cerraste el ciclo de vida de un modelo: lo cargaste desde un artefacto, lo pusiste a predecir en línea y por lotes sin inventar, lo vigilaste en producción con comparaciones justas y lo documentaste con una ficha honesta.
+
+En **R2-10 · Series temporales** (optativo) mirarás el PM2.5 como lo que es: una **serie en el tiempo**, con estacionalidad anual (el invierno que hoy complicó el monitoreo), patrones semanales, remuestreo y pronósticos que deben superar a una línea base estacional. Y en el **R2-CAP** harás todo esto de punta a punta con datos de tu propio organismo.
+
+> 💡 **Pregunta para reflexionar:** Si mañana tu servicio pusiera en uso un modelo, ¿quién vería la tabla de faltantes cada semana? Si la respuesta es «nadie», el modelo no está desplegado: está abandonado.

@@ -87,7 +87,7 @@ y lo que no se destrabe, a la comunidad o a la sesión semanal.
 - **Nunca pegues en la IA datos personales o sensibles**: RUT con nombres, fichas de
   beneficiarios, datos de salud, documentos internos no públicos. Vale para Gravity, Gemini,
   ChatGPT y cualquier servicio.
-- Los datos del curso (ChileCompra) son públicos: úsalos con libertad.
+- Los datos del curso (MINEDUC, SINCA, ChileAtiende, USGS…) son públicos: úsalos con libertad.
 - Para el **capstone** con datos de tu organismo: anonimiza primero (quita nombres y RUT,
   reemplaza por códigos). El modo tutor está instruido para frenarte si lo olvidas — no
   dependas de eso.

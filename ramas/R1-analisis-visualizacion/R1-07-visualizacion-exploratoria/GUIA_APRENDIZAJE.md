@@ -1,334 +1,266 @@
-# 📊 Guía de Aprendizaje · R1-07 · Visualización Exploratoria — Ver para Entender
+# Guía de Aprendizaje — R1-07 · Visualización exploratoria: ver para entender
 
 **Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
-Rama R1 · Analista de Datos · Semana 8 · Google Colab
-
-| Dato | Detalle |
-|------|---------|
-| 🎯 Competencia de salida | Usar gráficos para descubrir patrones en datos públicos |
-| ⏱️ Duración estimada | 90 minutos |
-| 📊 Dataset real | `compras_ml.csv` — compras públicas de ChileCompra |
-| ✅ Entregable | 4 celdas de chequeo con ✅ |
-| 🔗 Prerrequisito | R1-06 · Estadística descriptiva |
-| 🔜 Siguiente | R1-08 · Visualización: comunicar y ética |
+Rama R1 · Analista de Datos · Módulo 7 · Semana 8
 
 ---
 
-## ¿Para qué me sirve esto como funcionario público?
+## 1. Datos del Módulo
 
-En el Estado se trabaja con datos constantemente: montos de compras, cantidades, proveedores, regiones. El problema es que **una tabla de 10.000 filas no le dice nada a nadie**. Un buen gráfico, en cambio, revela en segundos si el gasto está concentrado, si hay valores atípicos, o si dos variables se relacionan.
-
-Este módulo te enseña a usar gráficos como **herramienta de descubrimiento personal** — no para presentar (eso viene en R1-08), sino para entender los datos tú primero antes de sacar conclusiones.
-
-> 💡 **La diferencia clave:** R1-07 es el gráfico que te haces a ti mismo para entender. R1-08 es el gráfico que le muestras a tu jefatura o directorio.
-
----
-
-## 🗺️ Mapa Conceptual del Módulo
-
-| Gráfico | Pregunta que responde | Analogía sector público | Función matplotlib |
-|---------|----------------------|------------------------|-------------------|
-| **Histograma** | ¿Cómo se distribuyen los montos? | Ver cuántas compras caen en cada rango de precio | `ax.hist()` |
-| **Boxplot** | ¿Difiere el comportamiento entre grupos? | Comparar gasto de proveedores micro vs. grande | `ax.boxplot()` |
-| **Dispersión** | ¿Más cantidad implica más monto? | ¿Los pedidos grandes cuestan proporcionalmente más? | `ax.scatter()` |
-| **Barras horizontales** | ¿Qué región concentra más gasto? | Ranking de regiones por gasto total ChileCompra | `ax.barh()` |
+| Campo | Detalle |
+|-------|---------|
+| **Módulo** | R1-07 · Visualización exploratoria |
+| **Rama** | R1 — Análisis y Visualización |
+| **Duración estimada** | 90 minutos |
+| **Nivel** | Intermedio — requiere R1-02 (pandas) y R1-06 (estadística descriptiva) |
+| **Prerrequisitos** | Filtrar DataFrames, `groupby`, cuantiles |
+| **Competencia de salida** | Usar histogramas, boxplots, dispersión y barras para descubrir patrones en datos públicos |
+| **Entregable** | Las 4 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `matricula.csv` — matrícula oficial 2025 (MINEDUC). Profundización: `sismos.csv` — 1.601 sismos M≥4,5 de Chile 2020–2025 (catálogo USGS) |
 
 ---
 
-## ✅ Antes de empezar: Verificación de Prerrequisitos
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-Deberías poder responder **sí** a todo esto antes de continuar:
+Una tabla de 10.945 filas no se puede *leer*. Un gráfico sí.
 
-- [ ] ¿Puedo calcular media, mediana y desviación estándar con pandas?
-- [ ] ¿Sé qué es un percentil y para qué sirve (`.quantile()`)?
-- [ ] ¿Puedo usar `groupby()` para resumir por categoría?
-- [ ] ¿Sé importar `matplotlib.pyplot as plt` y crear una figura con `plt.subplots()`?
-- [ ] ¿Entiendo qué es `fig` y qué es `ax` en matplotlib?
+La visualización exploratoria es la herramienta más rápida para entender un dataset nuevo: en cuatro gráficos descubres si la variable tiene valores extremos, si los grupos difieren de verdad, si dos variables se mueven juntas y qué categoría concentra el fenómeno. Todo eso **antes** de calcular un solo modelo o escribir un informe.
 
-Si alguna respuesta es "no", repasa rápidamente R1-06 antes de continuar.
+Este módulo es para **descubrir** (gráficos para ti). El siguiente, R1-08, es para **comunicar** (gráficos para otros, con las reglas éticas de la visualización pública). La distinción importa: un gráfico exploratorio puede ser feo; un gráfico comunicativo no puede ser engañoso.
 
 ---
 
-## 📖 Guía Sección por Sección
+## 3. Mapa Conceptual del Módulo
 
-### Sección 0 · Preparación del entorno (celda inicial)
+| Gráfico | ¿Qué pregunta responde? | Ejemplo en este módulo |
+|---------|------------------------|------------------------|
+| **Histograma** | ¿Cómo se distribuye una variable? | ¿Predominan las escuelas chicas o grandes? |
+| **Boxplot** | ¿Difieren los grupos? | ¿Los particulares pagados son más grandes que los municipales? |
+| **Dispersión** | ¿Se relacionan dos variables? | ¿Más cursos implica más estudiantes? |
+| **Barras** | ¿Qué categoría concentra más? | ¿Qué región tiene más matrícula? |
+| **`clip(upper=p99)`** | Recortar extremos para ver la masa de los datos | Sin el colegio gigante, ¿cómo se ve el resto? |
+| **`sample(n, random_state)`** | Muestra reproducible para no saturar el gráfico | 800 puntos en vez de 10.945 |
 
-🎯 **Objetivo:** cargar los datos de compras públicas en memoria.
+---
 
-💡 **Concepto clave:** el notebook descarga automáticamente `compras_ml.csv` desde el repositorio si no lo encuentra localmente. Así funciona igual en tu máquina que en Colab.
+## 4. Verificación de Prerrequisitos
+
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Filtrar un DataFrame con una condición (`df[df["col"] == valor]`) | ☐ |
+| Usar `groupby` con `sum()` | ☐ |
+| Explicar qué es un percentil (p99) | ☐ |
+
+Si respondiste No a alguna, repasa R1-02 y R1-06 antes de continuar.
+
+---
+
+## 5. Guía Paso a Paso por Sección del Notebook
+
+### Sección 0 · Preparación del entorno
+
+🎯 **Objetivo:** Cargar la matrícula 2025 y tener matplotlib listo.
+
+💡 **Concepto clave:** `matplotlib` es la librería base de gráficos en Python. El patrón que usarás siempre: `fig, ax = plt.subplots()` crea la figura (el lienzo) y los ejes (donde se dibuja); luego llamas métodos sobre `ax` (`ax.hist`, `ax.boxplot`, `ax.scatter`, `ax.barh`); al final `plt.show()` muestra el resultado.
+
+✅ **Señal de que entendiste:** Ves la tabla con `mat_total`, `dependencia`, `cursos`, `region`.
+
+---
+
+### Sección 1 · Histograma
+
+🎯 **Objetivo:** Ver la forma de la distribución del tamaño de los establecimientos.
+
+💡 **Concepto clave:** El histograma parte el rango de la variable en **bins** (cajones) y cuenta cuántos valores caen en cada uno. La matrícula tiene **cola larga**: la mayoría de los establecimientos son chicos y unos pocos son enormes. Por eso se recorta al percentil 99 con `clip(upper=...)`: sin ese recorte, los pocos colegios gigantes aplastan el gráfico y no se ve nada.
 
 🔍 **Qué hace el código:**
-```python
-import os, urllib.request
-import pandas as pd, numpy as np
-import matplotlib.pyplot as plt
+- `df["mat_total"].quantile(0.99)` → el valor bajo el cual está el 99% de los establecimientos
+- `.clip(upper=...)` → reemplaza los valores por sobre ese tope por el tope mismo (no los elimina)
+- `ax.hist(matriculas, bins=40)` → dibuja el histograma con 40 cajones
 
-CSV = "compras_ml.csv"
-if not os.path.exists(CSV):
-    urllib.request.urlretrieve("https://...compras_ml.csv", CSV)
+⚠️ **Error frecuente:** Confundir `clip` con filtrar. `clip` conserva las 10.945 filas (cambia los valores extremos); un filtro las eliminaría.
 
-df = pd.read_csv(CSV)
-print("Datos cargados:", df.shape, "filas x columnas")
-df.head()
-```
-- `os.path.exists(CSV)` — pregunta: ¿ya existe el archivo?
-- Si no existe, lo baja desde GitHub con `urlretrieve`
-- `df.head()` — muestra las primeras 5 filas para confirmar que todo cargó bien
-
-⚠️ **Error frecuente:** ejecutar las celdas de ejercicio antes de ejecutar esta celda de preparación. Resultado: `NameError: name 'df' is not defined`.
-
-✅ **Señal de que entendiste:** puedes ver el shape del DataFrame y las columnas `monto_total`, `cantidad`, `region_comprador`, `tamano_proveedor`.
+✅ **Señal de que entendiste:** Puedes decir dónde está la moda del tamaño de establecimiento mirando el gráfico.
 
 ---
 
-### Sección 1 · Histograma: la forma de una variable
+### Sección 2 · Boxplot
 
-🎯 **Objetivo:** dibujar la distribución del monto de compras usando un histograma.
+🎯 **Objetivo:** Comparar la distribución del tamaño entre dependencias.
 
-💡 **Concepto clave:** los datos de compras públicas tienen **cola larga** — la mayoría de las órdenes son pequeñas, pero unas pocas son gigantes. Si graficas todo sin filtrar, las barras pequeñas se aplanan y no ves nada. Por eso se "recorta" al percentil 99 (`.clip(upper=...quantile(0.99))`). Es como decir: "ignoremos el 1% más extremo para ver mejor el resto".
-
-🔍 **Qué hace el código línea por línea:**
-```python
-montos = df["monto_total"].clip(upper=df["monto_total"].quantile(0.99))
-# → Recorta los valores mayores al p99. No los elimina, los "topa".
-
-fig, ax = plt.subplots(figsize=(6, 4))
-# → Crea una figura de 6x4 pulgadas. fig = el lienzo, ax = el área de dibujo.
-
-# TODO: ax.hist(montos, bins=40)
-# → Divide los montos en 40 rangos y dibuja una barra por rango.
-
-ax.set_xlabel("Monto (recortado al p99)"); ax.set_ylabel("Frecuencia")
-ax.set_title("Distribución del monto")
-plt.show()
-```
-
-⚠️ **Error frecuente:** usar `plt.hist()` en lugar de `ax.hist()`. Ambos funcionan, pero la celda de chequeo verifica `ax.patches` (las barras del `ax`). Usa siempre el objeto `ax`.
-
-✅ **Señal de que entendiste:** ves un gráfico donde la mayoría de las compras se concentran en montos bajos (sesgo a la derecha). La celda muestra ✅.
-
----
-
-### Sección 2 · Boxplot: comparar grupos
-
-🎯 **Objetivo:** comparar la distribución del monto entre proveedores Micro, Pequeña, Mediana y Grande.
-
-💡 **Concepto clave:** un boxplot es como un resumen de 5 números dibujado. La **caja** muestra el rango intercuartil (Q1 a Q3, el 50% central de los datos), la **línea del medio** es la mediana, y los **bigotes** llegan hasta los valores extremos razonables. Los puntos sueltos son **outliers**.
-
-Analogía: imagina que tienes 4 grupos de funcionarios con distintos sueldos. El boxplot te dice de un vistazo si los sueldos de cada grupo son similares o muy dispersos, y dónde está el "típico" de cada uno.
+💡 **Concepto clave:** El boxplot resume cada grupo en 5 números: mínimo, Q1, mediana, Q3, máximo (más los outliers como puntos). Poner varios lado a lado permite comparar grupos de un vistazo: ¿la mediana de los particulares pagados es mayor? ¿la caja municipal es más ancha (más heterogénea)?
 
 🔍 **Qué hace el código:**
-```python
-orden = ["Micro", "Pequeña", "Mediana", "Grande"]
-tope = df["monto_total"].quantile(0.99)
-grupos = [df[df["tamano_proveedor"] == t]["monto_total"].clip(upper=tope) for t in orden]
-# → Crea una lista de 4 series, una por tamaño de proveedor, todas recortadas al p99.
+- `grupos = [df[df["dependencia"] == d]["mat_total"]... for d in orden]` → una lista de Series, una por dependencia
+- `ax.boxplot(grupos, labels=[...])` → un boxplot por elemento de la lista
 
-fig, ax = plt.subplots(figsize=(6, 4))
-# TODO: ax.boxplot(grupos, labels=orden)
-```
-- La **list comprehension** filtra el DataFrame para cada categoría en un solo paso
-- `labels=orden` pone los nombres debajo de cada caja en el gráfico
-
-⚠️ **Error frecuente:** pasar `df["tamano_proveedor"]` directamente en vez de la lista `grupos`. `ax.boxplot()` necesita una lista de arrays, no una columna de texto.
-
-✅ **Señal de que entendiste:** ves 4 cajas. Los proveedores grandes tienen cajas más altas (montos mayores) y más dispersión. La celda muestra ✅.
+✅ **Señal de que entendiste:** Puedes decir qué dependencia tiene la mediana de matrícula más alta sin calcular nada.
 
 ---
 
-### Sección 3 · Dispersión: ¿se relacionan dos variables?
+### Sección 3 · Dispersión
 
-🎯 **Objetivo:** visualizar si existe relación entre la cantidad comprada y el monto total.
+🎯 **Objetivo:** Ver si el número de cursos y la matrícula se mueven juntos.
 
-💡 **Concepto clave:** el gráfico de dispersión (scatter) dibuja un punto por cada orden de compra, usando cantidad en X y monto en Y. Si los puntos forman una nube diagonal ascendente, hay correlación positiva. Si la nube es horizontal, no hay relación.
+💡 **Concepto clave:** Cada punto es un establecimiento: x = cursos, y = estudiantes. Si los puntos forman una franja ascendente, hay relación positiva. El grosor de la franja también informa: cursos con ~45 estudiantes y cursos con ~15 conviven en el sistema (¡y eso es un hallazgo!). Se grafica una **muestra** de 800 con `random_state=42` para que el gráfico no se sature y sea reproducible.
 
-Analogía: es como el informe de auditoría donde preguntas "¿Los contratos con más ítems cuestan proporcionalmente más, o hay alguno que con pocas unidades tiene un monto desproporcionado?"
+⚠️ **Error frecuente:** Olvidar `alpha=0.4` (transparencia). Con puntos sólidos, las zonas densas se ven como una mancha uniforme.
 
-🔍 **Qué hace el código:**
-```python
-m = df.sample(800, random_state=42)
-# → Toma 800 filas al azar (muestra). Graficar 10.000 puntos superpondría todo.
-# random_state=42 asegura que siempre salga la misma muestra (reproducibilidad).
-
-fig, ax = plt.subplots(figsize=(6, 4))
-# TODO: ax.scatter(m["cantidad"], m["monto_total"])
-```
-
-⚠️ **Error frecuente:** usar `plt.scatter()` en lugar de `ax.scatter()`. La celda de chequeo verifica `ax.collections` (los puntos del scatter en el `ax`). Siempre usa el objeto `ax`.
-
-✅ **Señal de que entendiste:** ves una nube de puntos. Puedes notar que hay valores atípicos (puntos muy alejados). La celda muestra ✅.
+✅ **Señal de que entendiste:** Puedes explicar qué significa un punto que está muy por sobre la franja (muchos estudiantes por curso).
 
 ---
 
-### Sección 4 · Barras horizontales: comparar categorías
+### Sección 4 · Barras
 
-🎯 **Objetivo:** identificar qué región concentra más gasto total en compras públicas.
+🎯 **Objetivo:** Comparar la matrícula total entre las 16 regiones.
 
-💡 **Concepto clave:** las barras horizontales (barh) son ideales cuando las etiquetas del eje son texto largo (nombres de regiones). Son más fáciles de leer que las barras verticales para ese caso.
+💡 **Concepto clave:** Para categorías, la barra es el gráfico honesto por defecto. `barh` (horizontal) deja leer los nombres largos de las regiones sin girar la cabeza. `.sort_values()` ordena de menor a mayor, lo que convierte el gráfico en un ranking instantáneo.
 
-Analogía: es el gráfico que usarías en un informe de ChileCompra para decirle al director: "Mire, la Región Metropolitana concentra X% del gasto total. Las regiones de Maule y La Araucanía están en los últimos lugares."
-
-🔍 **Qué hace el código:**
-```python
-g = df.groupby("region_comprador")["monto_total"].sum().sort_values()
-# → Agrupa por región, suma el monto total de cada una, y ordena de menor a mayor.
-# El .sort_values() hace que la región con más gasto quede arriba en el gráfico.
-
-fig, ax = plt.subplots(figsize=(6, 5))
-# TODO: ax.barh(g.index, g.values)
-# g.index = nombres de las regiones (el eje Y)
-# g.values = montos totales (el largo de cada barra)
-```
-
-⚠️ **Error frecuente:** usar `ax.bar()` en lugar de `ax.barh()`. La celda de chequeo no fallará por esto, pero el gráfico quedará con las regiones en el eje X y serán ilegibles.
-
-✅ **Señal de que entendiste:** ves un ranking de regiones con las barras ordenadas. Puedes responder: ¿qué región tiene mayor gasto? ¿Cuánto más gasta que la que tiene menos? La celda muestra ✅.
+✅ **Señal de que entendiste:** El gráfico muestra la Metropolitana muy por sobre el resto — y puedes decir cuáles son las 3 regiones siguientes.
 
 ---
 
-## 🎯 Guía de los 4 Ejercicios
+## 6. Guía de los 4 Ejercicios
 
-### Ejercicio 1 · Histograma del monto
+### Ejercicio 1 — Dibuja el histograma de la matrícula
 
-**Habilidad que entrena:** dibujar una distribución numérica con `ax.hist()`.
+**Objetivo:** Graficar la distribución del tamaño de los establecimientos.
+**Habilidad que entrena:** `ax.hist`, manejo de colas largas con `clip`.
 
-| Nivel | Pista |
-|-------|-------|
-| 🟢 Suave | El método del objeto `ax` que dibuja histogramas se llama `hist`. Recibe la serie de datos como primer argumento. |
-| 🟡 Media | `ax.hist(datos, bins=N)` — `datos` ya está preparado en la variable `montos`. `N` es el número de barras que quieres. |
-| 🔴 Directa | `ax.hist(montos, bins=40)` — completa el `TODO` con exactamente eso. |
+**Pistas progresivas:**
+- 🟢 Pista suave: El método para histogramas se llama como el gráfico, y vive en `ax`.
+- 🟡 Pista media: Recibe la serie de datos y el número de cajones: `ax.hist(datos, bins=N)`.
+- 🔴 Pista directa: `ax.hist(matriculas, bins=40, color="#4240e5")`.
 
-**Lógica de la solución:** `montos` ya tiene los valores recortados al p99. Solo necesitas pasarlos a `ax.hist()` con `bins=40` para que matplotlib divida el rango en 40 intervalos iguales y cuente cuántas compras caen en cada uno.
-
----
-
-### Ejercicio 2 · Boxplot por tamaño de proveedor
-
-**Habilidad que entrena:** comparar distribuciones entre grupos con `ax.boxplot()`.
-
-| Nivel | Pista |
-|-------|-------|
-| 🟢 Suave | `ax.boxplot()` recibe una **lista de arrays**, no una columna del DataFrame. Esa lista ya está en `grupos`. |
-| 🟡 Media | También necesitas el parámetro `labels=` para que cada caja tenga su etiqueta. Los labels están en la variable `orden`. |
-| 🔴 Directa | `ax.boxplot(grupos, labels=orden)` |
-
-**Lógica de la solución:** `grupos` es una lista de 4 Series (una por tamaño). `labels=orden` les pone nombre. Matplotlib dibuja una caja por cada elemento de la lista, alineada con su etiqueta.
+**¿Qué significa el ✅?** Que la figura existe y tiene barras dibujadas (`ax.patches`).
 
 ---
 
-### Ejercicio 3 · Dispersión cantidad vs. monto
+### Ejercicio 2 — Boxplot de la matrícula por dependencia
 
-**Habilidad que entrena:** visualizar relaciones entre dos variables numéricas con `ax.scatter()`.
+**Objetivo:** Comparar la distribución del tamaño entre 4 dependencias.
+**Habilidad que entrena:** `ax.boxplot` sobre una lista de grupos.
 
-| Nivel | Pista |
-|-------|-------|
-| 🟢 Suave | El método para scatter en matplotlib se llama `scatter`. Recibe dos arrays: uno para X y otro para Y. |
-| 🟡 Media | `ax.scatter(eje_x, eje_y)` — los datos están en `m["cantidad"]` y `m["monto_total"]`. |
-| 🔴 Directa | `ax.scatter(m["cantidad"], m["monto_total"])` |
+**Pistas progresivas:**
+- 🟢 Pista suave: `grupos` ya es una lista con los datos de cada dependencia. El método recibe esa lista completa.
+- 🟡 Pista media: `ax.boxplot(grupos, labels=nombres)` — un boxplot por grupo, con su etiqueta.
+- 🔴 Pista directa: `ax.boxplot(grupos, labels=["Municipal", "P. subv.", "P. pagado", "SLEP"])`.
 
-**Lógica de la solución:** `m` es una muestra de 800 filas para no sobrecargar el gráfico. Cada punto representa una orden de compra: su posición horizontal es la cantidad pedida, su posición vertical es el monto pagado.
-
----
-
-### Ejercicio 4 · Barras horizontales por región
-
-**Habilidad que entrena:** construir un ranking categórico con `ax.barh()`.
-
-| Nivel | Pista |
-|-------|-------|
-| 🟢 Suave | Las barras horizontales en matplotlib usan `barh` (de *bar horizontal*). |
-| 🟡 Media | `ax.barh(etiquetas, valores)` — las etiquetas son los nombres de las regiones (`g.index`) y los valores son los montos (`g.values`). |
-| 🔴 Directa | `ax.barh(g.index, g.values)` |
-
-**Lógica de la solución:** `g` ya viene ordenado de menor a mayor gracias al `.sort_values()`. Al pasar `g.index` como eje Y y `g.values` como longitud de las barras, el gráfico queda automáticamente ordenado de abajo (menor) a arriba (mayor).
+**¿Qué significa el ✅?** Que la figura existe y los 4 grupos están construidos.
 
 ---
 
-## 🔬 Conexión con `profundiza.ipynb`
+### Ejercicio 3 — Dispersión cursos vs matrícula
 
-| Aspecto | `leccion.ipynb` (este módulo) | `profundiza.ipynb` (opcional) |
-|---------|-------------------------------|-------------------------------|
-| Nivel | Práctico, funcional | Teórico + avanzado |
-| Histograma | Básico con bins | Escala logarítmica para colas largas |
-| Boxplot | Visual directo | Detección formal de outliers con IQR |
-| Gráficos múltiples | Uno por sección | Pequeños múltiplos (subplots comparativos) |
-| ¿Para quién? | Todos los participantes | Quienes quieran profundidad estadística |
+**Objetivo:** Graficar la relación entre número de cursos y estudiantes.
+**Habilidad que entrena:** `ax.scatter`, muestreo reproducible.
 
-> **¿Cuándo ir al profundiza?** Cuando termines los 4 ejercicios y quieras entender *por qué* se recorta al p99, *cómo* se detectan outliers matemáticamente, o *cómo* comparar varias variables a la vez en una sola figura.
+**Pistas progresivas:**
+- 🟢 Pista suave: El gráfico de dispersión recibe dos columnas: la de x y la de y.
+- 🟡 Pista media: `ax.scatter(x, y, s=tamaño, alpha=transparencia)`.
+- 🔴 Pista directa: `ax.scatter(m["cursos"], m["mat_total"], s=10, alpha=0.4, color="#ff6b35")`.
 
----
-
-## 🧠 Autoevaluación Final
-
-**1.** Tienes una columna con montos que va de $1.000 a $500.000.000. Quieres ver cómo se distribuye la mayoría, ignorando los valores extremos. ¿Qué harías?
-- a) Un boxplot directamente
-- b) Un histograma de todos los datos
-- **c) Recortar al percentil 99 con `.clip()` y luego hacer el histograma** ✅
-- d) Ordenar de mayor a menor con `.sort_values()`
-
-> *El clip permite enfocarse en el comportamiento típico sin que los extremos distorsionen la visualización.*
-
-**2.** ¿Qué gráfico usarías para responder: "¿Los proveedores grandes tienen montos más altos que los micro?"
-- a) Histograma
-- **b) Boxplot** ✅
-- c) Dispersión
-- d) Barras
-
-> *El boxplot está diseñado para comparar distribuciones entre grupos.*
-
-**3.** En un gráfico de dispersión con `cantidad` en X y `monto_total` en Y, ¿qué indica una nube de puntos totalmente horizontal?
-- a) Correlación positiva fuerte
-- b) Correlación negativa
-- **c) No hay relación entre las dos variables** ✅
-- d) Error en los datos
-
-> *Si los puntos no suben al aumentar X, las dos variables no están relacionadas.*
-
-**4.** ¿Por qué en el Ejercicio 4 se usa `ax.barh()` en lugar de `ax.bar()`?
-- a) Porque los montos son muy grandes
-- **b) Porque los nombres de regiones son largos y se leen mejor en el eje Y** ✅
-- c) Porque es obligatorio para datos de ChileCompra
-- d) Porque `ax.bar()` no acepta strings
-
-> *Las barras horizontales son preferibles cuando las etiquetas del eje son texto extenso.*
-
-**5.** ¿Cuál es la diferencia principal entre R1-07 y R1-08?
-- a) En R1-07 se usa matplotlib y en R1-08 se usa seaborn
-- b) R1-07 es para números y R1-08 para categorías
-- **c) R1-07 es para descubrir patrones (para ti); R1-08 es para comunicar hallazgos (para otros)** ✅
-- d) No hay diferencia, son lo mismo
-
-> *La visualización exploratoria y la comunicativa tienen propósitos distintos: una es personal, la otra es pública.*
+**¿Qué significa el ✅?** Que la figura tiene una colección de puntos (`ax.collections`).
 
 ---
 
-## 📚 Glosario del Módulo
+### Ejercicio 4 — Matrícula por región
+
+**Objetivo:** Ranking regional con barras horizontales.
+**Habilidad que entrena:** `groupby` + `sort_values` + `ax.barh`.
+
+**Pistas progresivas:**
+- 🟢 Pista suave: `g` ya tiene las regiones (índice) y sus totales (valores), ordenados.
+- 🟡 Pista media: Las barras horizontales usan `barh(etiquetas, valores)`.
+- 🔴 Pista directa: `ax.barh(g.index, g.values, color="#4240e5")`.
+
+**¿Qué significa el ✅?** Que hay una barra por cada una de las 16 regiones.
+
+---
+
+> 🔬 **En la profundización** cambia el dominio pero no las herramientas: **1.601 sismos reales de Chile** (USGS, 2020–2025). Verás la ley de Gutenberg-Richter con una escala logarítmica, detectarás sismos anormalmente profundos con la regla IQR y compararás la sismicidad de las zonas del país con pequeños múltiplos. Si puedes hacer eso, la técnica ya es tuya — no del dataset.
+
+---
+
+## 7. Autoevaluación Final
+
+**Pregunta 1:** ¿Por qué se recorta la matrícula al percentil 99 antes del histograma?
+
+- A) Porque los datos sobre el p99 son errores
+- B) Porque sin recorte, los pocos establecimientos gigantes comprimen el resto del gráfico y no se ve la forma de la distribución ✅
+- C) Porque matplotlib no acepta valores grandes
+- D) Para que el gráfico corra más rápido
+
+**Explicación:** Los valores extremos son reales (colegios enormes), pero estiran el eje x. `clip` los lleva al tope para poder ver la masa de los datos. En un análisis formal, se reportaría el recorte.
+
+---
+
+**Pregunta 2:** En un boxplot, ¿qué representa la línea dentro de la caja?
+
+- A) El promedio
+- B) La mediana ✅
+- C) El valor más frecuente
+- D) El máximo
+
+**Explicación:** La caja va de Q1 a Q3 y la línea interior es la mediana (Q2). El promedio no aparece en un boxplot estándar.
+
+---
+
+**Pregunta 3:** ¿Para qué sirve `random_state=42` en `df.sample(800, random_state=42)`?
+
+- A) Para que la muestra tenga exactamente 800 filas
+- B) Para que la muestra sea siempre la misma cada vez que se ejecuta (reproducibilidad) ✅
+- C) Para ordenar la muestra
+- D) Es obligatorio en pandas
+
+**Explicación:** Sin semilla, cada ejecución tomaría una muestra distinta y el gráfico cambiaría. Con semilla fija, tu análisis es reproducible: cualquiera obtiene lo mismo.
+
+---
+
+**Pregunta 4:** Ves una franja ascendente y angosta en un gráfico de dispersión. ¿Qué concluyes?
+
+- A) Las dos variables tienen una relación positiva fuerte ✅
+- B) Las dos variables no se relacionan
+- C) Hay un error en los datos
+- D) La variable y causa la variable x
+
+**Explicación:** Franja ascendente = relación positiva; angosta = poca dispersión (relación fuerte). Ojo: relación no es causalidad — eso se discute en R1-08.
+
+---
+
+**Pregunta 5:** ¿Cuándo conviene `barh` (horizontal) en vez de `bar` (vertical)?
+
+- A) Nunca, son equivalentes
+- B) Cuando las etiquetas de las categorías son largas y muchas (como 16 nombres de regiones) ✅
+- C) Cuando los valores son negativos
+- D) Cuando hay menos de 5 categorías
+
+**Explicación:** Con barras horizontales, las etiquetas se leen de corrido en el eje y. Con 16 regiones en vertical, los nombres chocarían o habría que girarlos.
+
+---
+
+## 8. Glosario del Módulo
 
 | Término | Definición simple | Equivalente en el trabajo del Estado |
 |---------|-------------------|--------------------------------------|
-| **Histograma** | Gráfico que muestra cuántos datos caen en cada rango | Distribución de montos de contratos por tramo |
-| **Bins** | Los rangos (intervalos) del histograma | "¿Cuántos contratos entre $1M y $5M?" |
-| **Boxplot** | Resumen visual de 5 números para comparar grupos | Comparar sueldos entre distintos estamentos |
-| **Percentil p99** | El valor bajo el cual cae el 99% de los datos | El contrato más caro que no sea una excepción extrema |
-| **Clip** | Recortar valores extremos a un tope | Topar montos para analizar sin distorsión |
-| **Dispersión (scatter)** | Gráfico que muestra la relación entre dos números | ¿Más ítems = más costo en una licitación? |
-| **Correlación** | Qué tan relacionadas están dos variables | Si el N° de funcionarios sube, ¿sube el presupuesto? |
-| **Barras horizontales (barh)** | Barras que van de izquierda a derecha | Ranking de regiones por gasto |
-| **Outlier** | Dato muy alejado del resto | Contrato con monto 100× el promedio |
-| **`ax`** | El área de dibujo dentro de una figura matplotlib | La "hoja" donde dibujas el gráfico |
-| **`fig`** | El marco completo que contiene uno o más `ax` | El "marco" que envuelve la hoja |
-| **Muestra (`sample`)** | Subconjunto aleatorio de los datos | Auditar 100 contratos de 10.000 para un análisis rápido |
+| **Histograma** | Cuenta de valores por rango (bins) | Distribución de sueldos por tramo |
+| **Bin** | Cada cajón del histograma | Tramo de la tabla |
+| **Cola larga** | Pocos valores enormes junto a muchos chicos | Pocos contratos gigantes, muchos menores |
+| **`clip(upper=x)`** | Lleva los valores sobre x al valor x | Topear para visualizar |
+| **Boxplot** | Resumen de 5 números por grupo, en cajas | Comparar unidades de un vistazo |
+| **Outlier** | Valor anormalmente lejos del resto | El caso que amerita revisión |
+| **Dispersión (scatter)** | Un punto por observación en dos ejes | Cruce de dos indicadores |
+| **`alpha`** | Transparencia de los puntos | Ver densidad en zonas pobladas |
+| **Pequeños múltiplos** | Misma gráfica repetida por grupo | Una lámina por región, mismo formato |
+| **Escala logarítmica** | Eje que crece por múltiplos (1, 10, 100…) | Ver lo chico y lo enorme en un mismo gráfico |
+| **Regla IQR** | Outlier si está a más de 1,5·IQR de la caja | Criterio estándar de caso atípico |
 
 ---
 
-## 🔜 Conexión con R1-08 · Visualización: Comunicar y Ética
+## 9. Conexión con el Módulo Siguiente
 
-En R1-07 aprendiste a **ver para entender**: gráficos rápidos, sin formato, para descubrir patrones tú mismo. En R1-08 darás el siguiente paso: **ver para mostrar**.
+En R1-07 aprendiste a **ver para entender**: cuatro gráficos que revelan forma, grupos, relaciones y rankings. Son gráficos para ti, para descubrir.
 
-Aprenderás a:
-- Elegir el gráfico correcto según el mensaje que quieres transmitir
-- Agregar títulos, etiquetas y anotaciones que expliquen sin necesidad de texto
-- Evitar gráficos que distorsionan la realidad (manipulación visual)
-- Adaptar visualizaciones para informes a autoridades o ciudadanía
+En **R1-08 · Visualización para comunicar + ética** darás el paso profesional: convertir el hallazgo en un gráfico para **otros** — con título que afirma, ejes honestos, fuentes citadas — y conocerás las reglas éticas de la visualización pública: ejes truncados, cherry-picking, correlación vs causalidad. Con datos como la brecha de matrícula por dependencia, la honestidad del gráfico no es un detalle técnico: es un deber público.
 
-> 💬 **Pregunta motivadora para R1-08:** Con el gráfico de gasto por región que hiciste hoy, ¿cómo lo presentarías en una reunión de directivos para que el mensaje llegue en menos de 10 segundos?
+> 💡 **Pregunta para reflexionar:** De los cuatro gráficos que hiciste, ¿cuál mostrarías a tu jefatura para pedir una decisión? ¿Qué le falta a ese gráfico para sostenerse solo, sin que tú lo expliques al lado?

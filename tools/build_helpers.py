@@ -89,22 +89,42 @@ except Exception as e:
     return code(src)
 
 
-GET_LLM_SNIPPET = '''# ── get_llm(): proveedor de LLM (Gemini) detrás de una abstracción ────────────
-# Decisión congelada: Gemini API (capa gratuita sin tarjeta). Cambiar de proveedor
-# = cambiar solo esta función. Para agentes con baja latencia se puede usar Groq.
+# Modelo por defecto del curso (revisado oct-2026: gemini-2.5-* quedó restringido a cuentas
+# antiguas; 3.5-flash-lite está en la capa gratuita para proyectos nuevos). Cambiarlo AQUÍ
+# y re-generar los notebooks; cada estudiante puede sobreescribirlo con GEMINI_MODEL.
+GEMINI_MODEL = "gemini-3.5-flash-lite"
+
+GET_LLM_SNIPPET = f'''# ── preguntar_llm(): el LLM (Gemini) detrás de UNA función ─────────────────────
+# Cambiar de proveedor o de modelo = cambiar solo esta celda.
+# En Colab: 🔑 (Secretos) → agrega GEMINI_API_KEY (gratis en aistudio.google.com).
 import os
 
+MODELO = os.environ.get("GEMINI_MODEL", "{GEMINI_MODEL}")
+
+def _clave_gemini():
+    try:                                   # Colab: secreto del notebook
+        from google.colab import userdata
+        return userdata.get("GEMINI_API_KEY")
+    except Exception:                      # local: variable de entorno
+        return os.environ.get("GEMINI_API_KEY")
+
+def preguntar_llm(prompt, respaldo="[respuesta de respaldo — configura GEMINI_API_KEY para usar el LLM en vivo]"):
+    """Envía el prompt a Gemini y devuelve el texto. Sin clave o sin red, devuelve
+    `respaldo` para que el notebook siga corriendo (y se pueda verificar en CI)."""
+    clave = _clave_gemini()
+    if not clave:
+        return respaldo
+    try:
+        from google import genai
+        cliente = genai.Client(api_key=clave)
+        return cliente.models.generate_content(model=MODELO, contents=prompt).text
+    except Exception as e:
+        print("⚠️ No se pudo llamar al LLM:", e)
+        return respaldo
+
 def get_llm():
-    """Devuelve una función generate(prompt)->str. En vivo si hay GEMINI_API_KEY,
-    si no, cae a una respuesta cacheada para que el notebook sea verificable sin red."""
-    key = os.environ.get("GEMINI_API_KEY")
-    if key:
-        import google.generativeai as genai
-        genai.configure(api_key=key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        return lambda prompt: model.generate_content(prompt).text
-    # Fallback cacheado (sin red): respuesta de ejemplo para que los assert corran.
-    return lambda prompt: "[respuesta cacheada de ejemplo — define GEMINI_API_KEY para usar el LLM en vivo]"
+    """Compatibilidad: devuelve una función generate(prompt)->str."""
+    return preguntar_llm
 '''
 
 

@@ -1,11 +1,16 @@
 name: Verificar notebooks
 
-# Re-ejecuta todos los solucion.ipynb de ramas/ para detectar módulos rotos
+# Re-ejecuta solucion.ipynb y profundiza_solucion.ipynb de ramas/ y falla si algún
+# chequeo da ❌ o algún notebook se cae — detecta módulos rotos
 # (dependencias que rotan, APIs que cambian). El patrón "en vivo o caché" de los
 # notebooks permite correr sin red ni API keys. Corre semanalmente y a demanda;
 # correrlo antes de iniciar cada cohorte.
 
 on:
+  push:
+    branches: [main]
+    paths: ["ramas/**", "data/**", "tools/**", "requirements.txt"]
+  pull_request:
   schedule:
     - cron: "0 9 * * 1"   # lunes 09:00 UTC (~05:00 Chile)
   workflow_dispatch:
@@ -29,7 +34,7 @@ jobs:
       - name: Instalar dependencias
         run: |
           pip install -r requirements.txt
-          pip install nbconvert ipykernel requests
+          pip install gradio
 
       - name: Ejecutar notebooks de ${{ matrix.rama }}
         run: python tools/run_notebooks.py --rama ${{ matrix.rama }} --timeout 600

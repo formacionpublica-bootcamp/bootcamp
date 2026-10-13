@@ -1,392 +1,266 @@
 # Guía de Aprendizaje — R1-02 · Exploración con pandas
 
-> **Rama:** R1 · Análisis y Visualización | **Módulo:** R1-02 | **Nivel:** Introductorio  
-> **Duración estimada:** 3–4 horas | **Prerrequisitos:** R1-00 Fundamentos, R1-01 Traer el dato  
-> **Competencia de salida:** Cargar un dataset con pandas, inspeccionarlo y obtener un primer resumen exploratorio con datos reales del sector público chileno.
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R1 · Analista de Datos · Módulo 2 · Semana 3
 
 ---
 
-## 1. ¿Para qué me sirve esto como funcionario/a público/a?
+## 1. Datos del Módulo
 
-Cada día, miles de funcionarios del Estado chileno trabajan con datos: registros de beneficiarios, licitaciones, inventarios, estadísticas de atención, nóminas. La herramienta más usada para eso es Excel, y está bien. Pero Excel tiene límites: se pone lento con archivos grandes, no deja registrar los pasos que seguiste, y es difícil repetir el mismo análisis el mes siguiente.
-
-**pandas es el Excel del mundo del análisis de datos profesional.** Te permite hacer todo lo que harías en Excel —filtrar, contar, calcular promedios— pero de forma reproducible, documentada y escalable.
-
-En este módulo trabajarás con el dataset de **establecimientos del Servicio Médico Legal (SML)** de Chile. Son datos reales, públicos, de `datos.gob.cl`. Con ellos podrás responder preguntas como:
-
-- ¿Cuántos SML hay en cada región?
-- ¿Qué región tiene más establecimientos y cuál tiene menos?
-- ¿La distribución territorial del SML es equitativa?
-
-Estas preguntas —aparentemente técnicas— tienen implicancias directas en política pública de acceso a la justicia y servicios del Estado.
-
----
-
-## 2. Mapa conceptual del módulo
-
-Antes de entrar al notebook, mira este mapa. Cada concepto nuevo tiene su equivalente en el mundo que ya conoces:
-
-| Concepto pandas | Equivalente en tu trabajo | Para qué sirve |
-|---|---|---|
-| `pd.read_csv()` | Abrir un archivo en Excel | Cargar los datos al entorno de trabajo |
-| `DataFrame` | La hoja de cálculo | La tabla donde viven todos tus datos |
-| `.head()` / `.shape` | Ver las primeras filas y el tamaño del archivo | Entender de qué tamaño es el dataset |
-| `.value_counts()` | Tabla dinámica de recuento | Contar cuántos hay por categoría |
-| `.describe()` | Estadísticas rápidas en Excel | Obtener mínimo, máximo, promedio de un golpe |
+| Campo | Detalle |
+|-------|---------|
+| **Módulo** | R1-02 · Exploración con pandas |
+| **Rama** | R1 — Análisis y Visualización |
+| **Duración estimada** | 90 minutos |
+| **Nivel** | Básico — requiere R1-00 y R1-01 |
+| **Prerrequisitos** | Variables, listas, funciones; cargar un CSV |
+| **Competencia de salida** | Explorar cualquier dataset público con pandas: inspeccionar, seleccionar, filtrar, contar y resumir |
+| **Entregable** | Las 5 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `matricula.csv` — matrícula oficial 2025 (MINEDUC). Profundización: `establecimientos.csv` — Servicio Médico Legal (datos.gob.cl) |
 
 ---
 
-## 3. Antes de empezar: Verificación de prerrequisitos
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-Este módulo asume que puedes hacer lo siguiente. Marca cada uno honestamente:
+Este es el módulo donde pandas reemplaza al ratón. Todo lo que haces en Excel con clics — ocultar columnas, aplicar filtro, tabla dinámica rápida, mirar las sumas del pie de página — aquí se escribe en una línea de código que queda **documentada y repetible**.
 
-- [ ] Puedo ejecutar una celda en Google Colab con `Shift + Enter`
-- [ ] Sé qué es una variable en Python (por ejemplo, `nombre = "Felipe"`)
-- [ ] Entiendo qué es una función y cómo llamarla (por ejemplo, `print("hola")`)
-- [ ] Puedo subir o enlazar un archivo CSV desde Google Drive o URL
-- [ ] Sé qué es `import` y para qué se usa
+La diferencia práctica es enorme: el filtro de Excel que aplicaste ayer nadie sabe reproducirlo; el `df[df["region"] == "Maule"]` de hoy queda escrito, se audita y se corre de nuevo el próximo año con el archivo nuevo. En un servicio público, donde los análisis se heredan entre funcionarios, esa trazabilidad vale más que la velocidad.
 
-Si marcaste todos: ¡estás listo/a! Si te quedaron pendientes, revisa **R1-00 Fundamentos** y **R1-01 Traer el dato** antes de continuar.
+Las cinco operaciones de este módulo — inspeccionar, seleccionar, filtrar, contar, resumir — son el 80% del trabajo exploratorio real con datos. El resto del curso las combina.
 
 ---
 
-## 4. Guía paso a paso por sección del notebook
+## 3. Mapa Conceptual del Módulo
 
-### Sección 1 · ¿Qué es pandas y el DataFrame?
-
-**🎯 Objetivo:** Cargar el dataset de establecimientos SML y entender qué es un DataFrame.
-
-**💡 Concepto clave:** Un `DataFrame` es una tabla. Igual que en Excel, tiene filas y columnas. La diferencia es que en pandas esa tabla vive en la memoria del computador y puedes manipularla con código.
-
-```python
-import pandas as pd
-df = pd.read_csv("establecimientos.csv")
-```
-
-**🔍 ¿Qué hace este código?**
-- `import pandas as pd` → carga la librería pandas y le pone el apodo `pd` para escribir menos
-- `pd.read_csv(...)` → lee el archivo CSV y lo convierte en un DataFrame
-- `df` → es el nombre que le damos a nuestra tabla (podría llamarse cualquier cosa, pero `df` es la convención)
-
-**⚠️ Error frecuente:** `FileNotFoundError` — significa que el archivo no está en la misma carpeta que tu notebook. Verifica la ruta del archivo o que lo subiste correctamente a Colab.
-
-**✅ Sabes esta sección cuando puedes:** Ejecutar la celda sin errores y ver que `df` existe.
+| Operación pandas | ¿Qué hace? | Equivalente en Excel |
+|------------------|-----------|----------------------|
+| **`df.shape` / `len(df)`** | Dimensiones de la tabla | Mirar la barra de estado |
+| **`df.columns`** | Nombres de las columnas | La fila de encabezados |
+| **`df.head()`** | Primeras filas | El primer pantallazo |
+| **`df["col"]`** | Una columna (Serie) | Seleccionar una columna |
+| **`df[["a", "b"]]`** | Varias columnas (tabla) | Ocultar las demás columnas |
+| **`df[df["col"] == v]`** | Filas que cumplen la condición | El botón de filtro |
+| **`value_counts()`** | Conteo por categoría, ordenado | Tabla dinámica de conteo |
+| **`.mean() / .max() / .min()`** | Estadísticos de una columna | Las sumas del pie de página |
+| **`.idxmax()` + `.loc`** | Qué fila tiene el máximo | Ordenar y mirar la primera |
 
 ---
 
-### Sección 2 · Inspección inicial
+## 4. Verificación de Prerrequisitos
 
-**🎯 Objetivo:** Entender qué hay en el dataset antes de hacer cualquier análisis.
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Explicar qué es una variable y una lista | ☐ |
+| Escribir una función con `def` y `return` | ☐ |
+| Cargar un CSV con `pd.read_csv` | ☐ |
 
-**💡 Concepto clave:** Antes de trabajar con cualquier dato del Estado, necesitas saber qué tienes. ¿Cuántos registros? ¿Qué columnas? ¿Hay datos vacíos? Es como revisar el expediente antes de la reunión.
-
-```python
-df.head()        # muestra las primeras 5 filas
-df.shape         # devuelve (filas, columnas)
-df.columns       # lista los nombres de las columnas
-df.info()        # tipo de dato de cada columna y valores nulos
-```
-
-**🔍 ¿Qué hace cada línea?**
-- `.head()` → las primeras 5 filas, como ver el encabezado de un informe
-- `.shape` → te dice `(38, 5)`, es decir: 38 establecimientos, 5 columnas
-- `.columns` → lista los campos: `establecimiento`, `region`, `comuna`, `latitud`, `longitud`
-- `.info()` → te dice si hay celdas vacías (en este dataset no hay)
-
-**⚠️ Error frecuente:** Escribir `df.head` sin paréntesis — no muestra nada, solo describe la función. Siempre con `()`.
-
-**✅ Sabes esta sección cuando puedes:** Decir de memoria cuántas filas y columnas tiene el dataset y cómo se llaman las columnas.
+Si respondiste No a alguna, vuelve a R1-00 y R1-01 antes de continuar.
 
 ---
 
-### Sección 3 · Seleccionar columnas y filtrar filas
+## 5. Guía Paso a Paso por Sección del Notebook
 
-**🎯 Objetivo:** Quedarte solo con los datos que necesitas, como aplicar un filtro en Excel.
+### Sección 0 · Preparación
 
-**💡 Concepto clave:** En Excel usas el filtro automático para mostrar solo ciertas filas. En pandas haces lo mismo con una condición dentro de corchetes. Lo llamamos el "embudo": entran todos los datos, salen solo los que cumplen el criterio.
+🎯 **Objetivo:** Cargar la matrícula 2025 como DataFrame.
 
-```python
-# Seleccionar solo la columna de región
-df["region"]
+💡 **Concepto clave:** Un **DataFrame** es la planilla en memoria: filas (establecimientos) × columnas (atributos). Cada fila de este dataset es un establecimiento educacional real de Chile, con su dependencia, comuna y cuántos estudiantes tiene.
 
-# Filtrar solo los SML de la Región del Maule
-df[df["region"] == "Maule"]
-```
-
-**🔍 ¿Qué hace cada línea?**
-- `df["region"]` → extrae una sola columna, como hacer clic en la cabecera en Excel
-- `df[df["region"] == "Maule"]` → crea una condición verdadero/falso y la aplica como filtro
-
-**⚠️ Error frecuente:** Usar `=` en vez de `==` dentro del filtro. Un `=` es asignación; `==` es comparación.
-
-**✅ Sabes esta sección cuando puedes:** Filtrar el dataset por cualquier región y ver solo sus establecimientos.
+✅ **Señal de que entendiste:** `df.head()` muestra la tabla con `rbd`, `nombre`, `dependencia`, `mat_total`…
 
 ---
 
-### Sección 4 · Contar por categoría con `value_counts`
+### Sección 1 · Auditoría visual
 
-**🎯 Objetivo:** Saber cuántos SML hay en cada región con una sola línea de código.
+🎯 **Objetivo:** Saber qué tienes antes de calcular nada.
 
-**💡 Concepto clave:** Es exactamente la tabla dinámica de Excel, pero en una línea. `value_counts()` cuenta cuántas veces aparece cada valor único en una columna.
+💡 **Concepto clave:** La disciplina profesional: **nunca** calcules sobre una tabla que no has inspeccionado. `len(df)` (o `df.shape`) te dice el tamaño; `df.columns` los nombres exactos — con sus mayúsculas y guiones bajos, que necesitarás escribir bien después.
 
-```python
-df["region"].value_counts()
-```
+⚠️ **Error frecuente:** `KeyError` por escribir una columna «de memoria»: `Mat_Total` no es `mat_total`.
 
-**🔍 ¿Qué hace este código?**
-Devuelve una tabla ordenada de mayor a menor con el recuento por región. Resultado:
-```
-Maule           6
-Valparaíso      4
-O'Higgins       3
-...
-```
+✅ **Señal de que entendiste:** Sabes decir cuántos establecimientos hay (10.945) y qué columnas existen, sin abrir el CSV en Excel.
 
-**⚠️ Error frecuente:** Aplicar `value_counts()` a todo el DataFrame en vez de a una columna. Siempre especifica la columna primero: `df["columna"].value_counts()`.
+---
 
-**✅ Sabes esta sección cuando puedes:** Responder de inmediato "¿qué región tiene más SML?" mirando el output.
+### Sección 2 · Seleccionar columnas
+
+🎯 **Objetivo:** Crear una vista con solo las columnas que importan.
+
+💡 **Concepto clave:** El **doble corchete**: `df["col"]` devuelve una columna (Serie); `df[["a", "b", "c"]]` devuelve una tabla con esas columnas. La lista interior es exactamente eso: una lista de nombres, como las de R1-00.
+
+✅ **Señal de que entendiste:** `vista` tiene las mismas 10.945 filas pero solo 3 columnas.
+
+---
+
+### Sección 3 · Filtrar filas
+
+🎯 **Objetivo:** Quedarte solo con los establecimientos del Maule.
+
+💡 **Concepto clave:** `df["region"] == "Maule"` produce una columna de `True/False` (una por fila); ponerla dentro de `df[...]` selecciona las filas con `True`. Es el botón de filtro de Excel, pero componible: mañana le agregas otra condición con `&`.
+
+✅ **Señal de que entendiste:** `maule` solo contiene filas con región Maule, y puedes cambiar la región sin tocar nada más.
+
+---
+
+### Sección 4 · Contar por categoría
+
+🎯 **Objetivo:** ¿Cuántos establecimientos hay de cada dependencia?
+
+💡 **Concepto clave:** `value_counts()` es la tabla dinámica de conteo en una llamada: agrupa por valor único y cuenta, ordenando de mayor a menor. El resultado es una Serie indexada por categoría: `por_dependencia["Municipal"]` extrae un valor concreto.
+
+✅ **Señal de que entendiste:** La suma de todos los conteos da el total de establecimientos — nadie se pierde.
 
 ---
 
 ### Sección 5 · Estadísticos rápidos
 
-**🎯 Objetivo:** Obtener mínimo, máximo, promedio y más con una sola instrucción.
+🎯 **Objetivo:** Promedio, máximo y el nombre del establecimiento más grande.
 
-**💡 Concepto clave:** En Excel usarías funciones separadas: `=PROMEDIO()`, `=MIN()`, `=MAX()`. En pandas, `.describe()` te da todo eso junto para las columnas numéricas.
+💡 **Concepto clave:** `.mean()`, `.max()`, `.min()` resumen una columna numérica. El paso extra profesional: `.idxmax()` devuelve el **índice** de la fila con el máximo, y `df.loc[idx, "nombre"]` recupera su nombre. Saber *cuál* es el máximo suele importar más que saber *cuánto* vale.
 
-```python
-df["latitud"].describe()
-df["latitud"].mean()
-df["latitud"].min()
-df["latitud"].max()
-```
-
-**🔍 Interpretación con el dataset SML:**
-- `max` de latitud → `-18.47` → Arica (más al norte, valor menos negativo)
-- `min` de latitud → `-53.15` → Punta Arenas (más al sur, valor más negativo)
-- `mean` → `-35.13` → el "centro geográfico" promedio de la red SML está en la zona centro-sur
-
-**⚠️ Error frecuente:** Confundirse con los valores negativos de latitud. En el hemisferio sur, el valor más cercano a cero es el más al norte, y el más negativo es el más al sur.
-
-**✅ Sabes esta sección cuando puedes:** Leer el output de `.describe()` y explicar qué significa cada línea.
+✅ **Señal de que entendiste:** Puedes nombrar el establecimiento más grande de Chile y decir su matrícula.
 
 ---
 
-### Sección 6 · Errores típicos
+## 6. Guía de los 5 Ejercicios
 
-**🎯 Objetivo:** Reconocer y resolver los errores más comunes antes de que te frustren.
+### Ejercicio 1 — Inspecciona la tabla
 
-| Error | Mensaje | Causa | Solución |
-|---|---|---|---|
-| `FileNotFoundError` | No se encontró el archivo | La ruta del CSV es incorrecta | Verificar nombre y ubicación del archivo |
-| `KeyError: 'Region'` | Columna no encontrada | Mayúsculas incorrectas | Usar `df.columns` para ver el nombre exacto |
-| `SyntaxError` | Error de sintaxis | Falta `==` o comillas | Revisar la condición del filtro |
-| `AttributeError` | No existe el método | Se escribió mal el método | Verificar ortografía: `.head()` no `.Head()` |
+**Pistas progresivas:**
+- 🟢 Pista suave: Una función de Python cuenta elementos; un atributo del DataFrame lista las columnas.
+- 🟡 Pista media: `len(df)` y `df.columns` (conviértelo a lista).
+- 🔴 Pista directa: `n_establecimientos = len(df)` y `columnas = list(df.columns)`.
 
----
-
-## 5. Guía de los 5 Ejercicios
-
-### Ejercicio 01 · ¿Cuántos establecimientos hay en total?
-
-**Habilidad que entrena:** Usar `.shape` para conocer el tamaño del dataset.
-
-**Pista suave 🟢:** El dataset tiene filas y columnas. ¿Qué atributo de pandas te da esa información de una vez?
-
-**Pista media 🟡:** `df.shape` devuelve una tupla. El primer número es lo que buscas.
-
-**Pista directa 🔴:** Accede al primer elemento de `.shape` con `df.shape[0]`.
-
-**Lógica de la solución:** `.shape` devuelve `(filas, columnas)`. Para quedarte solo con las filas, usa el índice `[0]`. Resultado esperado: `38`.
-
-**✅ El chequeo automático valida que:** el valor sea exactamente 38.
+**¿Qué significa el ✅?** Que conoces el tamaño de la tabla y sus columnas — la auditoría mínima antes de cualquier análisis.
 
 ---
 
-### Ejercicio 02 · Lista de columnas
+### Ejercicio 2 — Crea una vista con nombre, comuna y matrícula
 
-**Habilidad que entrena:** Inspeccionar la estructura del DataFrame con `.columns`.
+**Pistas progresivas:**
+- 🟢 Pista suave: Para varias columnas necesitas pasar una lista de nombres.
+- 🟡 Pista media: La lista va dentro de los corchetes: doble corchete.
+- 🔴 Pista directa: `vista = df[["nombre", "comuna", "mat_total"]]`.
 
-**Pista suave 🟢:** ¿Qué atributo de un DataFrame muestra los nombres de todas sus columnas?
-
-**Pista media 🟡:** Es una sola palabra: `columns`. Se accede directamente sin paréntesis.
-
-**Pista directa 🔴:** `df.columns` devuelve un Index con los nombres. Para convertirlo a lista: `list(df.columns)`.
-
-**Lógica de la solución:** `.columns` es un atributo, no un método, por eso no lleva `()`. El resultado incluye las 5 columnas del dataset.
-
-**✅ El chequeo automático valida que:** la lista contenga exactamente los 5 nombres de columna correctos.
+**¿Qué significa el ✅?** Que la vista tiene exactamente esas 3 columnas en ese orden, con todas las filas.
 
 ---
 
-### Ejercicio 03 · Región con más establecimientos
+### Ejercicio 3 — Filtra los establecimientos del Maule
 
-**Habilidad que entrena:** Usar `.value_counts()` e identificar el valor más frecuente.
+**Pistas progresivas:**
+- 🟢 Pista suave: La condición va dentro de los corchetes del DataFrame.
+- 🟡 Pista media: `df[df["region"] == "Maule"]` y cuentas con `len(...)`.
+- 🔴 Pista directa: `maule = df[df["region"] == "Maule"]` y `n_maule = len(maule)`.
 
-**Pista suave 🟢:** Necesitas contar cuántas veces aparece cada región. ¿Qué método hace eso?
-
-**Pista media 🟡:** `value_counts()` ordena de mayor a menor automáticamente. El primer resultado es el que buscas.
-
-**Pista directa 🔴:** Usa `.value_counts().index[0]` para extraer el nombre de la región con más establecimientos.
-
-**Lógica de la solución:** `value_counts()` devuelve una Serie ordenada. El índice `[0]` corresponde al valor más frecuente. Resultado esperado: `"Maule"`.
-
-**✅ El chequeo automático valida que:** la respuesta sea `"Maule"`.
+**¿Qué significa el ✅?** Que el conteo coincide con la suma de la condición booleana, y el filtrado solo contiene el Maule.
 
 ---
 
-### Ejercicio 04 · Establecimiento más al norte
+### Ejercicio 4 — Cuenta establecimientos por dependencia
 
-**Habilidad que entrena:** Combinar `.max()` con filtrado para obtener un registro específico.
+**Pistas progresivas:**
+- 🟢 Pista suave: Hay un método que cuenta por categoría en una llamada.
+- 🟡 Pista media: `df["dependencia"].value_counts()`; para un valor concreto, indexa la Serie con el nombre.
+- 🔴 Pista directa: `por_dependencia = df["dependencia"].value_counts()` y `n_municipales = int(por_dependencia["Municipal"])`.
 
-**Pista suave 🟢:** "Más al norte" en Chile significa la latitud menos negativa (más cercana a cero). ¿Qué función te da el máximo de una columna?
-
-**Pista media 🟡:** Primero calcula `df["latitud"].max()`, luego úsalo como condición de filtro.
-
-**Pista directa 🔴:** `df[df["latitud"] == df["latitud"].max()]["establecimiento"].values[0]`
-
-**Lógica de la solución:** El máximo de latitud en un dataset del hemisferio sur es el valor menos negativo, que corresponde a la ubicación más septentrional. Resultado esperado: `"Servicio Médico Legal Arica"`.
-
-**✅ El chequeo automático valida que:** el nombre del establecimiento sea el de Arica.
+**¿Qué significa el ✅?** Que el conteo total cuadra con las filas y extrajiste bien el valor de «Municipal».
 
 ---
 
-### Ejercicio 05 · Interpretar para decidir (Política Pública)
+### Ejercicio 5 — Estadísticos de la matrícula
 
-**Habilidad que entrena:** Leer un resultado de `value_counts()` e interpretarlo en contexto de política pública.
+**Pistas progresivas:**
+- 🟢 Pista suave: Son dos métodos de la columna numérica; el nombre del más grande ya está resuelto en el código.
+- 🟡 Pista media: `.mean()` para el promedio, `.max()` para el máximo (conviértelo a entero).
+- 🔴 Pista directa: `promedio = df["mat_total"].mean()` y `maximo = int(df["mat_total"].max())`.
 
-**Pista suave 🟢:** Compara el número de SML en la Región Metropolitana versus la Región del Maule. ¿Qué te dice esa diferencia?
-
-**Pista media 🟡:** La Región Metropolitana concentra el 40% de la población del país. ¿Tiene sentido que el Maule tenga más SML que ella?
-
-**Pista directa 🔴:** Usa `value_counts()` para obtener los números exactos y selecciona la opción que mejor interpreta la distribución territorial.
-
-**Lógica de la solución:** El dataset muestra Maule=6 y Metropolitana=2. Si se mide solo por número de establecimientos (sin ajustar por población), el Maule tiene 3 veces más SML que la Región Metropolitana, lo que podría indicar una distribución geográfica más que proporcional a la población. La respuesta correcta es la opción **B**.
-
-**✅ El chequeo automático valida que:** se seleccione la opción B.
+**¿Qué significa el ✅?** Que tus estadísticos coinciden con los de pandas y sabes qué establecimiento es el mayor del país.
 
 ---
 
-## 6. El Ejercicio 05 en profundidad: Interpretar para decidir
-
-Este ejercicio no es técnico: es de **lectura crítica de datos para política pública**.
-
-### Los números
-
-| Región | N° SML | % Población aprox. |
-|---|---|---|
-| Metropolitana | 2 | ~40% |
-| Maule | 6 | ~5% |
-| Valparaíso | 4 | ~10% |
-| Tarapacá | 1 | ~3% |
-
-### Reflexión guiada
-
-La distribución territorial del SML parece estar orientada a **cobertura geográfica** más que a **proporción poblacional**. Esto tiene sentido en servicios que deben estar físicamente cerca de donde ocurren los hechos (defunciones, pericias), no necesariamente donde vive más gente.
-
-Sin embargo, una región con alta densidad poblacional y solo 2 establecimientos puede tener **listas de espera más largas** y **peores tiempos de respuesta**, lo que afecta el acceso equitativo a la justicia.
-
-### Pregunta de debate
-
-> ¿Qué otro dato pedirías para confirmar si la distribución es equitativa o no?
-
-Algunas respuestas posibles:
-- Número de pericias realizadas por establecimiento al año
-- Tiempo promedio de respuesta por región
-- Distancia promedio que recorre un ciudadano para llegar al SML más cercano
-- Tasa de defunciones por región que requieren autopsia
-
-Esta es la diferencia entre un analista de datos que entrega números y uno que **entrega decisiones**.
+> 🔬 **En la profundización** cambia el dominio: los **establecimientos del Servicio Médico Legal** de Chile (datos.gob.cl). Mismas cinco operaciones — `value_counts` por región, estadísticos de latitud (¿cuál es el SML más austral?) y una función de consulta `cuantos_en()`. Si las resuelves sin volver a la lección, la técnica ya es tuya.
 
 ---
 
 ## 7. Autoevaluación Final
 
-**Instrucciones:** Responde sin mirar el notebook. Son preguntas conceptuales, no de código.
+**Pregunta 1:** ¿Qué diferencia hay entre `df["region"]` y `df[["region"]]`?
 
-**Pregunta 1.** ¿Qué devuelve `df.shape` para un dataset de 38 filas y 5 columnas?
-- A) `[38, 5]`
-- B) `(38, 5)` ✅
-- C) `{filas: 38, columnas: 5}`
-- D) `38`
+- A) Ninguna
+- B) El primero devuelve una Serie (columna suelta); el segundo, un DataFrame de una columna ✅
+- C) El segundo da error
+- D) El primero es más lento
 
-*Explicación: `.shape` devuelve una tupla (tipo de dato inmutable), no una lista ni un diccionario.*
-
----
-
-**Pregunta 2.** ¿Cuál es la diferencia entre `df["region"]` y `df[["region"]]`?
-- A) No hay diferencia
-- B) La primera devuelve una Serie; la segunda devuelve un DataFrame ✅
-- C) La primera filtra; la segunda cuenta
-- D) La segunda falla con error
-
-*Explicación: Un corchete simple extrae una Serie (una columna). Doble corchete extrae un DataFrame de una sola columna. Es útil cuando quieres mantener el formato tabular.*
+**Explicación:** Corchete simple = Serie; doble corchete (lista adentro) = tabla. Importa porque algunos métodos existen en una y no en la otra.
 
 ---
 
-**Pregunta 3.** ¿Qué hace `df[df["region"] == "Maule"]`?
-- A) Elimina las filas donde región es Maule
-- B) Devuelve solo las filas donde la región es Maule ✅
-- C) Cuenta cuántas filas tienen región igual a Maule
-- D) Renombra la columna región
+**Pregunta 2:** ¿Qué produce la expresión `df["region"] == "Maule"` por sí sola?
 
-*Explicación: La condición entre corchetes crea una máscara booleana (True/False por cada fila) y la aplica como filtro.*
+- A) Las filas del Maule
+- B) Una Serie de True/False, una por fila ✅
+- C) El número de filas del Maule
+- D) Un error si hay otras regiones
 
----
-
-**Pregunta 4.** En el dataset SML, ¿qué significa que el `min` de latitud sea `-53.15`?
-- A) Es un error en los datos
-- B) Ese establecimiento está más al norte
-- C) Ese establecimiento está más al sur ✅
-- D) La latitud no tiene relación con la posición geográfica
-
-*Explicación: En el hemisferio sur, las latitudes son negativas. El valor más negativo corresponde a la posición más austral: Punta Arenas.*
+**Explicación:** La comparación produce la «máscara» booleana. Recién al ponerla dentro de `df[...]` se seleccionan las filas donde es True.
 
 ---
 
-**Pregunta 5.** ¿Cuál es la forma más rápida de obtener el número de valores únicos en la columna `region`?
-- A) `df.shape[0]`
-- B) `df["region"].count()`
-- C) `df["region"].nunique()` ✅
-- D) `df["region"].describe()`
+**Pregunta 3:** ¿Qué devuelve `df["dependencia"].value_counts()`?
 
-*Explicación: `.nunique()` cuenta los valores únicos (no nulos). `.count()` cuenta todos los valores no nulos (incluyendo repetidos). `.nunique()` para el dataset SML devuelve 16.*
+- A) El número de dependencias distintas
+- B) Una Serie con cada categoría y cuántas filas tiene, ordenada de mayor a menor ✅
+- C) Las filas duplicadas
+- D) La dependencia más común solamente
+
+**Explicación:** Es conteo por categoría con orden incluido. Para el número de categorías distintas existe `nunique()`.
+
+---
+
+**Pregunta 4:** Quieres saber el NOMBRE del establecimiento con mayor matrícula. ¿Qué usas?
+
+- A) `df["mat_total"].max()`
+- B) `df.loc[df["mat_total"].idxmax(), "nombre"]` ✅
+- C) `df["nombre"].max()`
+- D) `df.sort_values("nombre").head(1)`
+
+**Explicación:** `.max()` da el valor; `.idxmax()` da la fila del valor, y `.loc[fila, "nombre"]` recupera el atributo que buscas. (La C daría el nombre alfabéticamente mayor — un clásico error silencioso.)
+
+---
+
+**Pregunta 5:** ¿Por qué inspeccionar (`shape`, `columns`, `head`) antes de calcular?
+
+- A) Es opcional si el archivo es conocido
+- B) Porque los cálculos sobre columnas mal escritas o datos inesperados fallan o, peor, dan resultados silenciosamente incorrectos ✅
+- C) Para que el notebook se vea más largo
+- D) Solo es necesario con archivos grandes
+
+**Explicación:** El `KeyError` es el error amable; el peligroso es calcular sobre la columna equivocada sin error. La auditoría visual de 10 segundos previene ambos.
 
 ---
 
 ## 8. Glosario del Módulo
 
-| Término | Definición simple | Equivalente en tu trabajo |
-|---|---|---|
-| **DataFrame** | Tabla de datos en pandas | Hoja de cálculo de Excel |
-| **Serie** | Una sola columna de un DataFrame | Una columna de Excel |
-| **índice** | El número de fila que pandas asigna automáticamente | El número de fila en Excel |
-| **`pd.read_csv()`** | Función que carga un archivo CSV como tabla | Abrir un archivo en Excel |
-| **`.head()`** | Muestra las primeras 5 filas | Hacer scroll al inicio del archivo |
-| **`.shape`** | Tupla con (filas, columnas) | Ver el tamaño del archivo |
-| **`.info()`** | Resumen técnico: tipos de dato y valores nulos | Revisar el formato de cada columna |
-| **`.value_counts()`** | Recuento por categoría, ordenado de mayor a menor | Tabla dinámica de recuento en Excel |
-| **`.describe()`** | Estadísticos descriptivos de columnas numéricas | Funciones PROMEDIO, MIN, MAX, etc. |
-| **filtro booleano** | Condición que devuelve True/False por cada fila | Filtro automático de Excel |
-| **`NaN`** | Celda vacía o valor faltante | Celda en blanco en Excel |
-| **latitud** | Coordenada geográfica norte-sur. Negativa en el hemisferio sur | Fila en un mapa |
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **DataFrame** | Tabla de pandas: filas × columnas | La planilla en memoria |
+| **Serie** | Una columna con índice | Una columna de la planilla |
+| **`shape`** | (filas, columnas) | Dimensiones de la tabla |
+| **`head()`** | Primeras 5 filas | El vistazo inicial |
+| **Máscara booleana** | Serie de True/False que filtra | El criterio del filtro |
+| **`value_counts()`** | Conteo por categoría ordenado | Tabla dinámica exprés |
+| **`nunique()`** | Número de valores distintos | «¿Cuántas regiones hay?» |
+| **`idxmax()`** | Índice de la fila con el máximo | «¿Quién es el mayor?» |
+| **`loc[fila, col]`** | Acceso por etiqueta a una celda | La celda exacta de la planilla |
+| **`KeyError`** | La columna no existe (revisa el nombre) | Error de tipeo en el encabezado |
 
 ---
 
-## 9. Conexión con el siguiente módulo
+## 9. Conexión con el Módulo Siguiente
 
-Ya sabes explorar un dataset: cargarlo, inspeccionarlo, filtrar, contar y calcular estadísticos básicos. Es un logro real.
+En R1-02 aprendiste a explorar una tabla: inspeccionar, seleccionar, filtrar, contar, resumir. Pero los datos reales del Estado rara vez viven en una sola tabla.
 
-El próximo módulo es **R1-03 · Cruzar y resumir tablas**, donde aprenderás a:
-- **Combinar dos tablas** que comparten una columna en común (como hacer un `BUSCARV` en Excel, pero mejor)
-- **Resumir por grupos** con `groupby` (como una tabla dinámica completa)
+En **R1-03 · Cruzar y resumir tablas** aprenderás el superpoder de pandas: el `merge` — cruzar la matrícula con el directorio de establecimientos por RBD, el equivalente profesional del BUSCARV, más el `groupby` en serio para responder preguntas que ninguna tabla responde sola.
 
-Pregunta motivadora para que llegues con hambre:
-
-> *¿Qué pasaría si tuvieras el dataset de SML y además una tabla con la población de cada región? ¿Cómo calcularías el número de SML por cada 100.000 habitantes?*
-
-Eso es exactamente lo que harás en R1-03. ¡Nos vemos ahí!
-
----
-
-*Guía elaborada para el Bootcamp de Datos — Formación Pública Chile · Licencia CC BY 4.0*
+> 💡 **Pregunta para reflexionar:** Piensa en dos planillas de tu servicio que hoy cruzas con BUSCARV (o peor, a ojo). ¿Cuál es la columna que las conecta? Esa columna es tu «RBD».

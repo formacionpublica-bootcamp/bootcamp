@@ -1,363 +1,295 @@
-# 📘 Guía de Aprendizaje — R2-03 · Estadística para modelar
+# Guía de Aprendizaje — R2-03 · Estadística para modelar
+
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R2 · Científico de Datos · Módulo 3 · Semanas 5–6
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Nombre del módulo** | R2-03 · Estadística para modelar |
-| **Pista / Rama** | R2 — Científico/a de Datos · Línea B |
-| **Duración estimada** | 3–4 horas (Semanas 5–6) |
-| **Nivel** | Intermedio |
-| **Prerrequisitos** | R2-01 completado (pandas básico, filtros, groupby). Nociones básicas de promedio y porcentaje. |
-| **Competencia de salida** | Usar estadística inferencial —distribución, intervalos de confianza, pruebas de hipótesis y correlación— para sustentar decisiones de modelado. |
-| **Dataset** | `compras_ml.csv` — Compras públicas reales de ChileCompra (monto, cantidad, tamaño de proveedor). |
-| **Entregable** | Las 4 celdas de chequeo del `leccion.ipynb` muestran ✅. |
+|-------|---------|
+| **Módulo** | R2-03 · Estadística para modelar |
+| **Rama** | R2 — Científico de Datos |
+| **Duración estimada** | 2–3 horas |
+| **Nivel** | Intermedio — requiere R2-00 y R2-01 |
+| **Prerrequisitos** | Filtrar con máscaras, `groupby`, `dropna`, columnas de fecha (`.dt.month`) |
+| **Competencia de salida** | Usar estadística descriptiva e inferencial para sustentar —y cuestionar— decisiones de modelado: asimetría, estacionalidad, intervalos (t y *bootstrap*), prueba de hipótesis y correlación con confusores |
+| **Entregable** | Las 6 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `aire_diario.csv` — PM2.5 diario 2020–2025 de 14 estaciones SINCA (MMA); estación ancla: Cerro Navia, con temperatura y humedad. Profundización: `matricula.csv` (MINEDUC 2025) × `comunas.csv` |
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-Un informe de gestión que dice “el monto promedio de compras fue $X” está incompleto si no dice: ¿qué tan variable es ese monto? ¿Esa diferencia entre grupos es real o producto del azar? ¿Hay una relación entre cantidad y costo?
+Antes de entrenar un modelo hay que **conocer el dato**, porque el modelo hereda todo lo que no viste. Este módulo usa la calidad del aire —un tema de salud pública con norma propia: **50 µg/m³ de PM2.5 en 24 horas** (D.S. 12/2011 del MMA)— para practicar las preguntas que cualquier informe técnico debería responder antes de afirmar algo:
 
-Este módulo responde exactamente esas preguntas con herramientas estadísticas concretas. Cada una tiene uso directo en el Estado:
+- ¿Cómo se reparte la variable? El PM2.5 tiene **cola larga**: la media (15,5 µg/m³) queda bien arriba de la mediana (11).
+- ¿Cuándo pasa? En Cerro Navia, **julio** promedia 57,0 µg/m³ y hubo **332 días sobre la norma** entre 2020 y 2025.
+- ¿Con qué incertidumbre lo digo? La media invernal es 47,9 µg/m³, pero con un **intervalo** de [45,8 ; 50,0].
+- ¿Es real esta mejora? El invierno 2025 (48,6) fue algo más limpio que el 2024 (50,1)… pero la diferencia **no es distinguible del azar** (p = 0,69). Un anuncio de «bajó la contaminación» no se sostiene con esos datos.
+- ¿Esto causa aquello? La humedad *parece* subir el PM2.5 (r = +0,36), pero dentro del invierno la relación se **invierte** (r = −0,50): el invierno era el que movía ambas.
 
-- **Estadística descriptiva:** entender la distribución del gasto público antes de reportarlo o modelarlo.
-- **Intervalos de confianza:** acompañar cualquier estimación con su incertidumbre, como en encuestas o estudios de línea base.
-- **Prueba de hipótesis:** verificar si la diferencia entre grupos (ej. gasto en contratos con empresas grandes vs micro) es estadísticamente significativa.
-- **Correlación:** identificar relaciones entre variables para orientar el diseño de *features* en un modelo.
-
-> 🏛️ **Mensaje clave:** la estadística no es teoría separada. Es la caja de herramientas que te permite **hablar con honestidad sobre los datos** antes de tomar decisiones o entregar un informe.
+> 🏛️ **Mensaje clave:** la estadística no es un trámite antes del modelo; es la forma de **hablar con honestidad** de los datos ante una autoridad.
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía sector público |
-|---|---|---|
-| **Media** | Promedio aritmético | Gasto promedio por contrato |
-| **Mediana** | Valor central que divide en dos mitades | El gasto “típico” cuando hay casos extremos |
-| **Percentil 90 (p90)** | Umbral bajo el cual está el 90% de los datos | El gasto máximo “normal” (sin considerar el 10% más caro) |
-| **Desviación estándar (std)** | Dispersión alrededor de la media | Cuánto varía el gasto entre contratos similares |
-| **Distribución de cola larga** | La mayoría de valores son pequeños, pero hay pocos valores enormes | Muchas compras pequeñas y algunas licitaciones de gran escala |
-| **Intervalo de confianza (IC)** | Rango donde probablemente está el valor real de la población | “El gasto promedio real está entre $X y $Y con 95% de confianza” |
-| **Prueba de hipótesis (t-test)** | Contrasta si la diferencia entre dos grupos es significativa | ¿Es real la diferencia de gasto entre proveedores grandes y micro? |
-| **p-valor** | Probabilidad de observar esa diferencia por azar si no hubiera diferencia real | Menor a 0.05 = diferencia significativa |
-| **Correlación de Pearson (r)** | Mide la relación lineal entre dos variables (-1 a 1) | ¿A mayor cantidad pedida, mayor monto? |
-| `stats.t.interval()` | Calcula el IC 95% para una media | Rango estadístico alrededor del promedio |
-| `stats.ttest_ind()` | T-test para comparar dos grupos independientes | Comparación entre dos tipos de proveedores |
-| `stats.pearsonr()` | Calcula la correlación y su p-valor | Relación lineal entre dos columnas numéricas |
+| Concepto | ¿Qué hace? | Equivalente en Excel / en el trabajo |
+|----------|-----------|----------------------|
+| **Media / mediana / p90** | Centro y extremo alto de la distribución | `PROMEDIO`, `MEDIANA`, `PERCENTIL` |
+| **Asimetría (`skew`)** | Mide cuán cargada está la cola: 0 simétrico, > 1 muy asimétrico | `COEFICIENTE.ASIMETRIA` |
+| **`np.log1p`** | Logaritmo de (1 + x): comprime la cola larga y admite ceros | Graficar en escala logarítmica |
+| **Estacionalidad** | Patrón que se repite cada año (invierno alto, verano bajo) | Tabla dinámica por mes |
+| **Intervalo de confianza 95%** | Rango plausible para la media real | El «margen de error» de una encuesta |
+| **`stats.t.interval`** | IC por fórmula (distribución t) | — |
+| **Bootstrap** | IC por remuestreo con reemplazo, sin supuestos | Simular miles de «otros inviernos» |
+| **Test de Welch** | Compara dos medias sin asumir varianzas iguales | ¿La diferencia es real o ruido? |
+| **p-valor** | Probabilidad de ver una diferencia así si no hubiera diferencia real | < 0,05 → «significativa» |
+| **Pearson / Spearman** | Correlación lineal / correlación de rangos (robusta) | `COEF.DE.CORREL` |
+| **Variable de confusión** | Un tercero que mueve a las dos variables a la vez | «El invierno» detrás de humedad y PM2.5 |
 
 ---
 
 ## 4. Verificación de Prerrequisitos
 
-| ¿Puedo...? | ✅ Listo | 🔄 Revisar |
-|---|---|---|
-| Cargar un DataFrame con pandas y filtrar filas | ✅ | Repasa R2-01 si esto te cuesta |
-| Entender qué significa “promedio” y “valor central” | ✅ | Piensa en promedios de notas o de gastos mensuales |
-| Importar librerías en Python (`from scipy import stats`) | ✅ | Si nunca lo has hecho, no te preocupes: es solo copiar la primera celda |
-| Ejecutar celdas en Colab y leer mensajes ✅ / ❌ | ✅ | Ya lo hiciste en módulos anteriores |
-| Entender intuitivamente que “menos del 5%” suena a “poco probable” | ✅ | Eso es suficiente para entender el p-valor |
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Filtrar un DataFrame con una condición (`df[df["mes"] == 7]`) | ☐ |
+| Usar `.isin([6, 7, 8])` para filtrar por varios valores | ☐ |
+| Hacer `groupby("columna")["otra"].mean()` | ☐ |
+| Explicar qué es un valor nulo y quitarlo con `.dropna()` | ☐ |
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### 🔷 Sección 0 — Preparación del entorno
+### Sección 0 · Preparación
 
-**🎯 Objetivo:** Cargar las librerías necesarias y el dataset `compras_ml.csv`.
+🎯 **Objetivo:** Cargar `aire_diario.csv` (30.674 filas: un día × una estación) con la fecha como fecha, agregar `mes` y `anio`, y separar la estación ancla `cn` = **Cerro Navia** (2.191 días).
 
-**💡 Concepto clave:** Además de `pandas`, `numpy` y `matplotlib`, aquí usamos `scipy.stats`, que es la librería de referencia para estadística inferencial en Python. No necesitas saber cómo funciona por dentro, solo cómo llamarla.
-
-**🔍 Qué hace el código:** Importa las librerías, descarga el CSV si es necesario y lo carga en un DataFrame. Igual que en los módulos anteriores.
-
-**⚠️ Error frecuente:** No ejecutar esta celda o ejecutarla parcialmente. `stats` no existirá en el entorno y los ejercicios 2, 3 y 4 fallarán con `NameError`.
-
-**✅ Señal de comprensión:** El dataset carga sin errores y puedes ver las columnas: `monto_total`, `cantidad`, `tamano_proveedor`, entre otras.
+💡 **Concepto clave:** Solo 7 de las 14 estaciones traen temperatura y humedad en este archivo; Cerro Navia sí mide temperatura y humedad. Por eso los ejercicios con clima usan `cn`.
 
 ---
 
-### 🔷 Sección 1 — Describir antes de modelar
+### Sección 1 · Describir antes de modelar
 
-**🎯 Objetivo:** Calcular media, mediana, percentil 90 y desviación estándar del monto de compras.
+🎯 **Objetivo:** Calcular media, mediana, p90 y asimetría del PM2.5 de todas las estaciones, y la asimetría tras `np.log1p`.
 
-**💡 Concepto clave:** Antes de construir cualquier modelo, necesitas conocer la forma de tus datos. El monto de compras públicas tiene **cola larga**: muchos contratos pequeños y unos pocos enormes. En ese escenario, la media puede ser muchísimo mayor que la mediana, y esa diferencia es información crítica para elegir el modelo correcto.
+💡 **Concepto clave:** Media 15,5 > mediana 11 y asimetría **3,39**: muchos días tranquilos, pocos días muy malos. El logaritmo baja la asimetría a **0,43**. Muchos modelos funcionan mejor con variables menos asimétricas — esto vuelve en R2-04.
 
-**🔍 Qué hace el código:**
-- `x.mean()` calcula la media aritmética.
-- `x.median()` calcula la mediana (el valor que divide la distribución por la mitad).
-- `x.quantile(0.90)` calcula el percentil 90 (el 90% de las compras está por debajo de este valor).
-- `x.std()` mide la dispersión: cuánto se alejan los datos del promedio.
-
-**⚠️ Error frecuente:** Confundir media y mediana. En datos con valores extremos (como contratos de gran escala), la media es arrastrada hacia arriba por esos extremos. La mediana es más representativa del caso “típico”.
-
-**✅ Señal de comprensión:** Puedes explicar por qué en compras públicas la media y la mediana son muy distintas, y qué implica eso para un analista.
+⚠️ **Error frecuente:** Usar `np.log` en vez de `np.log1p`: hay 80 días con PM2.5 = 0 y log(0) = −∞.
 
 ---
 
-### 🔷 Sección 2 — Intervalo de confianza para la media
+### Sección 2 · Estacionalidad
 
-**🎯 Objetivo:** Calcular el intervalo de confianza al 95% para la media del monto.
+🎯 **Objetivo:** Promedio de PM2.5 por mes en Cerro Navia, el peor mes y cuántos días superaron 50 µg/m³.
 
-**💡 Concepto clave:** Un estimado puntual (“el promedio es $X”) siempre tiene incertidumbre. El intervalo de confianza dice: “on 95% de confianza, el promedio real de la población está entre $A y $B”. Es como reportar una encuesta con margen de error: no es imprecisión, es honestidad.
+💡 **Concepto clave:** El peor mes es **julio** (57,0 µg/m³ promedio) y hubo **332 días** sobre la norma en seis años. El gráfico de cajas muestra que en junio-julio la mitad de los días ya rondan o superan la norma: calefacción a leña e inversión térmica.
 
-**🔍 Qué hace el código:**
-- `stats.sem(x)` calcula el error estándar de la media (cuánto varía la media entre muestras).
-- `stats.t.interval(0.95, len(x)-1, loc=media, scale=stats.sem(x))` construye el intervalo usando la distribución t de Student.
-
-**⚠️ Error frecuente:** Asignar mal el desempaquetado. La función devuelve una tupla `(low, high)`, y hay que capturarla como `ic_low, ic_high = ...`. Si se asigna a una sola variable, el chequeo fallará.
-
-**✅ Señal de comprensión:** La media está dentro del intervalo (`ic_low < media < ic_high`) y puedes explicar en palabras simples qué significa ese rango.
+✅ **Señal de que entendiste:** Puedes explicar por qué un promedio anual esconde el problema.
 
 ---
 
-### 🔷 Sección 3 — Prueba de hipótesis: Grande vs Micro
+### Sección 3 · Intervalo de confianza
 
-**🎯 Objetivo:** Determinar si el monto promedio de compras con proveedores Grandes es significativamente distinto al de proveedores Micro.
+🎯 **Objetivo:** IC 95% de la media invernal (junio-agosto) con `stats.t.interval`.
 
-**💡 Concepto clave:** El t-test de Welch (con `equal_var=False`) compara las medias de dos grupos sin asumir que tienen la misma varianza. Devuelve un **p-valor**: si es menor a 0.05, la diferencia entre grupos es difícilmente explicable por el azar. En política pública esto se traduce en: “¿la diferencia que veo en los datos es real o podría ser coincidencia?”
+💡 **Concepto clave:** Con 546 días de invierno, la media es **47,9** y el IC **[45,8 ; 50,0]** µg/m³. El intervalo habla de la **media**, no de los días: muchos días individuales están muy por encima de 50.
 
-**🔍 Qué hace el código:**
-- Filtra el DataFrame en dos grupos: compras a proveedores `Grande` y a proveedores `Micro`.
-- `stats.ttest_ind(grande, micro, equal_var=False)` ejecuta el test de Welch y devuelve el estadístico `t` y el `p_valor`.
-
-**⚠️ Error frecuente:** Olvidar `equal_var=False`. Con `True` (por defecto) se aplica el t-test clásico que asume varianzas iguales, lo cual no suele cumplirse en datos reales de compras públicas.
-
-**✅ Señal de comprensión:** El p-valor está entre 0 y 1, y puedes interpretar si la diferencia es o no significativa al 5%.
+⚠️ **Error frecuente:** Asignar el resultado a una sola variable. `stats.t.interval` devuelve dos números: `ic_low, ic_high = ...`.
 
 ---
 
-### 🔷 Sección 4 — Correlación entre cantidad y monto
+### Sección 4 · Bootstrap
 
-**🎯 Objetivo:** Medir si la cantidad de artículos pedidos tiene relación lineal con el monto total.
+🎯 **Objetivo:** IC 95% de la diferencia invierno − verano remuestreando 2.000 veces.
 
-**💡 Concepto clave:** La correlación de Pearson mide la fuerza de la relación lineal entre dos variables numéricas. Va de -1 (relación inversa perfecta) a 1 (relación directa perfecta). Un valor cercano a 0 indica que no hay relación lineal. Lo más importante: **correlación no implica causalidad**. Dos variables pueden moverse juntas por razones totalmente distintas.
+💡 **Concepto clave:** La diferencia observada es **33,6 µg/m³** y el IC bootstrap **[31,5 ; 35,8]** no toca el cero. El bootstrap no usa fórmulas ni supone normalidad: es la herramienta de referencia cuando la distribución es rara.
 
-**🔍 Qué hace el código:**
-- `stats.pearsonr(df["cantidad"], df["monto_total"])` devuelve el coeficiente `r` y el `p-valor`.
-
-**⚠️ Error frecuente:** Interpretar una correlación alta como causalidad. Decir “a mayor cantidad, mayor monto *porque*...” sin más evidencia es un error común en informes de gestión.
-
-**✅ Señal de comprensión:** Puedes decir si la correlación es débil, moderada o fuerte, y por qué el p-valor importa para saber si esa correlación es significativa o podría ser producto del azar.
+✅ **Señal de que entendiste:** Puedes decir qué significa «remuestrear con reemplazo» con un ejemplo.
 
 ---
 
-## 6. Guía de Ejercicios
+### Sección 5 · Prueba de hipótesis
 
-### ✍️ Ejercicio 1 — Resumen descriptivo del monto
+🎯 **Objetivo:** Comparar los inviernos 2024 y 2025 con el test de Welch.
 
-**Habilidad que desarrolla:** Caracterizar una distribución con medidas de tendencia central y dispersión.
+💡 **Concepto clave:** 50,1 vs 48,6 µg/m³, **p = 0,69**: no hay evidencia de mejora. Un p-valor alto **también es un resultado** y protege de anunciar logros que son variación normal (la meteorología cambia de un invierno a otro).
 
-**Pista 1 (conceptual):** Necesitas cuatro números que describan la columna `monto_total`: su valor central, su valor típico, su percentil alto y su variabilidad.
-
-**Pista 2 (técnica):** Los métodos son `mean()`, `median()`, `quantile(0.90)` y `std()`, todos sobre la variable `x = df["monto_total"]`.
-
-**Pista 3 (casi solución):** El diccionario ya tiene las claves definidas. Solo reemplaza cada `...` por la llamada al método correspondiente.
-
-**Lógica de solución:** Completar el diccionario `desc` con los cuatro métodos estadísticos de pandas sobre la columna.
+⚠️ **Letra chica:** Los días consecutivos se parecen (autocorrelación), así que los p-valores con series diarias son **optimistas**. Aquí ni siquiera así sale significativo.
 
 ---
 
-### ✍️ Ejercicio 2 — Intervalo de confianza al 95%
+### Sección 6 · Correlación ≠ causalidad
 
-**Habilidad que desarrolla:** Cuantificar la incertidumbre de una estimación estadística.
+🎯 **Objetivo:** Comparar la correlación humedad–PM2.5 en todo el año y solo en junio-julio.
 
-**Pista 1 (conceptual):** La función `stats.t.interval` recibe el nivel de confianza, los grados de libertad, la media y el error estándar.
+💡 **Concepto clave:** Todo el año, **r = +0,36**; solo en pleno invierno, **r = −0,50**. El signo se invierte porque el **invierno** trae a la vez aire húmedo y más contaminación: es una **variable de confusión**. La temperatura (r = −0,55) tampoco «causa» nada por sí sola: actúa a través de la calefacción y la inversión térmica.
 
-**Pista 2 (técnica):** El error estándar se calcula con `stats.sem(x)`. Los grados de libertad son `len(x)-1`.
-
-**Pista 3 (casi solución):** `stats.t.interval(0.95, len(x)-1, loc=media, scale=stats.sem(x))` devuelve directamente el par `(ic_low, ic_high)`.
-
-**Lógica de solución:** Desempaquetar la tupla que devuelve `stats.t.interval(...)` en `ic_low, ic_high`.
+✅ **Señal de que entendiste:** Puedes explicar por qué «subir la temperatura» no es una política de aire limpio.
 
 ---
 
-### ✍️ Ejercicio 3 — T-test Grande vs Micro
+### Reflexión final
 
-**Habilidad que desarrolla:** Contrastar grupos con una prueba de hipótesis.
-
-**Pista 1 (conceptual):** Los dos grupos ya están definidos (`grande` y `micro`). Solo necesitas la función que los compara.
-
-**Pista 2 (técnica):** `stats.ttest_ind(grupo1, grupo2, equal_var=False)` ejecuta el test de Welch.
-
-**Pista 3 (casi solución):** Desempaqueta el resultado en `t_stat, p_valor = ...`. Si `p_valor < 0.05`, la diferencia es estadísticamente significativa.
-
-**Lógica de solución:** Aplicar `stats.ttest_ind` con `equal_var=False` y desempaquetar los dos valores de retorno.
+La pregunta sobre qué variable **sí** se puede intervenir (uso de leña, restricción vehicular, fiscalización en episodios) no tiene celda de chequeo: es la conversación que el analista debe tener con quien diseña la política.
 
 ---
 
-### ✍️ Ejercicio 4 — Correlación entre cantidad y monto
+## 6. Guía de los 6 Ejercicios
 
-**Habilidad que desarrolla:** Medir y describir la relación lineal entre dos variables.
+### Ejercicio 1 — Resumen descriptivo y asimetría
 
-**Pista 1 (conceptual):** `stats.pearsonr` recibe dos columnas de igual largo y devuelve el coeficiente de correlación y su p-valor.
+**Pistas progresivas:**
+- 🟢 Pista suave: Son cuatro métodos de pandas sobre `x`, más uno para la asimetría del logaritmo.
+- 🟡 Pista media: `mean()`, `median()`, `quantile(0.90)`, `skew()`; el log es `np.log1p(x)`.
+- 🔴 Pista directa: `"asimetria": float(x.skew())` y `asim_log = float(np.log1p(x).skew())`.
 
-**Pista 2 (técnica):** Los argumentos son `df["cantidad"]` y `df["monto_total"]`, en ese orden.
-
-**Pista 3 (casi solución):** Desempaqueta como `r, p = stats.pearsonr(...)`. `r` está entre -1 y 1.
-
-**Lógica de solución:** Llamar a `stats.pearsonr` con las dos columnas y desempaquetar en `r, p`.
-
----
-
-## 7. Sección en Profundidad: Ejercicio 3 — Prueba de hipótesis aplicada a política pública
-
-El ejercicio 3 es el más relevante para la toma de decisiones basada en evidencia, que es exactamente lo que busca la política pública moderna.
-
-### ¿Por qué el t-test importa en el sector público?
-
-En el Estado muchas veces se toman decisiones basadas en diferencias observadas: “los contratos con empresas grandes tienen montos mayores, entonces las regulaciones deben cambiar”. Pero esa diferencia observada puede ser puro ruido estadístico.
-
-El t-test responde: **¿cambiaríamos de opinión si esta diferencia fuera producto del azar?**
-
-### Interpretación del p-valor en lenguaje público
-
-| p-valor | Interpretación |
-|---|---|
-| p < 0.001 | Diferencia muy significativa — muy poco probable que sea azar |
-| 0.001 ≤ p < 0.05 | Diferencia significativa — suficiente evidencia para actuar |
-| 0.05 ≤ p < 0.10 | Diferencia marginal — hay tendencia pero no es concluyente |
-| p ≥ 0.10 | Diferencia no significativa — podría ser azar |
-
-### Advertencia importante: significancia estadística ≠ importancia práctica
-
-Con muchos datos (como los miles de contratos de ChileCompra), es muy fácil obtener un p-valor pequeño aunque la diferencia real sea mínima. Un p-valor < 0.05 no siempre implica una diferencia que valga la pena gestionar.
-
-> 🧠 **Regla práctica:** combina el p-valor con el tamaño del efecto (cuánto es la diferencia en términos absolutos o relativos) para saber si la diferencia es **significativa Y relevante**.
-
-### Aplicaciones directas en el Estado chileno
-
-| Pregunta | Herramienta |
-|---|---|
-| ¿El gasto difiere significativamente entre regiones? | T-test o ANOVA |
-| ¿La tasa de adjudicación mejoró después de una política? | T-test de comparación antes/después |
-| ¿Los proveedores MIPYME tienen montos distintos a los grandes? | T-test |
-| ¿La diferencia en tiempos de pago entre organismos es real? | T-test o Mann-Whitney |
+**¿Qué significa el ✅?** Que mediste la cola larga (asimetría 3,39) y viste que el log la reduce (0,43).
 
 ---
 
-## 8. Conexión con profundiza.ipynb
+### Ejercicio 2 — Estacionalidad en Cerro Navia
 
-El profundiza lleva las herramientas de la lección a un nivel más robusto y profesional.
+**Pistas progresivas:**
+- 🟢 Pista suave: Agrupa por mes, y busca el índice del máximo.
+- 🟡 Pista media: `cn.groupby("mes")["pm25"].mean()` y `.idxmax()`; los días sobre la norma son una condición sumada.
+- 🔴 Pista directa: `mes_peor = int(por_mes.idxmax())` y `dias_sobre_norma = int((cn["pm25"] > 50).sum())`.
 
-### Comparativa leccion vs. profundiza
-
-| Tema | `leccion.ipynb` | `profundiza.ipynb` |
-|---|---|---|
-| Intervalo de confianza | T de Student (fórmula paramétrica) | Bootstrap (sin supuestos de distribución) |
-| Comparación de grupos | T-test de Welch (asume distribución) | Mann-Whitney (no paramétrico) |
-| Regresión | No aborda | Regresión OLS con statsmodels |
-| Complejidad | ⭐⭐⭐ Intermedio | ⭐⭐⭐⭐ Avanzado |
-
-### Guía de decisión
-
-```
-¿Tienes las 4 celdas en ✅?
-    ├── No → Termina la lección principal primero.
-    └── Sí → ¿Tus datos tienen distribuciones raras o muchos valores extremos?
-              ├── Sí → El bootstrap y Mann-Whitney del profundiza son muy relevantes para ti.
-              └── No → Avanza a R2-04 y vuelve al profundiza cuando necesites robustez.
-```
-
-**Ejercicio más valioso del profundiza:** El bootstrap (ejercicio 1), porque en datos públicos con colas largas (como montos de contratos), los métodos clásicos pueden ser imprecisos y el bootstrap ofrece una alternativa computacional sin supuestos.
+**¿Qué significa el ✅?** Que encontraste julio como el peor mes y contaste los 332 días sobre la norma.
 
 ---
 
-## 9. Autoevaluación Final
+### Ejercicio 3 — IC 95% de la media invernal
 
-**Pregunta 1:** En una distribución con cola larga (muchos contratos pequeños y pocos enormes), ¿qué ocurre con la media?
+**Pistas progresivas:**
+- 🟢 Pista suave: La función necesita el nivel de confianza, los grados de libertad, la media y el error estándar.
+- 🟡 Pista media: Grados de libertad = `len(inv) - 1`; error estándar = `stats.sem(inv)`.
+- 🔴 Pista directa: `ic_low, ic_high = stats.t.interval(0.95, len(inv) - 1, loc=media_inv, scale=stats.sem(inv))`.
 
-- a) La media es siempre igual a la mediana
-- b) La media es arrastrada hacia arriba por los valores extremos y queda por encima de la mediana
-- c) La media baja porque hay muchos valores pequeños
-- d) La media no se puede calcular en distribuciones así
-
-✅ **Respuesta correcta: b)**
-**Explicación:** Los valores extremos (contratos muy grandes) inflan la media. Por eso en datos con colas largas, la mediana es más representativa del caso típico que la media.
+**¿Qué significa el ✅?** Que acompañaste la media invernal con su incertidumbre (± ~2 µg/m³).
 
 ---
 
-**Pregunta 2:** Un intervalo de confianza del 95% para la media indica que:
+### Ejercicio 4 — Bootstrap de la diferencia invierno − verano
 
-- a) El 95% de los contratos están dentro de ese rango
-- b) Con 95% de confianza, la media real de la población está dentro de ese intervalo
-- c) El 5% de los datos son errores
-- d) El intervalo contiene el 95% de los valores extremos
+**Pistas progresivas:**
+- 🟢 Pista suave: Repite 2.000 veces: remuestrea cada grupo, calcula la diferencia de medias y guárdala.
+- 🟡 Pista media: `rng.choice(inv.values, len(inv))` remuestrea con reemplazo; usa una lista por comprensión.
+- 🔴 Pista directa: `difs = [rng.choice(inv.values, len(inv)).mean() - rng.choice(ver.values, len(ver)).mean() for _ in range(2000)]` y `b_low, b_high = np.percentile(difs, [2.5, 97.5])`.
 
-✅ **Respuesta correcta: b)**
-**Explicación:** El IC no describe los datos individuales sino la estimación de la media poblacional. Dice: si repitiéramos el muestreo muchas veces, el 95% de los intervalos contendrían la media real.
-
----
-
-**Pregunta 3:** Si el p-valor del t-test es 0.003, ¿qué concluyes?
-
-- a) La diferencia entre grupos es del 0.3%
-- b) La diferencia observada tiene sólo un 0.3% de probabilidad de ser aleatoria; es estadísticamente significativa
-- c) El error del modelo es del 0.3%
-- d) Hay un 99.7% de contratos con esa diferencia
-
-✅ **Respuesta correcta: b)**
-**Explicación:** El p-valor indica la probabilidad de observar esa diferencia (o mayor) si en realidad no hubiera diferencia. Un p = 0.003 < 0.05 implica que la diferencia es estadísticamente significativa.
+**¿Qué significa el ✅?** Que el intervalo [31,5 ; 35,8] no toca el cero: el invierno es claramente peor.
 
 ---
 
-**Pregunta 4:** Una correlación de Pearson de r = 0.87 entre cantidad y monto significa:
+### Ejercicio 5 — ¿El invierno 2025 fue más limpio?
 
-- a) Que el 87% del monto es causado por la cantidad
-- b) Existe una fuerte relación lineal positiva: a mayor cantidad, mayor monto tiende a ser
-- c) Que no hay relación entre las variables
-- d) Que cantidad y monto son iguales en el 87% de los casos
+**Pistas progresivas:**
+- 🟢 Pista suave: Los dos grupos ya están filtrados; falta la función que compara medias.
+- 🟡 Pista media: `stats.ttest_ind(a, b, equal_var=False)` es el test de Welch; devuelve dos valores.
+- 🔴 Pista directa: `t_stat, p_valor = stats.ttest_ind(inv_2024, inv_2025, equal_var=False)` y `significativa = p_valor < 0.05`.
 
-✅ **Respuesta correcta: b)**
-**Explicación:** Un r cercano a 1 indica relación lineal positiva fuerte. Pero cuidado: no dice nada sobre causalidad. La relación puede deberse a otras variables.
-
----
-
-**Pregunta 5:** ¿Cuál es la advertencia más importante sobre la correlación?
-
-- a) Solo funciona con menos de 1.000 datos
-- b) La correlación no implica causalidad
-- c) Solo es válida si el p-valor es mayor a 0.05
-- d) No se puede usar con datos de compras públicas
-
-✅ **Respuesta correcta: b)**
-**Explicación:** Dos variables pueden correlacionarse por una tercera causa común, por coincidencia, o por una relación espuria. Siempre hay que complementar la correlación con análisis adicional antes de inferir causalidad.
+**¿Qué significa el ✅?** Que comprobaste que la baja de 1,5 µg/m³ cabe en la variación normal entre inviernos (p = 0,69).
 
 ---
 
-## 10. Glosario del Módulo
+### Ejercicio 6 — Correlaciones globales vs dentro del invierno
 
-| Término | Definición simple | Equivalente sector público / Excel |
-|---|---|---|
-| **Media** | Promedio aritmético de los valores | `PROMEDIO()` en Excel |
-| **Mediana** | Valor del centro al ordenar todos los datos | Valor que deja la mitad del gasto por encima y la mitad por debajo |
-| **Percentil 90** | El 90% de los datos está por debajo de este valor | El corte de gasto “normal” en una distribución |
-| **Desviación estándar** | Medida de cuánto se dispersan los datos alrededor del promedio | `DESVEST()` en Excel |
-| **Distribución de cola larga** | Muchos valores pequeños y pocos enormes | Patrón típico del gasto público |
-| **Intervalo de confianza** | Rango probable donde está el valor real de la población | Margen de error en encuestas o estudios |
-| **Prueba de hipótesis** | Herramienta para decidir si una diferencia es real o aleatoria | Verificar si un cambio en una política tuvo efecto real |
-| **p-valor** | Probabilidad de observar esa diferencia si no hubiera ninguna real | < 0.05 = diferencia significativa |
-| **T-test de Welch** | Comparación de medias de dos grupos sin asumir varianzas iguales | Comparar grupos con diferentes tamaños y variabilidades |
-| **Correlación de Pearson** | Medida de relación lineal entre dos variables (-1 a 1) | `COEF.DE.CORREL()` en Excel |
-| **Error estándar** | Cuánto varía la media entre distintas muestras | Precisión de la estimación promedio |
-| **Estadística inferencial** | Herramientas para concluir sobre poblaciones a partir de muestras | Base para informes de evaluación basados en evidencia |
+**Pistas progresivas:**
+- 🟢 Pista suave: Calcula la misma correlación dos veces: en todos los días (`s`) y solo en junio-julio (`pleno`).
+- 🟡 Pista media: `stats.pearsonr(x, y)` da (r, p); `serie1.corr(serie2)` da solo r.
+- 🔴 Pista directa: `r_temp, p_temp = stats.pearsonr(s["temp_media"], s["pm25"])`, `r_hum_todo = s["pm25"].corr(s["humedad_media"])` y `r_hum_invierno = pleno["pm25"].corr(pleno["humedad_media"])`.
+
+**¿Qué significa el ✅?** Que viste un signo invertirse al controlar por la estación del año: la firma de un confusor.
 
 ---
 
-## 11. Conexión con el Módulo Siguiente
+> 🔬 **En la profundización:** transferencia a otro dato del Estado — la **matrícula 2025** cruzada con la **población** de 30 comunas. Construyes la tasa de estudiantes por 1.000 habitantes (de 148 en Pirque a 255 en Linares), ves que dos **conteos** correlacionan casi perfecto solo por tamaño (r = 0,99), comparas **Pearson (−0,44, p = 0,014) con Spearman (−0,17, p = 0,37)** y mides con *bootstrap* cuán frágil es una correlación con solo 30 casos (IC [−0,75 ; −0,04]).
 
-En R2-03 aprendiste a describir y probar relaciones en los datos con rigor estadístico. Ahora estás listo para el siguiente paso.
+---
 
-**El siguiente módulo es R2-04 · Fundamentos de Machine Learning.**
+## 7. Autoevaluación Final
 
-Allí darás el salto de la estadística descriptiva al modelado predictivo:
+**Pregunta 1:** El PM2.5 diario tiene media 15,5 y mediana 11. ¿Qué indica?
 
-- Entenderás qué es un modelo de ML y para qué sirve.
-- Aprenderás a separar datos en entrenamiento y validación.
-- Entrenarás tu primer modelo de regresión o clasificación sobre datos reales.
+- A) Que los datos tienen errores
+- B) Una cola larga a la derecha: pocos días muy contaminados arrastran la media hacia arriba ✅
+- C) Que la mitad de los días supera la norma
+- D) Nada: media y mediana siempre difieren un poco
 
-> 🔗 **Conexión pedagógica:** R2-03 te enseña a entender los datos con honestidad estadística; R2-04 te enseña a usarlos para construir predicciones. La base que aprendiste aquí —distribuciones, grupos, correlaciones— es exactamente lo que te permite elegir y evaluar un modelo con criterio.
+**Explicación:** Con asimetría positiva, la media queda sobre la mediana. Para describir el «día típico», la mediana es más fiel.
 
-¡Muy bien! Llevas más de la mitad del camino de la Rama R2 💪
+---
+
+**Pregunta 2:** El IC 95% de la media invernal es [45,8 ; 50,0]. ¿Qué significa?
+
+- A) Que el 95% de los días de invierno está entre 45,8 y 50,0
+- B) Que la media real del PM2.5 invernal está, con 95% de confianza, en ese rango ✅
+- C) Que ningún día de invierno superó la norma
+- D) Que hay un 5% de datos erróneos
+
+**Explicación:** El intervalo es sobre la **media**, no sobre los días individuales; muchos días superan los 50 µg/m³.
+
+---
+
+**Pregunta 3:** Comparando los inviernos 2024 y 2025 se obtiene p = 0,69. ¿Qué concluyes?
+
+- A) Que 2025 fue 69% más limpio
+- B) Que la diferencia observada es compatible con la variación normal entre inviernos; no hay evidencia de mejora ✅
+- C) Que la medición está mal
+- D) Que 2024 fue significativamente peor
+
+**Explicación:** p > 0,05 → no se puede descartar el azar. No prueba que «no cambió nada», pero no respalda anunciar una mejora.
+
+---
+
+**Pregunta 4:** ¿Por qué usar *bootstrap* en vez de la fórmula t?
+
+- A) Porque siempre da intervalos más angostos
+- B) Porque no necesita suponer una distribución: remuestrea los datos que tienes ✅
+- C) Porque no requiere computador
+- D) Porque elimina la asimetría
+
+**Explicación:** El bootstrap reemplaza supuestos por cómputo; es especialmente útil con colas largas o estadísticos raros (como una correlación).
+
+---
+
+**Pregunta 5:** La humedad correlaciona +0,36 con el PM2.5 en el año, pero −0,50 dentro de junio-julio. ¿Qué explica el cambio de signo?
+
+- A) Un error de cálculo
+- B) La estación del año es una variable de confusión que mueve a ambas ✅
+- C) La humedad causa contaminación en verano
+- D) Que en invierno no se mide la humedad
+
+**Explicación:** El invierno trae aire húmedo **y** más contaminación (calefacción, inversión térmica). Al mirar solo el invierno, ese efecto común desaparece y aparece otra relación.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **PM2.5** | Material particulado fino (≤ 2,5 micrones), en µg/m³ | El contaminante con norma diaria de 50 µg/m³ |
+| **Asimetría (skew)** | Cuán cargada a un lado está la distribución | «Pocos casos extremos» en un indicador |
+| **`np.log1p`** | Logaritmo de 1 + x | Escala log que admite ceros |
+| **Estacionalidad** | Patrón que se repite cada año | La «temporada alta» de un servicio |
+| **Intervalo de confianza** | Rango plausible del valor real | Margen de error de una encuesta |
+| **Bootstrap** | Remuestrear con reemplazo para medir incertidumbre | Simular muchos «otros años» |
+| **Test de Welch** | Prueba que compara dos medias | ¿El programa cambió algo o es ruido? |
+| **p-valor** | Probabilidad de ver una diferencia así por azar | < 0,05 → significativa |
+| **Pearson / Spearman** | Correlación lineal / por rangos | `COEF.DE.CORREL` / su versión robusta |
+| **Variable de confusión** | Tercer factor que mueve a dos variables | El invierno, el tamaño de la comuna |
+| **Autocorrelación** | Días seguidos se parecen entre sí | Por qué los p-valores de series diarias son optimistas |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R2-03 aprendiste a describir, estimar con incertidumbre, contrastar y desconfiar de las correlaciones — sobre seis años de PM2.5 real.
+
+En **R2-04 · Fundamentos de Machine Learning** usarás lo que viste aquí para construir tu primer modelo: **predecir el PM2.5 de mañana** en Cerro Navia con la temperatura, la humedad, el mes, el día de la semana y el PM2.5 de ayer. La estacionalidad y las correlaciones de hoy son, literalmente, las *features* de mañana — y la honestidad estadística será el **baseline** que el modelo tendrá que batir.
+
+> 💡 **Pregunta para reflexionar:** si el PM2.5 de hoy se parece tanto al de ayer, ¿qué tan difícil será que un modelo le gane a la regla «mañana será igual que hoy»?

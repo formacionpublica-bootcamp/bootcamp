@@ -1,8 +1,9 @@
 """build_R1-08.py — módulo R1-08 (Visualización para comunicar + ética).
 
-Rama R1 (Análisis y Visualización). Split de A6, parte comunicación: gráfico honesto
-y claro para audiencia directiva — eje desde 0, título/etiquetas, anotación, evitar
-engaños visuales. Convención de la casa.
+Rama R1 (Análisis y Visualización). Gráfico honesto y claro para audiencia
+directiva — eje desde 0, título/etiquetas, anotación, evitar engaños visuales.
+Rearmado 2026: lección sobre matrícula 2025 (MINEDUC); profundiza = transferencia
+con calidad del aire (SINCA, adelanto de la rama R2). Convención de la casa.
 
 Uso:  /opt/anaconda3/bin/python tools/build_R1-08.py
 """
@@ -15,9 +16,9 @@ DEST = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
 
 IMPORTS = "import pandas as pd\nimport matplotlib.pyplot as plt"
 
-PREP = '''# Trabajaremos con el gasto por región (top 6) en todos los ejercicios.
-g = df.groupby("region_comprador")["monto_total"].sum().sort_values(ascending=False).head(6)
-print(g.round(0))'''
+PREP = '''# Trabajaremos con la matrícula por región (top 6) en todos los ejercicios.
+g = df.groupby("region")["mat_total"].sum().sort_values(ascending=False).head(6)
+print(g)'''
 
 EJ = [
  ("## 1. El eje Y empieza en cero",
@@ -45,8 +46,8 @@ plt.show()''',
   '''fig, ax = plt.subplots(figsize=(7, 4))
 ax.bar(g.index, g.values, color="#4240e5")
 ax.set_ylim(bottom=0)
-ax.set_title("Gasto en compras públicas por región (top 6)")
-ax.set_xlabel("Región"); ax.set_ylabel("Gasto total (CLP)")
+ax.set_title("Matrícula escolar por región, 2025 (top 6)")
+ax.set_xlabel("Región"); ax.set_ylabel("Estudiantes matriculados")
 plt.xticks(rotation=45, ha="right"); plt.tight_layout()
 plt.show()''',
   '''fig, ax = plt.subplots(figsize=(7, 4))
@@ -63,18 +64,18 @@ assert ax.get_xlabel() != "" and ax.get_ylabel() != ""''',
 
  ("## 3. Anotar el dato clave",
   "Una buena visualización **guía la mirada** al mensaje. Anota el valor más importante.",
-  "Anota la región de mayor gasto",
+  "Anota la región con más estudiantes",
   '''fig, ax = plt.subplots(figsize=(7, 4))
 ax.bar(g.index, g.values, color="#4240e5")
 ax.set_ylim(bottom=0)
-ax.annotate(f"Mayor gasto: {g.idxmax()}", xy=(0, g.max()), xytext=(1, g.max() * 0.9),
+ax.annotate(f"Más estudiantes: {g.idxmax()}", xy=(0, g.max()), xytext=(1, g.max() * 0.9),
             arrowprops=dict(arrowstyle="->"))
 plt.xticks(rotation=45, ha="right"); plt.tight_layout()
 plt.show()''',
   '''fig, ax = plt.subplots(figsize=(7, 4))
 ax.bar(g.index, g.values, color="#4240e5")
 ax.set_ylim(bottom=0)
-# TODO: usa ax.annotate(...) para señalar la región de mayor gasto (g.idxmax())
+# TODO: usa ax.annotate(...) para señalar la región con más estudiantes (g.idxmax())
 ...
 plt.xticks(rotation=45, ha="right"); plt.tight_layout()
 plt.show()''',
@@ -116,6 +117,8 @@ CIERRE = '''## Cierre
 - **Título y etiquetas** hacen que el gráfico se entienda solo.
 - **Anota** el mensaje clave para guiar la mirada.
 - La honestidad visual es **ética**: en el Estado, comunicar bien es comunicar con integridad.
+  Con datos de educación, un eje truncado puede convertir una diferencia menor entre
+  dependencias en un titular injusto.
 
 > *Ética distribuida: aquí la responsabilidad es no engañar con un gráfico, aunque sea sin querer.*'''
 
@@ -123,15 +126,15 @@ CIERRE = '''## Cierre
 def build_leccion(con_sol):
     nb = h.new_notebook()
     cells = [
-        h.header_cell("R1-08", "Visualización para comunicar + ética", "A", "Analista de Datos", "9",
+        h.header_cell("R1-08", "Visualización para comunicar + ética", "R1", "Analista de Datos", "9",
                       ["Hacer barras **honestas** con el eje desde 0.",
                        "Poner **título y etiquetas** claros.",
                        "**Anotar** el dato clave.",
                        "Reconocer y evitar **engaños visuales**."],
                       "comunicar un hallazgo con un gráfico claro y honesto para una audiencia directiva.",
-                      "gasto en compras públicas por región (ChileCompra).",
+                      "matrícula escolar oficial 2025 por región (MINEDUC).",
                       n_checks=4),
-        h.setup_cell("compras_ml.csv", IMPORTS),
+        h.setup_cell("matricula.csv", IMPORTS),
         h.md("### Preparación"), h.code(PREP),
     ]
     for i, (sec_t, sec_b, ej_t, sol, todo, chk, hint, viz) in enumerate(EJ, 1):
@@ -148,45 +151,48 @@ def build_leccion(con_sol):
 
 PROF_PREP = '''import pandas as pd, os, urllib.request
 import matplotlib.pyplot as plt
-CSV = "compras_ml.csv"
+CSV = "aire_diario.csv"
 if not os.path.exists(CSV):
-    urllib.request.urlretrieve("https://raw.githubusercontent.com/formacionpublica-bootcamp/bootcamp/main/data/compras_ml.csv", CSV)
-df = pd.read_csv(CSV)
-g = df.groupby("region_comprador")["monto_total"].sum().sort_values(ascending=False).head(6)
-print("Listo:", len(g), "regiones")'''
+    urllib.request.urlretrieve("https://raw.githubusercontent.com/formacionpublica-bootcamp/bootcamp/main/data/aire_diario.csv", CSV)
+aire = pd.read_csv(CSV)
+# PM2.5 promedio 2020-2025 por estación (µg/m3), las 6 más contaminadas
+g = aire.groupby("estacion")["pm25"].mean().sort_values(ascending=False).head(6)
+print(g.round(1))'''
 
 PROF_EJ = [
- ("## 1. Destacar una sola barra",
-  "El color guía la atención. Pinta de acento solo la barra del máximo, el resto en gris suave.",
+ ("## 1. Transferencia: destacar una sola barra",
+  "Dominio nuevo: **calidad del aire** (PM2.5 promedio por estación SINCA, 2020–2025 — un adelanto de "
+  "la rama R2). El color guía la atención: pinta de acento solo la estación más contaminada, "
+  "el resto en gris suave.",
   "Colorea destacando el máximo",
-  '''colores = ["#ff6b35" if r == g.idxmax() else "#c1c1ff" for r in g.index]
+  '''colores = ["#ff6b35" if e == g.idxmax() else "#c1c1ff" for e in g.index]
 fig, ax = plt.subplots(figsize=(7, 4))
 ax.bar(g.index, g.values, color=colores); ax.set_ylim(bottom=0)
 plt.xticks(rotation=45, ha="right"); plt.tight_layout(); plt.show()''',
-  '''# TODO: lista de colores: "#ff6b35" para la región de mayor gasto (g.idxmax()), "#c1c1ff" el resto
+  '''# TODO: lista de colores: "#ff6b35" para la estación de mayor PM2.5 (g.idxmax()), "#c1c1ff" el resto
 colores = ...
 fig, ax = plt.subplots(figsize=(7, 4))
 ax.bar(g.index, g.values, color=colores); ax.set_ylim(bottom=0)
 plt.xticks(rotation=45, ha="right"); plt.tight_layout(); plt.show()''',
   '''assert colores.count("#ff6b35") == 1''',
-  '["#ff6b35" if r == g.idxmax() else "#c1c1ff" for r in g.index].'),
+  '["#ff6b35" if e == g.idxmax() else "#c1c1ff" for e in g.index].'),
 
  ("## 2. Etiquetas de valor sobre las barras",
   "Mostrar el número sobre cada barra evita que la audiencia tenga que estimarlo del eje.",
-  "Pon el valor (en millones) sobre cada barra",
+  "Pon el valor (µg/m³) sobre cada barra",
   '''fig, ax = plt.subplots(figsize=(7, 4))
 barras = ax.bar(g.index, g.values, color="#4240e5"); ax.set_ylim(bottom=0)
 for b, v in zip(barras, g.values):
-    ax.text(b.get_x() + b.get_width() / 2, v, f"{v/1e6:.0f}M", ha="center", va="bottom")
+    ax.text(b.get_x() + b.get_width() / 2, v, f"{v:.0f}", ha="center", va="bottom")
 plt.xticks(rotation=45, ha="right"); plt.tight_layout(); plt.show()''',
   '''fig, ax = plt.subplots(figsize=(7, 4))
 barras = ax.bar(g.index, g.values, color="#4240e5"); ax.set_ylim(bottom=0)
 for b, v in zip(barras, g.values):
-    # TODO: ax.text(...) con el valor v en millones sobre la barra
+    # TODO: ax.text(...) con el valor v (redondeado) sobre la barra
     ...
 plt.xticks(rotation=45, ha="right"); plt.tight_layout(); plt.show()''',
   '''assert len(ax.texts) == len(g)''',
-  "ax.text(b.get_x()+b.get_width()/2, v, f'{v/1e6:.0f}M', ha='center', va='bottom')."),
+  "ax.text(b.get_x()+b.get_width()/2, v, f'{v:.0f}', ha='center', va='bottom')."),
 
  ("## 3. Checklist de honestidad",
   "Automatiza la revisión: una función que verifica si un gráfico cumple lo mínimo ético.",
@@ -200,7 +206,7 @@ plt.xticks(rotation=45, ha="right"); plt.tight_layout(); plt.show()''',
 
 fig, ax = plt.subplots()
 ax.bar(g.index, g.values); ax.set_ylim(bottom=0)
-ax.set_title("Gasto por región"); ax.set_xlabel("Región"); ax.set_ylabel("CLP")
+ax.set_title("PM2.5 promedio por estación"); ax.set_xlabel("Estación"); ax.set_ylabel("µg/m³")
 chequeo = revisar_grafico(ax)
 print(chequeo)''',
   '''def revisar_grafico(ax):
@@ -209,7 +215,7 @@ print(chequeo)''',
 
 fig, ax = plt.subplots()
 ax.bar(g.index, g.values); ax.set_ylim(bottom=0)
-ax.set_title("Gasto por región"); ax.set_xlabel("Región"); ax.set_ylabel("CLP")
+ax.set_title("PM2.5 promedio por estación"); ax.set_xlabel("Estación"); ax.set_ylabel("µg/m³")
 chequeo = revisar_grafico(ax)
 print(chequeo)''',
   '''assert chequeo["eje_desde_cero"]
@@ -219,10 +225,11 @@ assert all(chequeo.values())''',
 
 PROF_HEADER = '''# R1-08 · Visualización para comunicar — Profundización (opcional) 🔬
 
-**Formación Pública — Línea A · Analista de Datos · Notebook de profundización**
+**Formación Pública — Rama R1 · Analista de Datos · Notebook de profundización**
 
-Opcional. **Destacar** una barra con color, **etiquetas de valor** sobre las barras y un **checklist
-de honestidad** automatizado. Mismos datos de compras públicas.
+Opcional y de **transferencia**: las mismas reglas de comunicación honesta, ahora sobre la
+**calidad del aire de Chile** (PM2.5 por estación SINCA — adelanto de la rama R2). **Destacar**
+una barra con color, **etiquetas de valor** y un **checklist de honestidad** automatizado.
 
 > Cada ejercicio termina en una **celda de chequeo** con ✅ / pista.'''
 
@@ -252,7 +259,9 @@ def main():
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-08-visualizacion-comunicar-etica/leccion.ipynb)
 
 Construir un gráfico **honesto y claro** para audiencia directiva: eje desde 0, título/etiquetas,
-anotación del mensaje clave y cómo evitar engaños visuales. Datos reales de compras públicas.
+anotación del mensaje clave y cómo evitar engaños visuales. Lección con la matrícula escolar
+2025 (`matricula.csv`, MINEDUC); profundización de transferencia con calidad del aire
+(`aire_diario.csv`, SINCA).
 
 - `leccion.ipynb` — completa los `TODO`; cada ejercicio se autoverifica (✅).
 - `profundiza.ipynb` — opcional 🔬: destacar una barra, etiquetas de valor, checklist de honestidad.

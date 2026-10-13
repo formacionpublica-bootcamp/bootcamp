@@ -1,360 +1,246 @@
-# 📘 Guía de Aprendizaje — R2-00 · Fundamentos express: Python + pandas
+# Guía de Aprendizaje — R2-00 · Fundamentos express: Python + pandas
+
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R2 · Científico de Datos · Módulo 0 · Semana 1–2
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Nombre del módulo** | R2-00 · Fundamentos express: Python + pandas |
-| **Pista / Rama** | R2 — Científico/a de Datos |
-| **Duración estimada** | 2–3 horas (Semana 1–2) |
-| **Nivel** | Inicial (cero conocimientos de Python) |
-| **Prerrequisitos** | Ninguno. Solo necesitas una cuenta Google para usar Colab. |
-| **Competencia de salida** | Manipular un DataFrame de datos públicos desde cero: cargar, inspeccionar, filtrar, seleccionar, ordenar y agregar con `groupby`. |
-| **Dataset** | `compras_ml.csv` — Compras públicas reales de ChileCompra (monto, categoría, región, tamaño de proveedor). |
-| **Entregable** | Las 4 celdas de chequeo del `leccion.ipynb` muestran ✅. |
+|-------|---------|
+| **Módulo** | R2-00 · Fundamentos express: Python + pandas |
+| **Rama** | R2 — Científico de Datos |
+| **Duración estimada** | 2–3 horas |
+| **Nivel** | Inicial — cero conocimientos de Python |
+| **Prerrequisitos** | Ninguno. Solo una cuenta Google para usar Colab |
+| **Competencia de salida** | Manipular un DataFrame de datos públicos desde cero: cargar, inspeccionar, filtrar, seleccionar, ordenar y agregar con `groupby` |
+| **Entregable** | Las 4 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `aire_diario.csv` — PM2.5 diario de 14 estaciones del SINCA (Ministerio del Medio Ambiente), 2020–2025: 30.674 días-estación. Profundización: `matricula.csv` (matrícula 2025 por establecimiento, MINEDUC, 10.945 filas) |
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-Imagina que tu jefatura te pide un informe urgente: *"¿Cuánto gastamos en tecnología por región el año pasado?"* Hasta ahora, eso significaba abrir un Excel enorme, filtrar a mano, copiar columnas y rezar para que no hubiera errores de fórmula.
+Imagina que llega un oficio urgente: *«¿Cuántos días el aire de nuestra región superó la norma en los últimos años, y cuáles fueron los peores?»*. Hasta ahora eso significaba descargar planillas de cada estación, filtrar a mano y rezar para que no hubiera errores de fórmula.
 
-Con Python y pandas puedes hacer exactamente lo mismo —y mucho más— en 5 líneas de código. En lugar de filtrar arrastrando el cursor, escribes una instrucción clara que puedes volver a ejecutar mañana con datos nuevos, sin tocar nada.
+Con Python y pandas lo resuelves en cinco líneas que puedes volver a ejecutar mañana con datos nuevos. Este módulo trabaja con el registro real del **SINCA**: el material particulado fino (**PM2.5**) que miden 14 estaciones, de Alto Hospicio a Temuco, día a día entre 2020 y 2025. La norma chilena (D.S. 12/2011 del MMA) fija **50 µg/m³** como valor para la concentración de 24 horas.
 
-Este módulo usa el dataset real de **compras públicas de ChileCompra**: miles de órdenes de compra con monto, categoría, región y tamaño del proveedor. Cada ejercicio responde una pregunta que cualquier analista del Estado podría tener hoy: ¿cuántas compras se hicieron a grandes empresas?, ¿qué categoría tiene el mayor gasto promedio?, ¿cuáles son las 10 compras más altas?
-
-> 💡 **La clave:** aprendes Python no como ejercicio abstracto, sino resolviendo preguntas reales sobre gasto público.
+Lo que vas a descubrir con tus propias manos: el PM2.5 **promedio** de todas las estaciones está muy por debajo de 50 (el más alto, El Bosque, promedia 27,5 µg/m³), y sin embargo hubo **1.279 días-estación sobre 50 µg/m³**, con un peor día de **284 µg/m³** (Bomberos, Tocopilla, 11-11-2024). El promedio tranquiliza; el conteo de días sobre el umbral informa. Esa diferencia es exactamente lo que un analista del Estado tiene que saber mostrar.
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía en el sector público |
-|---|---|---|
-| `DataFrame` | Tabla de datos en memoria (filas × columnas) | Una planilla Excel abierta en Python |
-| `pd.read_csv()` | Carga un archivo .csv como DataFrame | Abrir un archivo descargado de ChileCompra |
-| `df.shape` | Devuelve (N° filas, N° columnas) | Ver cuántas filas tiene tu registro |
-| `df.columns` | Lista los nombres de columnas | Ver los encabezados de tu tabla |
-| `df.head()` | Muestra las primeras 5 filas | Echar un vistazo rápido al informe |
-| Máscara booleana `df[condición]` | Filtra filas que cumplen una condición | Filtro de Excel: "Mostrar solo Grande" |
-| `df[['col1','col2']]` | Selecciona solo ciertas columnas | Ocultar columnas irrelevantes en Excel |
-| `df.sort_values()` | Ordena por una columna | Ordenar por monto de mayor a menor |
-| `groupby().mean()` | Agrupa y calcula promedios por categoría | Tabla dinámica en Excel |
+| Concepto | ¿Qué hace? | Equivalente en Excel |
+|----------|-----------|----------------------|
+| **DataFrame** | Tabla de datos en memoria (filas × columnas) | Una hoja de cálculo abierta |
+| **`pd.read_csv()`** | Carga un archivo .csv como DataFrame | Abrir el archivo descargado |
+| **`df.shape` / `df.columns`** | Tamaño y nombres de columnas | Ctrl+Fin y la fila de encabezados |
+| **Máscara booleana `df[cond]`** | Filtra las filas que cumplen una condición | Autofiltro «mayor que 50» |
+| **`df[["a", "b"]]`** | Selecciona solo ciertas columnas | Ocultar columnas |
+| **`sort_values(..., ascending=False)`** | Ordena de mayor a menor | Ordenar Z→A |
+| **`groupby().mean()`** | Promedio por grupo | Tabla dinámica con «Promedio de» |
 
 ---
 
 ## 4. Verificación de Prerrequisitos
 
-Antes de empezar, respóndete estas preguntas. No necesitas saber programar, pero sí tener claro el punto de partida:
-
-| ¿Puedo...? | ✅ Listo | 🔄 Revisar |
-|---|---|---|
-| Abrir Google Colab (colab.research.google.com) con mi cuenta Google | ✅ | Si no tienes cuenta Google, créala primero |
-| Entender qué es una tabla con filas y columnas | ✅ | Piensa en Excel: filas son registros, columnas son campos |
-| Ejecutar una celda en Colab con ▶︎ o Shift+Enter | ✅ | Mira el tutorial de 2 min de Colab en YouTube |
-| Identificar qué es un archivo .csv | ✅ | Es una planilla de datos separada por comas, como las de ChileCompra |
-| Tolerar ver mensajes de error sin pánico | ✅ | Los errores son normales; este módulo te enseña a leerlos |
-
-> 🟢 Si marcaste todo ✅, ¡adelante! Si alguno dice 🔄, dedica 10 minutos a resolverlo antes de continuar.
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Abrir Google Colab con mi cuenta Google y ejecutar una celda con ▶︎ o `Shift`+`Enter` | ☐ |
+| Explicar qué es una tabla con filas (registros) y columnas (campos) | ☐ |
+| Leer un mensaje de error sin pánico (es información, no un castigo) | ☐ |
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### 🔷 Sección 0 — Preparación del entorno (celda inicial)
+### Sección 0 · Preparación
 
-**🎯 Objetivo:** Cargar las librerías necesarias y el dataset de compras.
+🎯 **Objetivo:** Cargar pandas, matplotlib y `aire_diario.csv` en el DataFrame `df`.
 
-**💡 Concepto clave:** `import` es como decirle a Python "trae esta caja de herramientas". `pandas` es la caja de herramientas para tablas; `matplotlib` es para gráficos. Es exactamente como instalar un complemento en Excel antes de usarlo.
+💡 **Concepto clave:** La celda aplica el patrón **«en vivo o caché»**: si el archivo está en la carpeta lo usa; si no (como en Colab), lo baja del repositorio. Debe imprimir `Datos cargados: (30674, 7)`.
 
-**🔍 Qué hace el código:**
-1. Revisa si el archivo `compras_ml.csv` ya está en la carpeta local.
-2. Si no está (como en Colab), lo descarga automáticamente desde el repositorio.
-3. Lo carga como DataFrame y muestra cuántas filas y columnas tiene.
-
-**⚠️ Error frecuente:** Ejecutar celdas en orden distinto. Siempre ejecuta primero esta celda de setup. Si ves `NameError: name 'df' is not defined`, es porque saltaste esta celda.
-
-**✅ Señal de comprensión:** Ves el mensaje `Datos cargados: (XXXX, N) filas x columnas` y la tabla aparece abajo.
+⚠️ **Error frecuente:** Saltarse esta celda. Si ves `NameError: name 'df' is not defined`, vuelve arriba y ejecútala.
 
 ---
 
-### 🔷 Sección 1 — Cargar e inspeccionar un DataFrame
+### Sección 1 · Cargar e inspeccionar un DataFrame
 
-**🎯 Objetivo:** Conocer la forma y los nombres de columnas del dataset antes de manipularlo.
+🎯 **Objetivo:** Conocer la forma y las columnas antes de tocar nada.
 
-**💡 Concepto clave:** Antes de analizar cualquier tabla, necesitas saber qué tiene. En Excel harías Ctrl+Fin para ver el tamaño. En pandas usas `df.shape` (tamaño) y `df.columns` (nombres). Es el equivalente a leer el encabezado del informe antes de analizarlo.
+💡 **Concepto clave:** `df.shape` es una tupla `(filas, columnas)` que se puede «desempaquetar» en dos variables. Mira las columnas: `fecha`, `estacion`, `pm25` y cuatro de meteorología. Fíjate en los `NaN` de temperatura en las primeras filas: no es un error del curso, hay estaciones **sin sensor meteorológico** (lo trabajarás en R2-01).
 
-**🔍 Qué hace el código:**
-- `df.shape` devuelve una tupla `(n_filas, n_columnas)` que puedes "desempaquetar" con `n_filas, n_cols = df.shape`.
-- `list(df.columns)` convierte el índice de columnas en una lista de nombres legibles.
-
-**⚠️ Error frecuente:** Escribir `df.shape()` con paréntesis. `shape` es un atributo, no una función. Escríbelo sin paréntesis.
-
-**✅ Señal de comprensión:** Puedes decir de memoria cuántas filas tiene el dataset y nombrar al menos 3 columnas que existen.
+⚠️ **Error frecuente:** Escribir `df.shape()` con paréntesis. `shape` es un atributo, no una función.
 
 ---
 
-### 🔷 Sección 2 — Filtrar filas con una condición
+### Sección 2 · Filtrar filas con una condición
 
-**🎯 Objetivo:** Quedarte solo con las compras realizadas a proveedores clasificados como "Grande".
+🎯 **Objetivo:** Quedarte con los días-estación con PM2.5 sobre 50 µg/m³.
 
-**💡 Concepto clave:** Una **máscara booleana** es como un filtro de Excel, pero escrito en código. Le preguntas a cada fila: *¿esta condición es verdadera?* Y pandas devuelve solo las que dicen "Sí". Imagina marcar con color en una planilla solo las filas de una región específica.
+💡 **Concepto clave:** `df["pm25"] > 50` crea una columna de `True`/`False`; `df[esa_mascara]` devuelve solo las filas `True`. Resultado real: **1.279** días-estación. Los días sin medición (`NaN`) no cumplen la condición y quedan fuera automáticamente.
 
-**🔍 Qué hace el código:**
-- `df["tamano_proveedor"] == "Grande"` crea una serie de True/False para cada fila.
-- `df[esa_mascara]` devuelve solo las filas donde el resultado fue True.
+⚠️ **Error frecuente:** Confundir `=` (asignar) con `==`/`>` (comparar).
 
-**⚠️ Error frecuente:** Usar `=` en vez de `==`. En Python, `=` asigna variables; `==` compara valores. También asegúrate que el texto sea exacto: "Grande" con G mayúscula.
-
-**✅ Señal de comprensión:** El número de filas de `grandes` es menor que el total del dataset y todas sus filas tienen `tamano_proveedor == "Grande"`.
+✅ **Señal de que entendiste:** Puedes explicar por qué `n_sobre_norma` es mucho menor que 30.674.
 
 ---
 
-### 🔷 Sección 3 — Seleccionar columnas y ordenar
+### Sección 3 · Seleccionar columnas y ordenar
 
-**🎯 Objetivo:** Ver las 10 compras de mayor monto, mostrando solo categoría y monto.
+🎯 **Objetivo:** Ver los 10 peores días del registro con solo `fecha`, `estacion` y `pm25`.
 
-**💡 Concepto clave:** En un informe, no necesitas todas las columnas. `df[['col1','col2']]` es como ocultar columnas en Excel para quedarte solo con lo relevante. `sort_values` es el botón "Ordenar de mayor a menor". Juntos, son la base de cualquier ranking.
+💡 **Concepto clave:** Encadenar operaciones: ordenar descendente → `head(10)` → seleccionar columnas. El ranking muestra un patrón claro: el peor día es de **Bomberos (Tocopilla) con 284 µg/m³** el 11-11-2024, y **ocho** de los nueve siguientes son de **Las Encinas Temuco** en invierno (más uno de Nielol, también Temuco) — un patrón invernal consistente con la calefacción a leña.
 
-**🔍 Qué hace el código:**
-1. `df.sort_values('monto_total', ascending=False)` ordena el DataFrame de mayor a menor monto.
-2. `.head(10)` toma las primeras 10 filas (las de mayor monto).
-3. `[['categoria','monto_total']]` selecciona solo esas dos columnas.
-
-**⚠️ Error frecuente:** Olvidar `ascending=False`. Por defecto, `sort_values` ordena de menor a mayor. Para un ranking de "top 10", necesitas `ascending=False`.
-
-**✅ Señal de comprensión:** El DataFrame `top` tiene exactamente 10 filas, solo 2 columnas, y el primer monto es mayor que el último.
+⚠️ **Error frecuente:** Olvidar `ascending=False`: por defecto se ordena de menor a mayor y verías los días más limpios.
 
 ---
 
-### 🔷 Sección 4 — Agregar: groupby
+### Sección 4 · Agregar: una pregunta, una respuesta
 
-**🎯 Objetivo:** Calcular el monto promedio de compras para cada categoría de producto.
+🎯 **Objetivo:** PM2.5 promedio de cada estación.
 
-**💡 Concepto clave:** `groupby` es la **tabla dinámica de Python**. Le dices: "agrupa por esta columna" y luego "calcula este número para cada grupo". Es como en Excel cuando arrastras una categoría al área de filas de una tabla dinámica y un valor al área de valores.
+💡 **Concepto clave:** `groupby` es la tabla dinámica de Python. El resultado tiene 14 valores; el más alto es **El Bosque (27,5 µg/m³)** y el más bajo **Cuncumen (5,4 µg/m³)**. El gráfico agrega la línea de 50 µg/m³: ninguna barra la alcanza, aunque todas las estaciones del centro-sur tuvieron cientos de días sobre ella.
 
-**🔍 Qué hace el código:**
-- `df.groupby('categoria')['monto_total'].mean()` agrupa todas las filas por categoría y para cada grupo calcula el promedio de `monto_total`.
-- El resultado es una Series donde el índice es la categoría y el valor es el promedio.
-
-**⚠️ Error frecuente:** Confundir `groupby('categoria')` (agrupa filas) con `df['categoria']` (selecciona columna). `groupby` crea grupos; la selección de columna posterior indica *qué calcular* dentro de cada grupo.
-
-**✅ Señal de comprensión:** `gasto_categoria` tiene tantas filas como categorías únicas en el dataset, y el gráfico de barras muestra diferencias claras entre categorías.
+✅ **Señal de que entendiste:** Puedes explicar por qué «ninguna estación promedia sobre 50» no significa «el aire está bien».
 
 ---
 
-## 6. Guía de Ejercicios
+### Reflexión final
 
-### ✍️ Ejercicio 1 — Inspecciona la tabla
-
-**Habilidad que desarrolla:** Exploración inicial de un DataFrame.
-
-**Pista 1 (conceptual):** `df.shape` te da una tupla con dos números. ¿Puedes asignar esos dos números a dos variables distintas al mismo tiempo?
-
-**Pista 2 (técnica):** En Python puedes "desempaquetar" una tupla: si `df.shape` devuelve `(5000, 8)`, entonces `a, b = df.shape` deja `a = 5000` y `b = 8`. Algo similar necesitas hacer.
-
-**Pista 3 (casi solución):** Las variables que necesitas son `n_filas` y `n_cols`. Para `columnas`, necesitas convertir `df.columns` a lista. Hay una función built-in de Python que convierte cosas a lista...
-
-**Lógica de solución:** Desempaquetar `df.shape` en dos variables, y convertir `df.columns` a lista con `list()`.
+La reflexión no tiene celda de chequeo: pide explicar a una jefatura por qué el promedio esconde los episodios. La respuesta es mostrar **cuántos días** se superó el umbral, y **dónde y cuándo**.
 
 ---
 
-### ✍️ Ejercicio 2 — Filtra los proveedores Grande
+## 6. Guía de los 4 Ejercicios
 
-**Habilidad que desarrolla:** Aplicar máscaras booleanas para filtrar filas.
+### Ejercicio 1 — Inspecciona la tabla
 
-**Pista 1 (conceptual):** ¿Cómo le preguntas a una columna si su valor es igual a algo? En Python comparas con dos signos igual, no uno.
+**Pistas progresivas:**
+- 🟢 Pista suave: `df.shape` entrega dos números a la vez; puedes recibirlos en dos variables.
+- 🟡 Pista media: `a, b = df.shape` y `list(...)` convierte las columnas en lista.
+- 🔴 Pista directa: `n_filas, n_cols = df.shape` y `columnas = list(df.columns)`.
 
-**Pista 2 (técnica):** `df["tamano_proveedor"] == "Grande"` crea una máscara True/False. Pero eso solo crea la máscara. Para *aplicarla* al DataFrame, necesitas pasarla dentro de los corchetes del DataFrame.
-
-**Pista 3 (casi solución):** La estructura es `df[df["columna"] == "valor"]`. Reemplaza "columna" por el nombre real y "valor" por el texto exacto que buscas (respeta mayúsculas).
-
-**Lógica de solución:** Crear una máscara con `==` sobre la columna de tamaño y aplicarla al DataFrame completo entre corchetes.
-
----
-
-### ✍️ Ejercicio 3 — Top 10 compras por monto
-
-**Habilidad que desarrollas:** Ordenar y seleccionar columnas específicas.
-
-**Pista 1 (conceptual):** Para obtener el "top", primero debes ordenar de mayor a menor. ¿Qué parámetro de `sort_values` controla la dirección del orden?
-
-**Pista 2 (técnica):** `.sort_values('monto_total', ascending=False)` ordena el DataFrame. Luego `.head(10)` toma los primeros 10. ¿Cómo seleccionas solo dos columnas de esa tabla ordenada?
-
-**Pista 3 (casi solución):** Para seleccionar varias columnas, usa corchetes dobles: `df[['col1', 'col2']]`. Encadena las tres operaciones una tras otra con punto.
-
-**Lógica de solución:** Ordenar descendente → tomar head(10) → seleccionar las dos columnas, todo encadenado.
+**¿Qué significa el ✅?** Que conoces el tamaño (30.674 × 7) y que existen las columnas `pm25` y `estacion`.
 
 ---
 
-### ✍️ Ejercicio 4 — Monto promedio por categoría
+### Ejercicio 2 — Filtra los días con PM2.5 sobre 50
 
-**Habilidad que desarrollas:** Usar `groupby` para responder preguntas agregadas.
+**Pistas progresivas:**
+- 🟢 Pista suave: Primero arma la condición sobre la columna `pm25`; después pásala entre corchetes al DataFrame.
+- 🟡 Pista media: `df["pm25"] > 50` es la máscara.
+- 🔴 Pista directa: `sobre_norma = df[df["pm25"] > 50]`.
 
-**Pista 1 (conceptual):** Piensa en una tabla dinámica de Excel donde las filas son categorías y el valor es el promedio de monto. `groupby` hace exactamente eso.
-
-**Pista 2 (técnica):** `df.groupby('categoria')` crea los grupos. Luego seleccionas la columna que quieres calcular con `['monto_total']`. Finalmente aplicas la función de agregación: `.mean()`.
-
-**Pista 3 (casi solución):** La estructura completa es `df.groupby('columna_grupo')['columna_valor'].funcion_agregacion()`. Reemplaza las partes con los nombres correctos.
-
-**Lógica de solución:** `groupby` sobre categoría → selección de monto_total → `.mean()` al final.
+**¿Qué significa el ✅?** Que todas las filas filtradas superan 50 µg/m³ y no se te escapó ninguna (1.279).
 
 ---
 
-## 7. Profundidad en Política Pública: Ejercicio 4 — Monto promedio por categoría
+### Ejercicio 3 — Top 10 días con más PM2.5
 
-Este ejercicio es el más relevante para el trabajo del Estado porque **responde directamente una pregunta de gestión**: *¿en qué tipos de bienes o servicios gasta más el sector público por transacción?*
+**Pistas progresivas:**
+- 🟢 Pista suave: Ordena, recorta y elige columnas, en ese orden.
+- 🟡 Pista media: `.sort_values("pm25", ascending=False).head(10)` y luego `[["fecha", "estacion", "pm25"]]`.
+- 🔴 Pista directa: `top = df.sort_values("pm25", ascending=False).head(10)[["fecha", "estacion", "pm25"]]`.
 
-### ¿Por qué importa para política pública?
-
-El análisis de gasto promedio por categoría permite:
-
-- **Detectar anomalías:** Si una categoría tiene un promedio muy superior al resto, puede indicar sobreprecios o concentración en pocos proveedores.
-- **Priorizar fiscalización:** La Contraloría y la Dirección de Compras pueden focalizar revisiones en categorías con mayor monto promedio o mayor varianza.
-- **Diseñar marcos de referencia:** Los precios de referencia para licitaciones se basan justamente en promedios históricos por categoría.
-- **Evaluar ahorro por convenios marco:** Comparar el promedio de compras en convenio vs. fuera de convenio en una misma categoría.
-
-### Cómo profundizar este análisis
-
-| Pregunta de política pública | Extensión del groupby |
-|---|---|
-| ¿Cuánto se gasta en total por categoría? | Cambiar `.mean()` por `.sum()` |
-| ¿Cuántas transacciones hay por categoría? | Usar `.count()` |
-| ¿Cuál es la dispersión del gasto? | Usar `.std()` (desviación estándar) |
-| ¿Cuál es el mayor gasto individual por categoría? | Usar `.max()` |
-| ¿Cómo varía por región y categoría a la vez? | `groupby(['region','categoria'])` |
-
-> 🏛️ **Conexión con ChileCompra:** La plataforma Mercado Público publica estadísticas de gasto por rubro. Con este `groupby`, tú puedes reproducir —y profundizar— ese análisis con los datos completos.
+**¿Qué significa el ✅?** Que el primer valor es el máximo del registro (284) y la lista viene en orden decreciente.
 
 ---
 
-## 8. Conexión con profundiza.ipynb
+### Ejercicio 4 — PM2.5 promedio por estación
 
-El `profundiza.ipynb` de este módulo es un complemento **opcional** que lleva las habilidades del `leccion.ipynb` un paso más adelante.
+**Pistas progresivas:**
+- 🟢 Pista suave: Agrupa por la columna de la estación y calcula un promedio de `pm25`.
+- 🟡 Pista media: `df.groupby("columna_grupo")["columna_valor"].mean()`.
+- 🔴 Pista directa: `pm25_estacion = df.groupby("estacion")["pm25"].mean()`.
 
-### Comparativa leccion vs. profundiza
-
-| Tema | `leccion.ipynb` | `profundiza.ipynb` |
-|---|---|---|
-| Filtrado | Una condición simple (`tamano == "Grande"`) | Condiciones combinadas con `&` y `\|` |
-| Conteos | No incluye | `value_counts` para diagnóstico rápido |
-| Columnas nuevas | No incluye | Crea `monto_por_unidad` (columna derivada) |
-| Complejidad | ⭐⭐ Básico | ⭐⭐⭐ Intermedio |
-| Prerrequisito para | R2-01 | R2-02 (feature engineering) |
-
-### Guía de decisión
-
-```
-¿Completaste todas las ✅ del leccion.ipynb?
-    ├── No → Termina primero la lección.
-    └── Sí → ¿Tienes 30 minutos extra?
-              ├── Sí → ¡Haz el profundiza! Te prepara mejor para R2-02.
-              └── No → Avanza a R2-01. Puedes volver después.
-```
-
-**Ejercicio más importante del profundiza:** El Ejercicio 3 (columna derivada `monto_por_unidad`) es el preludio directo del **feature engineering** de R2-02. Si planeas completar la Rama R2 completa, este ejercicio es estratégicamente valioso.
+**¿Qué significa el ✅?** Que tienes un valor por cada una de las 14 estaciones, listo para comparar.
 
 ---
 
-## 9. Autoevaluación Final
-
-Responde sin mirar el notebook.
+> 🔬 **En la profundización:** las mismas herramientas sobre otro dato del Estado — la **matrícula escolar 2025** (MINEDUC, 10.945 establecimientos). **Filtros combinados** con `&` (hay **1.730** establecimientos rurales municipales), **`value_counts`** para ver cómo se reparten por dependencia (5.379 particulares subvencionados, 3.194 municipales, 1.707 de Servicios Locales de Educación…) y una primera **columna derivada**, `alumnos_por_curso` (mediana 19,4), el preludio del feature engineering de R2-02.
 
 ---
+
+## 7. Autoevaluación Final
 
 **Pregunta 1:** ¿Qué devuelve `df.shape`?
 
-- a) Una lista con los nombres de columnas
-- b) Una tupla con el número de filas y columnas
-- c) El número de filas solamente
-- d) Un resumen estadístico de la tabla
+- A) La lista de columnas
+- B) Una tupla con el número de filas y de columnas ✅
+- C) Solo el número de filas
+- D) Un resumen estadístico
 
-✅ **Respuesta correcta: b)**
-**Explicación:** `df.shape` devuelve una tupla `(n_filas, n_columnas)`. Es el primer comando que deberías ejecutar al explorar cualquier dataset nuevo. Para obtener solo las filas, usarías `len(df)`.
-
----
-
-**Pregunta 2:** ¿Cuál de las siguientes líneas filtra correctamente las compras a proveedores "Grande"?
-
-- a) `df["tamano_proveedor"] = "Grande"`
-- b) `df.filter("tamano_proveedor" == "Grande")`
-- c) `df[df["tamano_proveedor"] == "Grande"]`
-- d) `df.where("tamano_proveedor", "Grande")`
-
-✅ **Respuesta correcta: c)**
-**Explicación:** La sintaxis correcta es `df[condicion]` donde la condición es una máscara booleana. La opción a) asigna un valor (un solo `=`), no filtra. Las opciones b) y d) no existen con esa sintaxis en pandas.
+**Explicación:** `(filas, columnas)`. Para solo las filas, `len(df)`.
 
 ---
 
-**Pregunta 3:** Quieres el top 5 de compras ordenadas de mayor a menor monto. ¿Qué código es correcto?
+**Pregunta 2:** ¿Qué línea filtra correctamente los días con PM2.5 sobre 50?
 
-- a) `df.sort_values('monto_total').head(5)`
-- b) `df.sort_values('monto_total', ascending=False).head(5)`
-- c) `df.head(5).sort_values('monto_total', ascending=False)`
-- d) `df.sort_values('monto_total', ascending=True).tail(5)`
+- A) `df["pm25"] = 50`
+- B) `df.filter("pm25" > 50)`
+- C) `df[df["pm25"] > 50]` ✅
+- D) `df.where("pm25", 50)`
 
-✅ **Respuesta correcta: b)**
-**Explicación:** `ascending=False` ordena de mayor a menor. Luego `.head(5)` toma los primeros 5. La opción c) es incorrecta: primero toma 5 filas cualquiera y luego las ordena, sin garantizar que sean las de mayor monto global.
-
----
-
-**Pregunta 4:** ¿Qué hace `df.groupby('categoria')['monto_total'].mean()`?
-
-- a) Filtra las filas donde monto_total es el promedio
-- b) Calcula el promedio general de monto_total ignorando categorías
-- c) Calcula el promedio de monto_total para cada categoría de forma separada
-- d) Agrupa las categorías por su monto promedio
-
-✅ **Respuesta correcta: c)**
-**Explicación:** `groupby` divide el DataFrame en grupos según la columna indicada. `['monto_total'].mean()` calcula el promedio de esa columna dentro de cada grupo. El resultado es una tabla con una fila por cada categoría única.
+**Explicación:** La máscara booleana va entre corchetes del DataFrame. La opción A asigna (con un solo `=`), no filtra.
 
 ---
 
-**Pregunta 5:** En el contexto de compras públicas, ¿para qué sirve `value_counts` sobre la columna `tamano_proveedor`?
+**Pregunta 3:** Quieres los 5 peores días. ¿Qué código es correcto?
 
-- a) Para ordenar los proveedores por tamaño
-- b) Para ver cuántas compras hay por cada tamaño de proveedor (Grande, Mediana, Pequeña)
-- c) Para calcular el monto total por tamaño de proveedor
-- d) Para filtrar solo los proveedores grandes
+- A) `df.sort_values("pm25").head(5)`
+- B) `df.sort_values("pm25", ascending=False).head(5)` ✅
+- C) `df.head(5).sort_values("pm25", ascending=False)`
+- D) `df.sort_values("pm25", ascending=False).tail(5)`
 
-✅ **Respuesta correcta: b)**
-**Explicación:** `value_counts()` cuenta cuántas veces aparece cada valor único en una columna. Aplicado a `tamano_proveedor`, muestra cuántas transacciones corresponden a cada tamaño. Es el primer diagnóstico de distribución: ¿el Estado compra más a empresas grandes o pequeñas?
-
----
-
-## 10. Glosario del Módulo
-
-| Término técnico | Definición simple | Equivalente en sector público / Excel |
-|---|---|---|
-| **DataFrame** | Tabla de datos bidimensional (filas y columnas) en memoria | Una planilla Excel abierta como objeto |
-| **pandas** | Librería de Python especializada en tablas de datos | El "Excel" de Python |
-| **`pd.read_csv()`** | Función que carga un archivo .csv y lo convierte en DataFrame | Abrir archivo → Importar datos en Excel |
-| **`df.shape`** | Atributo que devuelve (n_filas, n_columnas) | Ctrl+Fin en Excel para ver el tamaño |
-| **`df.columns`** | Lista de nombres de columnas del DataFrame | Los encabezados de tu planilla |
-| **Máscara booleana** | Serie de valores True/False que indica qué filas cumplen una condición | Filtro aplicado en Excel |
-| **`df.sort_values()`** | Ordena las filas por una columna (ascendente o descendente) | Botón "Ordenar A→Z" o "Z→A" en Excel |
-| **`df.head(n)`** | Devuelve las primeras n filas | Ver las primeras filas de una tabla |
-| **`groupby`** | Agrupa filas por categoría y calcula estadísticas por grupo | Tabla dinámica en Excel |
-| **`.mean()`** | Calcula el promedio de una columna numérica | Función PROMEDIO() en Excel |
-| **`ascending=False`** | Parámetro que ordena de mayor a menor | Orden descendente en Excel |
-| **`list(df.columns)`** | Convierte el índice de columnas a una lista de Python | Copiar los encabezados de una fila |
+**Explicación:** Primero ordenar descendente, después recortar. La C ordena solo 5 filas cualquiera.
 
 ---
 
-## 11. Conexión con el Módulo Siguiente
+**Pregunta 4:** Ninguna estación promedia más de 50 µg/m³. ¿Qué conclusión es correcta?
 
-Has completado **R2-00 · Fundamentos express**. Ahora sabes cargar, inspeccionar, filtrar, ordenar y agregar datos con pandas. Ese es el vocabulario base.
+- A) Ninguna estación tuvo días sobre la norma
+- B) El promedio puede ocultar episodios: hay que contar los días sobre el umbral ✅
+- C) La norma está mal calculada
+- D) Los datos están corruptos
 
-**El próximo módulo es R2-01 · Datos: traer, cruzar y limpiar.**
+**Explicación:** Con 1.279 días-estación sobre 50 µg/m³, el promedio anual bajo convive con episodios graves en invierno.
 
-En R2-01 vas a enfrentar el problema real de la ciencia de datos en el sector público: los datos nunca vienen perfectos. Vas a aprender a:
+---
 
-- **Traer datos** desde múltiples fuentes (archivos CSV, URLs, APIs básicas).
-- **Cruzar tablas** con `merge` (el equivalente a BUSCARV/XLOOKUP de Excel, pero más potente).
-- **Limpiar datos** sucios: valores nulos, formatos inconsistentes, duplicados.
+**Pregunta 5:** ¿Qué hace `df.groupby("estacion")["pm25"].mean()`?
 
-> 🔗 **Por qué importa la secuencia:** En R2-00 aprendiste a *manipular* datos ya limpios. En R2-01 aprenderás a *obtenerlos y prepararlos* desde el mundo real. Es el paso previo obligatorio antes de construir cualquier modelo de datos públicos.
+- A) Filtra las estaciones con PM2.5 promedio
+- B) Calcula el promedio general ignorando estaciones
+- C) Calcula el PM2.5 promedio de cada estación por separado ✅
+- D) Ordena las estaciones por PM2.5
 
-**Antes de pasar:** asegúrate de que tus 4 celdas de chequeo muestren ✅. ¡Ánimo, que vas bien! 🚀
+**Explicación:** `groupby` separa en grupos y `.mean()` resume cada uno: una fila por estación.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **DataFrame** | Tabla en memoria | Una planilla Excel abierta |
+| **PM2.5** | Material particulado fino (≤ 2,5 micrones), en µg/m³ | Lo que mide el SINCA y gatilla episodios críticos |
+| **Norma de 24 h** | 50 µg/m³ (D.S. 12/2011 MMA) | El umbral de referencia del informe |
+| **Máscara booleana** | Columna `True`/`False` que selecciona filas | El autofiltro |
+| **`sort_values`** | Ordena por una columna | Ordenar A→Z / Z→A |
+| **`head(n)`** | Primeras n filas | Mirar el comienzo de la tabla |
+| **`groupby`** | Agrupa y resume por categoría | Tabla dinámica |
+| **`NaN`** | Valor faltante | La celda vacía de la planilla |
+| **Días-estación** | Una fila = un día en una estación | La unidad del registro SINCA |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R2-00 aprendiste el vocabulario base de pandas resolviendo preguntas reales sobre el aire: cuántos días sobre la norma, cuáles fueron los peores y qué estaciones están más expuestas.
+
+En **R2-01 · Datos: traer, cruzar y limpiar** vas a cruzar estas mediciones con el **catálogo de estaciones** (comuna, región, coordenadas), convertir las fechas a fechas de verdad y enfrentar los **faltantes reales**: estaciones sin sensor de temperatura, días sin PM2.5 y una humedad imposible — tomando y declarando cada decisión de limpieza.
+
+> 💡 **Pregunta para reflexionar:** Si tu jefatura solo mira promedios, ¿qué otros indicadores de tu servicio podrían estar escondiendo «episodios» importantes?

@@ -1,355 +1,266 @@
-# 📘 Guía de Aprendizaje — R2-04 · Fundamentos de Machine Learning
+# Guía de Aprendizaje — R2-04 · Fundamentos de Machine Learning
+
+**Bootcamp de Datos para Funcionarios Públicos · Formación Pública**
+Rama R2 · Científico de Datos · Módulo 4 · Semana 10
 
 ---
 
-## 1. Portada y Datos del Módulo
+## 1. Datos del Módulo
 
 | Campo | Detalle |
-|---|---|
-| **Nombre del módulo** | R2-04 · Fundamentos de Machine Learning (D9) |
-| **Pista / Rama** | R2 — Científico/a de Datos · Línea B |
-| **Duración estimada** | 3–4 horas (Semana 10) |
-| **Nivel** | Intermedio |
-| **Prerrequisitos** | R2-02 completado (tablas analíticas con SQL). R2-03 recomendado (estadística descriptiva). |
-| **Competencia de salida** | Plantear un problema de aprendizaje supervisado, dividir datos en entrenamiento y prueba, entrenar un modelo de regresión con scikit-learn, evaluarlo con MAE y usarlo para predecir un caso nuevo. |
-| **Dataset** | `compras_ml.csv` — Compras públicas reales de alimentos de ChileCompra/MercadoPúblico (cantidad, monto total). |
-| **Entregable** | Las 4 celdas de chequeo del `leccion.ipynb` muestran ✅. |
+|-------|---------|
+| **Módulo** | R2-04 · Fundamentos de Machine Learning |
+| **Rama** | R2 — Científico de Datos |
+| **Duración estimada** | 2–3 horas |
+| **Nivel** | Intermedio — requiere R2-03 |
+| **Prerrequisitos** | Filtrar por fechas, `groupby`, `dropna`; idea de correlación y estacionalidad (R2-03) |
+| **Competencia de salida** | Plantear un problema supervisado, fabricar una *feature* de rezago, separar entrenamiento y prueba con corte temporal, comparar contra un baseline, entrenar una regresión lineal y evaluarla con MAE en datos no vistos |
+| **Entregable** | Las 5 celdas de chequeo deben mostrar ✅ |
+| **Dataset** | `aire_diario.csv` — PM2.5 diario, temperatura y humedad de Cerro Navia 2020–2025 (SINCA, MMA). Profundización: `matricula.csv` (MINEDUC 2025) |
 
 ---
 
-## 2. ¿Para qué me sirve esto como funcionario/a público/a?
+## 2. ¿Para qué me sirve esto como funcionario público?
 
-Imagina que tienes que estimar el gasto de un contrato antes de que ocurra, o predecir la demanda de un programa social antes de que lleguen los beneficiarios. Eso es exactamente lo que hace un modelo de machine learning: **aprende de ejemplos pasados para estimar casos futuros**.
+Muchas decisiones del Estado son **anticipaciones**: cuántas consultas llegarán a urgencia, cuántos estudiantes tendrá un colegio, si mañana el aire será malo. Un modelo de *machine learning* aprende ese patrón de los datos pasados y lo aplica a casos nuevos.
 
-Este módulo te da los fundamentos correctos para construir ese tipo de herramienta. Y lo más importante: te enseña los **hábitos correctos** desde el principio: separar datos de prueba, evaluar con honestidad, y entender el riesgo del sobreajuste.
+En este módulo pronosticas el **PM2.5 diario de Cerro Navia** — si pudieras anticiparlo, podrías avisar antes a la población y a la red de salud. Pero la lección central no es el algoritmo (la regresión lineal es simple), sino los **hábitos que hacen creíble un modelo**:
 
-Aplicaciones directas en el Estado:
+- Evaluar con datos que el modelo **no vio**, y **del futuro** (corte temporal: entrenar 2020–2024, probar 2025).
+- Compararlo con una **regla ingenua**: «mañana = hoy» ya logra un error de **7,36 µg/m³**. El modelo lineal llega a **7,09**: gana, pero por poco — y reportarlo así es honestidad técnica.
 
-- **Gestión de compras:** estimar el monto de una orden antes de aprobarla.
-- **Salud:** estimar el tiempo de espera para un tipo de atención según la carga del servicio.
-- **Presupuesto:** proyectar el gasto en función de variables operativas.
-- **Planificación:** estimar la demanda de un programa según características del territorio.
-
-> 🏛️ **Mensaje clave:** no necesitas ser matemático/a para entrenar un modelo. Lo que sí necesitas son los hábitos correctos: separar prueba, evaluar en datos que el modelo no vio, y entender lo que el error te dice.
+> 🏛️ **Mensaje clave:** un modelo sin baseline y sin prueba honesta es un acto de fe. Con ellos, es evidencia.
 
 ---
 
 ## 3. Mapa Conceptual del Módulo
 
-| Concepto técnico | ¿Qué hace? | Analogía sector público |
-|---|---|---|
-| **Aprendizaje supervisado** | Aprende a partir de ejemplos con la respuesta correcta | Aprender a estimar gastos usando facturas históricas reales |
-| **Features (`X`)** | Variables de entrada que el modelo usa para predecir | Indicadores de un trámite: cantidad, tipo, región |
-| **Objetivo (`y`)** | La variable que queremos predecir | El monto total, el tiempo de espera, el resultado del proceso |
-| **Regresión** | Predice un número continuo | Estimar el gasto de un contrato |
-| **Clasificación** | Predice una categoría | ¿Este contrato tiene riesgo alto, medio o bajo? |
-| **Entrenamiento (train)** | Datos con los que el modelo aprende | Historial de contratos pasados con sus resultados conocidos |
-| **Prueba (test)** | Datos reservados para evaluar; el modelo no los ve al entrenar | Contratos nuevos que aun no se han ejecutado |
-| **Sobreajuste (*overfitting*)** | El modelo memoriza el pasado pero no generaliza | Un modelo que predice perfecto en los datos viejos pero falla en los nuevos |
-| `train_test_split` | Divide los datos en entrenamiento y prueba al azar | Separar el historial en “para aprender” y “para verificar” |
-| `modelo.fit()` | El modelo aprende de los datos de entrenamiento | El modelo estudia los ejemplos históricos |
-| `modelo.predict()` | El modelo genera predicciones para datos nuevos | El modelo responde: “para esta compra, el monto estimado es...” |
-| **MAE (Error Absoluto Medio)** | Promedio del error absoluto en las predicciones | En promedio, ¿cuanto se equivoca el modelo? |
+| Concepto | ¿Qué hace? | Equivalente en Excel / en el trabajo |
+|----------|-----------|----------------------|
+| **Aprendizaje supervisado** | Aprender de ejemplos con respuesta conocida | Ajustar una tendencia con datos históricos |
+| **Features (`X`) / objetivo (`y`)** | Entradas del modelo / lo que se predice | Columnas explicativas / columna a estimar |
+| **Regresión / clasificación** | Predecir un número / una categoría | µg/m³ mañana / ¿supera la norma? |
+| **Rezago (`shift(1)`)** | Trae el valor del día anterior a la fila de hoy | Referenciar la celda de arriba |
+| **Corte temporal** | Entrenar con el pasado, probar con el futuro | Validar con el año siguiente |
+| **Baseline** | Predicción ingenua que el modelo debe superar | «Igual que ayer», «el promedio de siempre» |
+| **`fit` / `predict`** | Aprender / responder | — |
+| **MAE** | Error absoluto medio, en las unidades de `y` | «En promedio me equivoco por X µg/m³» |
+| **Sobreajuste** | Bien en entrenamiento, mal en datos nuevos | Memorizar el solucionario |
 
 ---
 
 ## 4. Verificación de Prerrequisitos
 
-| ¿Puedo...? | ✅ Listo | 🔄 Revisar |
-|---|---|---|
-| Cargar y filtrar un DataFrame con pandas | ✅ | Repasa R2-01 si esto te cuesta |
-| Entender qué es una *feature* y por qué sirve | ✅ | Revisa la sección conceptual de R2-02 |
-| Interpretar un promedio y entender la idea de “error” | ✅ | Piensa en el error como “cuanto me equivoco en promedio” |
-| Ejecutar celdas en Colab sin problemas | ✅ | Ya tienes experiencia de los módulos anteriores |
-| Entender intuitivamente que “memoizar” no es lo mismo que “aprender” | ✅ | Eso es todo lo que necesitas para entender el sobreajuste |
+| ¿Puedo...? | Sí / No |
+|-----------|---------|
+| Filtrar filas por una fecha (`datos[datos["fecha"] < corte]`) | ☐ |
+| Crear una columna nueva a partir de otra | ☐ |
+| Explicar qué es la estacionalidad del PM2.5 (R2-03) | ☐ |
+| Distinguir una lista de columnas (`df[["a", "b"]]`) de una sola columna (`df["a"]`) | ☐ |
 
 ---
 
 ## 5. Guía Paso a Paso por Sección del Notebook
 
-### 🔷 Sección 0 — Preparación del entorno
+### Sección 0 · Preparación
 
-**🎯 Objetivo:** Cargar el dataset de compras públicas de alimentos y visualizar la relación entre cantidad y monto.
+🎯 **Objetivo:** Cargar `aire_diario.csv` y quedarse con Cerro Navia (2.191 días, ordenados por fecha).
 
-**💡 Concepto clave:** Este módulo usa datos de compras de alimentos porque tienen una relación más clara entre cantidad y monto que el dataset general. El gráfico de dispersión que aparece al inicio es la relación que el modelo va a aprender a representar como una línea recta.
-
-**🔍 Qué hace el código:** Descarga el CSV si no está disponible, lo carga en `df` y genera un scatter plot de `cantidad` vs `monto_total`.
-
-**⚠️ Error frecuente:** Saltar al ejercicio sin ver el gráfico. El gráfico muestra visualmente la relación que se va a modelar y ayuda a entender si tiene sentido una regresión lineal.
-
-**✅ Señal de comprensión:** Ves el scatter plot y puedes describir qué patrón general muestra (si a mayor cantidad el monto tiende a subir).
+💡 **Concepto clave:** El orden importa: el rezago solo significa «ayer» si las filas están en orden cronológico y no faltan días (en este archivo no faltan).
 
 ---
 
-### 🔷 Sección 1 — ¿Qué es el machine learning?
+### Sección 1 · Fabricar las features
 
-**🎯 Objetivo:** Entender la lógica del aprendizaje supervisado antes de escribir código.
+🎯 **Objetivo:** Crear `pm25_ayer` (con `shift(1)`), `mes` y `dia_semana`, y quedarse con los **1.990 días** que tienen todas las features.
 
-**💡 Concepto clave:** En vez de escribir reglas a mano (“si la cantidad supera 50, el monto es...”), le muestras al modelo miles de ejemplos y él descubre las reglas solo. Igual que un/a funcionario/a aprende a estimar gastos con experiencia, el modelo aprende de los registros históricos.
+💡 **Concepto clave:** El rezago es la *feature* reina de los pronósticos: el aire de hoy se parece mucho al de ayer.
 
-**🔍 Qué hace el código:** Solo explica los conceptos. No hay `TODO` aquí.
-
-**⚠️ Error frecuente:** Saltarse la sección conceptual. La diferencia entre regresión y clasificación, y entre features y objetivo, son distinciones que aparecerán en todos los módulos siguientes.
-
-**✅ Señal de comprensión:** Puedes explicar con tus palabras por qué este problema es de regresión (predice un número) y no de clasificación.
+⚠️ **Error frecuente:** `shift(-1)` trae el valor de **mañana**: sería una fuga (usar el futuro para predecir el futuro).
 
 ---
 
-### 🔷 Sección 2 — La regla de oro: separar datos de prueba
+### Sección 2 · Corte temporal
 
-**🎯 Objetivo:** Definir `X` e `y` y dividir los datos en entrenamiento (70%) y prueba (30%).
+🎯 **Objetivo:** Entrenar con **1.637 días** (2020–2024) y probar con **353 días** de 2025.
 
-**💡 Concepto clave:** Evaluar un modelo con los mismos datos que usó para aprender es hacer trampa. Es como corregir un examen con el solucionario que el alumno/a ya vio. La “prueba” son datos que el modelo nunca vio durante el entrenamiento. Si se desempeña bien ahí, significa que realmente aprendió.
+💡 **Concepto clave:** La prueba debe imitar el uso real. Si barajas los días, el modelo entrena con vecinos de los días que luego «predice»: la evaluación deja de imitar el uso real y puede quedar maquillada. En R2-07 verás la validación temporal en profundidad.
 
-**🔍 Qué hace el código:**
-- `X = df[["cantidad"]]` — **doble corchete** para obtener una tabla (no una columna).
-- `y = df["monto_total"]` — **un corchete** para obtener la columna objetivo.
-- `train_test_split(X, y, test_size=0.3, random_state=42)` divide al azar el 70% para entrenar y el 30% para probar.
-
-**⚠️ Error frecuente:** Usar un corchete simple para `X`. `df["cantidad"]` devuelve una Serie (una columna), pero scikit-learn espera una tabla (DataFrame). Por eso se usa `df[["cantidad"]]` con doble corchete.
-
-**✅ Señal de comprensión:** `X_train` tiene 5.188 filas y `X_test` tiene 2.224. La suma es el total del dataset.
+✅ **Señal de que entendiste:** Puedes explicar por qué `train_test_split` al azar no es adecuado aquí.
 
 ---
 
-### 🔷 Sección 3 — Entrenar tu primer modelo
+### Sección 3 · Baseline
 
-**🎯 Objetivo:** Crear un `LinearRegression`, entrenarlo con los datos de entrenamiento y generar predicciones sobre los de prueba.
+🎯 **Objetivo:** Medir el MAE de «mañana = hoy» (**7,36 µg/m³**) y de «siempre el promedio» (**18,37**).
 
-**💡 Concepto clave:** La regresión lineal busca la mejor línea recta que relaciona `cantidad` con `monto_total`. El coeficiente que aprende dice: “por cada unidad adicional comprada, el monto sube $X pesos”. El patrón `fit` + `predict` es idéntico para todos los modelos de scikit-learn.
-
-**🔍 Qué hace el código:**
-1. `modelo.fit(X_train, y_train)` — el modelo estudia los ejemplos de entrenamiento.
-2. `modelo.predict(X_test)` — el modelo genera una estimación para cada fila de `X_test`.
-
-**⚠️ Error frecuente:** Llamar `modelo.fit(X_test, y_test)`. Siempre se entrena con `train`, nunca con `test`.
-
-**✅ Señal de comprensión:** Después del `fit`, el mensaje del chequeo muestra el coeficiente aprendido. Ese número tiene un significado real: cuanto sube el monto por cada unidad de cantidad.
+💡 **Concepto clave:** La persistencia es una vara alta. Cualquier modelo que se presente a una autoridad debe compararse con ella.
 
 ---
 
-### 🔷 Sección 4 — Evaluar con honestidad
+### Sección 4 · fit / predict
 
-**🎯 Objetivo:** Calcular el MAE sobre los datos de prueba.
+🎯 **Objetivo:** Entrenar `LinearRegression`, predecir 2025 y comparar.
 
-**💡 Concepto clave:** El MAE (Error Absoluto Medio) mide en promedio cuánto se equivoca el modelo. Si el modelo predice $50.000 pero el monto real fue $80.000, el error absoluto es $30.000. El MAE es el promedio de esos errores en todos los casos de prueba.
+💡 **Concepto clave:** MAE en prueba **7,09** vs baseline 7,36: el modelo gana por poco. El MAE en entrenamiento (8,04) no es menor que el de prueba, así que **no hay sobreajuste** (2025 resultó incluso algo más predecible). Los coeficientes se leen como «µg/m³ por unidad»: cada °C más de temperatura media resta ~1,5 µg/m³; cada µg/m³ de ayer suma ~0,7 hoy.
 
-**🔍 Qué hace el código:** `mean_absolute_error(y_test, y_pred)` calcula el MAE entre los valores reales (`y_test`) y los predichos (`y_pred`).
-
-**⚠️ Error frecuente:** Calcular el MAE usando `y_train` en vez de `y_test`. Eso mide el desempeño en los datos con que aprendió, que casi siempre es mejor. La verdad está en los datos de prueba.
-
-**✅ Señal de comprensión:** El MAE de entrenamiento y el de prueba son similares. Si fueran muy distintos, habría sobreajuste.
+⚠️ **Error frecuente:** Entrenar con `X_test` o reportar el MAE de entrenamiento como si fuera el desempeño real.
 
 ---
 
-### 🔷 Sección 5 — Predecir un caso nuevo
+### Sección 5 · Un día nuevo
 
-**🎯 Objetivo:** Usar el modelo entrenado para estimar el monto total de una compra de 100 artículos.
+🎯 **Objetivo:** Pronosticar un miércoles de julio con 7 °C, 85% de humedad y 60 µg/m³ el día anterior.
 
-**💡 Concepto clave:** Este es el propósito final de un modelo: estimar lo que no hemos medido. Una vez entrenado, el modelo puede responder a cualquier cantidad, incluso una que no estaba en el dataset.
-
-**🔍 Qué hace el código:** Construye un DataFrame con la cantidad nueva, lo pasa a `modelo.predict()` y extrae el primer (y único) valor del resultado con `[0]`.
-
-**⚠️ Error frecuente:** Pasar solo el número `100` a `predict` sin envolverlo en un DataFrame. Scikit-learn espera la misma estructura que usaste en `fit`.
-
-**✅ Señal de comprensión:** El monto estimado tiene sentido (no es negativo ni un número absurdo) y puedes explicar por qué ese es el resultado esperado.
+💡 **Concepto clave:** El modelo estima **54,2 µg/m³** → sobre la norma. La entrada debe tener las mismas columnas, en el mismo orden, que el entrenamiento.
 
 ---
 
-## 6. Guía de Ejercicios
+### Reflexión final
 
-### ✍️ Ejercicio 1 — Separar X, y y reservar la prueba
-
-**Habilidad que desarrollas:** Estructurar correctamente un problema de aprendizaje supervisado.
-
-**Pista 1 (conceptual):** Necesitas separar los datos en dos grupos: uno para que el modelo aprenda y otro para probar si realmente aprendió. ¿Qué función de scikit-learn hace esa división?
-
-**Pista 2 (técnica):** `train_test_split(X, y, test_size=0.3, random_state=42)` devuelve cuatro objetos en orden: `X_train, X_test, y_train, y_test`.
-
-**Pista 3 (casi solución):** Recuerda usar doble corchete para `X`: `df[["cantidad"]]`. El resultado debe tener 5.188 filas de entrenamiento y 2.224 de prueba.
-
-**Lógica de solución:** Llamar a `train_test_split` con los parámetros correctos y desempaquetar en cuatro variables.
+Dos límites honestos del modelo: usa la temperatura y humedad **del mismo día** (en producción vendrían de un pronóstico meteorológico, que también se equivoca) y lee `mes` como número (para la recta, diciembre es «más» que julio). R2-05 aborda el segundo.
 
 ---
 
-### ✍️ Ejercicio 2 — Crear, entrenar y predecir
+## 6. Guía de los 5 Ejercicios
 
-**Habilidad que desarrollas:** Usar el patrón `fit`/`predict` de scikit-learn.
+### Ejercicio 1 — Crea `pm25_ayer`, `mes` y `dia_semana`
 
-**Pista 1 (conceptual):** El modelo ya está creado. Ahora necesitas dos pasos: que aprenda de los datos de entrenamiento, y que luego prediga sobre los de prueba.
+**Pistas progresivas:**
+- 🟢 Pista suave: El rezago «corre» la columna una fila hacia abajo.
+- 🟡 Pista media: `.shift(1)` sobre la columna `pm25`; el día de la semana sale de `.dt`.
+- 🔴 Pista directa: `cn["pm25_ayer"] = cn["pm25"].shift(1)` y `cn["dia_semana"] = cn["fecha"].dt.dayofweek`.
 
-**Pista 2 (técnica):** `modelo.fit(X_train, y_train)` no devuelve nada útil directamente. Después llamas `y_pred = modelo.predict(X_test)`.
-
-**Pista 3 (casi solución):** Ambas líneas son necesarias. Sin `fit`, `predict` dará error. Sin `predict`, no tendrás `y_pred` para evaluar.
-
-**Lógica de solución:** Ejecutar `modelo.fit(X_train, y_train)` y luego `y_pred = modelo.predict(X_test)`.
-
----
-
-### ✍️ Ejercicio 3 — Calcular el MAE
-
-**Habilidad que desarrollas:** Evaluar un modelo con honestidad usando métricas en datos de prueba.
-
-**Pista 1 (conceptual):** El MAE mide cuánto se equivoca el modelo en promedio. Se calcula comparando los valores reales con los predichos.
-
-**Pista 2 (técnica):** `mean_absolute_error(valores_reales, valores_predichos)` es la función de scikit-learn.
-
-**Pista 3 (casi solución):** Los valores reales son `y_test` y los predichos son `y_pred`. El resultado se guarda en `mae`.
-
-**Lógica de solución:** `mae = mean_absolute_error(y_test, y_pred)`.
+**¿Qué significa el ✅?** Que cada fila tiene el PM2.5 del día anterior y no quedan nulos en las features.
 
 ---
 
-### ✍️ Ejercicio 4 — Predecir un caso nuevo
+### Ejercicio 2 — Corte temporal
 
-**Habilidad que desarrollas:** Usar el modelo entrenado con datos reales nuevos.
+**Pistas progresivas:**
+- 🟢 Pista suave: Dos filtros por fecha, uno con `<` y otro con `>=`.
+- 🟡 Pista media: Compara `datos["fecha"]` con `corte`.
+- 🔴 Pista directa: `train = datos[datos["fecha"] < corte]` y `test = datos[datos["fecha"] >= corte]`.
 
-**Pista 1 (conceptual):** El modelo espera un DataFrame con la misma estructura que usó al entrenar. Necesitas crear uno con la cantidad nueva.
-
-**Pista 2 (técnica):** `pd.DataFrame({"cantidad": [100]})` crea un DataFrame con una fila y la columna correcta.
-
-**Pista 3 (casi solución):** `modelo.predict(nueva_compra)[0]` devuelve el primer (y único) valor de la predicción. Guárdalo en `temp_estimada`.
-
-**Lógica de solución:** Construir el DataFrame, pasarlo a `predict` y extraer el valor con `[0]`.
+**¿Qué significa el ✅?** Que todo el entrenamiento es anterior a la prueba y la prueba es 2025 completo.
 
 ---
 
-## 7. Sección en Profundidad: Ejercicio 2 — El patrón `fit`/`predict` y su impacto en política pública
+### Ejercicio 3 — MAE del baseline
 
-El ejercicio 2 contiene el habito más importante de este módulo: el patrón **`fit` luego `predict`** es el mismo para todos los modelos de scikit-learn. Una vez que lo dominas con regresión lineal, puedes cambiar `LinearRegression()` por `RandomForestRegressor()` o `GradientBoostingClassifier()` con exactamente el mismo código alrededor.
+**Pistas progresivas:**
+- 🟢 Pista suave: La predicción ingenua ya está en una columna de `X_test`.
+- 🟡 Pista media: Usa `mean_absolute_error(real, predicho)`.
+- 🔴 Pista directa: `pred_base = X_test["pm25_ayer"]` y `mae_base = mean_absolute_error(y_test, pred_base)`.
 
-### La regresión lineal como punto de partida
-
-La regresión lineal aprende la ecuación:
-
-```
-monto_total = a * cantidad + b
-```
-
-Donde `a` (el coeficiente) es lo que aprende con `fit`. Ese número tiene un significado real: **cuántos pesos sube el monto por cada unidad adicional comprada**.
-
-### Por qué el sobreajuste es especialmente peligroso en el Estado
-
-Un modelo sobreajustado que se usa para decisiones públicas puede:
-
-- **Estimar incorrectamente** presupuestos futuros porque “calió” solo en el pasado.
-- **Dar falsas certezas** en informes técnicos que sostienen políticas.
-- **Ser invalidado** en una auditoría si no hay un conjunto de prueba que demuestre que generaliza.
-
-> 🚨 **Regla pública:** cualquier modelo usado para decisiones de política debe evaluarse obligatoriamente en datos que no participaron en el entrenamiento. No es burocracia: es rigor metodológico.
-
-### Aplicaciones del patrón `fit`/`predict` en el Estado
-
-| Caso de uso | `X` (*features*) | `y` (objetivo) | Tipo |
-|---|---|---|---|
-| Estimar gasto de compra | Cantidad, tipo | Monto total | Regresión |
-| Clasificar riesgo de proveedor | Historial, mora, giro | Alto / Medio / Bajo | Clasificación |
-| Estimar demanda de programa | Características del territorio | Número de beneficiarios | Regresión |
-| Detectar anomalías en contratos | Tipo, monto, proveedor | Normal / Sospechoso | Clasificación |
+**¿Qué significa el ✅?** Que tienes la vara (7,36 µg/m³) antes de entrenar nada.
 
 ---
 
-## 8. Conexión con profundiza.ipynb
+### Ejercicio 4 — Entrena, predice y compara
 
-Este módulo no tiene `profundiza.ipynb` propio. El notebook `solucion.ipynb` sirve como referencia interna del equipo.
+**Pistas progresivas:**
+- 🟢 Pista suave: Tres pasos: crear, `fit`, `predict`.
+- 🟡 Pista media: `fit` recibe `X_train, y_train`; `predict` recibe `X_test`.
+- 🔴 Pista directa: `modelo = LinearRegression()`, `modelo.fit(X_train, y_train)`, `y_pred = modelo.predict(X_test)`.
 
-> 💡 **Alternativa de profundización:** Si quieres ir más allá, intenta cambiar `LinearRegression()` por `Ridge()` o `Lasso()` (importados desde `sklearn.linear_model`) y compara el MAE resultante. Son variantes de la regresión lineal con regularización, que veremos más a fondo en módulos posteriores.
-
----
-
-## 9. Autoevaluación Final
-
-**Pregunta 1:** ¿Qué diferencia hay entre un problema de regresión y uno de clasificación?
-
-- a) La regresión usa más datos
-- b) La regresión predice un número continuo; la clasificación predice una categoría
-- c) La clasificación siempre es más precisa
-- d) La regresión solo se usa con datos temporales
-
-✅ **Respuesta correcta: b)**
-**Explicación:** Si lo que quieres predecir es un número (monto, tiempo, demanda), es regresión. Si es una etiqueta (aprobado/rechazado, riesgo alto/bajo), es clasificación.
+**¿Qué significa el ✅?** Que tu modelo (7,09) le ganó al baseline (7,36) en datos que nunca vio.
 
 ---
 
-**Pregunta 2:** ¿Por qué es incorrecto evaluar el modelo con los datos de entrenamiento?
+### Ejercicio 5 — Pronostica un día nuevo
 
-- a) Porque son demasiados datos y el cálculo tarda mucho
-- b) Porque el modelo puede haber memorizado esas respuestas, lo que da una evaluación falsamente optimista
-- c) Porque scikit-learn no permite usar `y_train` en `mean_absolute_error`
-- d) Porque los datos de entrenamiento siempre tienen errores
+**Pistas progresivas:**
+- 🟢 Pista suave: `predict` devuelve un arreglo; toma el primer elemento.
+- 🟡 Pista media: `modelo.predict(dia_nuevo)[0]`, convertido a `float`.
+- 🔴 Pista directa: `pm25_estimado = float(modelo.predict(dia_nuevo)[0])` y `supera_norma = pm25_estimado > 50`.
 
-✅ **Respuesta correcta: b)**
-**Explicación:** El modelo aprende de los datos de entrenamiento. Evaluarlo con esos mismos datos puede dar una métrica excelente aunque el modelo sea pésimo con casos nuevos.
-
----
-
-**Pregunta 3:** ¿Qué ocurre con `modelo.predict(X_test)` si el modelo nunca ejecutó `.fit()`?
-
-- a) Devuelve ceros
-- b) Lanza un error porque el modelo no ha aprendido nada
-- c) Usa el modelo del último entrenamiento disponible
-- d) Devuelve el promedio de y
-
-✅ **Respuesta correcta: b)**
-**Explicación:** Sin `fit`, el modelo no tiene parámetros aprendidos. scikit-learn lanzará `NotFittedError` indicando que el modelo no fue entrenado.
+**¿Qué significa el ✅?** Que usaste el modelo para lo que sirve: estimar lo que aún no ocurre (54,2 µg/m³).
 
 ---
 
-**Pregunta 4:** ¿Qué significa que el MAE de prueba sea mucho mayor que el MAE de entrenamiento?
-
-- a) El modelo no tiene suficientes datos
-- b) El modelo tiene sobreajuste: memorizó el entrenamiento pero no generaliza
-- c) El MAE de prueba siempre es mayor, es normal
-- d) Los datos de prueba son incorrectos
-
-✅ **Respuesta correcta: b)**
-**Explicación:** Esta brecha entre entrenamiento y prueba es la señal clásica del sobreajuste. El modelo “calió” demasiado a los datos de entrenamiento y pierde precisión con datos nuevos.
+> 🔬 **En la profundización:** el mismo método sobre la **matrícula 2025**. Predices los **cursos** de un colegio desde su matrícula (MAE 2,59 cursos vs 8,0 del baseline; ≈ 2,6 cursos por cada 100 estudiantes), aprendes cuándo **sí** vale el corte aleatorio (una foto sin tiempo), y caes a propósito en una **fuga de datos**: predecir `mat_total` con `mat_hombres` + `mat_mujeres` da R² ≈ 1 porque es una suma. El modelo honesto (con `cursos` y `rural`) logra R² 0,897 y MAE de 90 estudiantes — peor, pero real.
 
 ---
 
-**Pregunta 5:** Si quisieras predecir el gasto de una compra de 200 artículos, ¿cómo le pasarías ese dato al modelo?
+## 7. Autoevaluación Final
 
-- a) `modelo.predict(200)`
-- b) `modelo.predict([200])`
-- c) `modelo.predict(pd.DataFrame({"cantidad": [200]}))`
-- d) `modelo.fit(200)`
+**Pregunta 1:** ¿Por qué no se barajan los días al separar entrenamiento y prueba en este módulo?
 
-✅ **Respuesta correcta: c)**
-**Explicación:** scikit-learn espera que la entrada tenga la misma estructura que la usada en `fit`. Como entrenaste con `df[["cantidad"]]` (un DataFrame), debes pasar un DataFrame con la misma columna.
+- A) Porque `train_test_split` no funciona con fechas
+- B) Porque queremos pronosticar el futuro: la prueba debe ser posterior al entrenamiento ✅
+- C) Porque hay pocos datos
+- D) Para que el modelo entrene más rápido
 
----
-
-## 10. Glosario del Módulo
-
-| Término | Definición simple | Equivalente sector público / Excel |
-|---|---|---|
-| **Machine learning** | Computador aprende patrones de ejemplos en vez de reglas escritas a mano | Construir una fórmula de estimación aprendida del historial |
-| **Aprendizaje supervisado** | Aprende de ejemplos con la respuesta correcta conocida | Aprender a estimar gastos con facturas históricas reales |
-| **Features (`X`)** | Variables de entrada que el modelo usa para predecir | Indicadores de un trámite o contrato |
-| **Objetivo (`y`)** | Variable que se quiere predecir | Monto, tiempo, resultado |
-| **Regresión** | Predice un número continuo | Estimación de presupuesto |
-| **Clasificación** | Predice una categoría | Aprobado / Rechazado / Riesgo alto |
-| **Train / Test** | Conjunto de entrenamiento / conjunto de prueba | Historial para aprender / casos nuevos para verificar |
-| **Sobreajuste** | El modelo memoriza en vez de aprender; falla con datos nuevos | Modelo que predice perfecto en el pasado pero falla en la operación real |
-| `fit()` | El modelo aprende de los datos | “Estudiar” los ejemplos históricos |
-| `predict()` | El modelo estima para datos nuevos | “Responder” a casos no vistos |
-| **MAE** | Error absoluto medio: promedio de los errores de predicción | Cuánto me equivoco en promedio |
-| **LinearRegression** | Modelo que aprende una línea recta entre X e y | Ajuste lineal entre dos variables |
+**Explicación:** Barajar mezcla días de 2025 en el entrenamiento y deja que el modelo aprenda de «vecinos del futuro». El corte temporal imita el uso real.
 
 ---
 
-## 11. Conexión con el Módulo Siguiente
+**Pregunta 2:** El baseline «mañana = hoy» tiene MAE 7,36 y el modelo lineal 7,09. ¿Qué reportas?
 
-En R2-04 entrenaste tu primer modelo de machine learning con las prácticas correctas. Lo que aprendiste aquí —el patrón `fit`/`predict`, la separación entrenamiento/prueba, la evaluación honesta— no cambia en los módulos siguientes.
+- A) Que el modelo es excelente
+- B) Que el modelo mejora levemente a la persistencia; el aire de ayer ya explica casi todo ✅
+- C) Que el modelo no sirve
+- D) Solo el 7,09, sin comparar
 
-**El siguiente módulo es R2-05 · Modelos basados en árboles.**
+**Explicación:** Sin baseline, 7,09 no dice nada. Con él, sabes cuánto aporta el modelo (poco) y dónde buscar mejoras.
 
-Allí cambiarás `LinearRegression()` por modelos más potentes y flexibles:
+---
 
-- Aprenderás cómo funcionan los **árboles de decisión** y los **Random Forest**.
-- Podrás capturar relaciones no lineales que la regresión lineal no puede.
-- Usarás el mismo patrón `fit`/`predict` que acabas de dominar.
+**Pregunta 3:** ¿Qué indica que el MAE de entrenamiento sea mucho menor que el de prueba?
 
-> 🔗 **Conexión pedagógica:** R2-04 te da el esqueleto correcto del proceso ML; R2-05 lo potencia con algoritmos más sofisticados. Todo lo que hiciste aquí se reutiliza directamente.
+- A) Que el modelo generaliza muy bien
+- B) Sobreajuste: el modelo memorizó el entrenamiento ✅
+- C) Que faltan features
+- D) Que la prueba está mal hecha
 
-¡Excelente trabajo! Ya entrenas modelos con rigor. Eso te distingue 🚀
+**Explicación:** Memorizar da error bajo en lo conocido y alto en lo nuevo. Aquí no pasa (8,04 vs 7,09).
+
+---
+
+**Pregunta 4:** ¿Por qué `shift(-1)` sería un error grave en la *feature* de rezago?
+
+- A) Porque da error de sintaxis
+- B) Porque trae el valor de mañana: el modelo vería la respuesta (fuga de datos) ✅
+- C) Porque borra la primera fila
+- D) No es error, da lo mismo
+
+**Explicación:** Una feature solo vale si estaría disponible al momento de predecir.
+
+---
+
+**Pregunta 5:** Un modelo predice la matrícula total con R² = 0,99999 usando hombres y mujeres matriculados. ¿Qué pasa?
+
+- A) Es un modelo excepcional
+- B) Hay fuga: el total es la suma de esas columnas ✅
+- C) Falta normalizar
+- D) Hay sobreajuste por profundidad
+
+**Explicación:** «Demasiado bueno para ser cierto» suele ser fuga. Pregunta siempre si tendrías esa feature antes de conocer la respuesta.
+
+---
+
+## 8. Glosario del Módulo
+
+| Término | Definición simple | Equivalente en el trabajo del Estado |
+|---------|-------------------|--------------------------------------|
+| **Machine learning** | Aprender reglas a partir de ejemplos | Estimar a partir de la experiencia registrada |
+| **Feature / objetivo** | Entrada / lo que se predice | Variables explicativas / indicador a anticipar |
+| **Rezago (lag)** | Valor de un período anterior | «El dato de ayer» |
+| **Conjunto de prueba** | Datos reservados para evaluar | El examen sin solucionario |
+| **Corte temporal** | Probar con datos posteriores al entrenamiento | Validar con el año siguiente |
+| **Baseline** | Predicción ingenua de referencia | «Lo que diría cualquiera sin modelo» |
+| **`fit` / `predict`** | Entrenar / predecir | — |
+| **MAE** | Error absoluto medio | «Me equivoco en promedio por X» |
+| **Sobreajuste** | Memorizar en vez de aprender | Regla hecha a la medida de los casos ya vistos |
+| **Fuga de datos** | Usar información que no tendrías al predecir | Mirar la respuesta antes de responder |
+
+---
+
+## 9. Conexión con el Módulo Siguiente
+
+En R2-04 entrenaste tu primer modelo con los hábitos correctos: features con sentido, corte temporal, baseline y MAE en datos no vistos.
+
+En **R2-05 · Modelos basados en árboles** cambiarás la recta por **árboles de decisión** y **bosques aleatorios** — con el **mismo dato, el mismo corte y la misma vara** (7,36 del baseline, 7,09 de la recta), para comparar de forma justa. Verás el sobreajuste con tus propios ojos al dejar crecer un árbol sin límite, y aprenderás a leer qué *feature* pesa más.
+
+> 💡 **Pregunta para reflexionar:** si el PM2.5 de ayer explica casi todo, ¿qué tendría que aportar un modelo más complejo para que valga la pena explicarlo a una autoridad?
