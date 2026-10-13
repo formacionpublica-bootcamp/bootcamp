@@ -1,123 +1,129 @@
-> ## 🆕 Rediseño en 3 ramas independientes
->
-> El curso se reorganizó en **3 ramas autocontenidas** (elige una según tu rol), en [`ramas/`](ramas/):
-> - **R1 · Análisis y Visualización de Datos** — `ramas/R1-analisis-visualizacion/`
-> - **R2 · Científico de Datos** — `ramas/R2-cientifico-de-datos/`
-> - **R3 · IA Aplicada** — `ramas/R3-ia-aplicada/`
->
-> El curso anterior (Prework + Capa A/B/C) quedó archivado en [`legacy/`](legacy/) y respaldado en la rama `curso-v1-legacy`.
+# Formación Pública — Datos e IA para funcionarios públicos
 
-# Formación Pública — Datos para funcionarios públicos
-
-Bootcamp **gratuito, autoguiado y práctico** de datos para funcionarios públicos chilenos que
+Bootcamp **gratuito, autoguiado y práctico** de datos e IA para funcionarios públicos chilenos que
 **parten desde cero** (sin programación previa). El objetivo es **upskilling**: usar datos —y luego
 IA— para hacer mejor tu trabajo. Todo se ejecuta en **Google Colab** (solo necesitas una cuenta de
-Google), con datos públicos reales (compras públicas de ChileCompra/MercadoPúblico) y ejercicios
-auto-corregidos.
+Google), con **datos públicos chilenos reales** y ejercicios autocorregidos.
 
-> **Syllabus completo** (módulo por módulo, benchmark y método): [SYLLABUS.md](SYLLABUS.md) ·
-> Diseño y razonamiento del rediseño: [BLUEPRINT_FORMACION_PUBLICA.md](BLUEPRINT_FORMACION_PUBLICA.md).
+> 🌐 Campus: **[formacionpublica.cl/campus.html](https://formacionpublica.cl/campus.html)** ·
+> Datos y procedencia: [data/README.md](data/README.md) ·
+> Modo tutor de IA: [TUTOR_IA.md](TUTOR_IA.md)
+
+**Datos ancla por rama** (un dataset en todas las lecciones de la rama; cada `profundiza` cambia de
+dataset para practicar la transferencia):
+
+| Rama | Dataset ancla | Fuente |
+|---|---|---|
+| R1 | Matrícula escolar 2025: 10.945 establecimientos | MINEDUC, datos abiertos |
+| R2 | Calidad del aire: PM2.5 + meteorología, 14 estaciones, 2020–2025, y 2026 como datos nuevos | SINCA, Ministerio del Medio Ambiente |
+| R3 | 245 fichas de trámites con texto completo | ChileAtiende |
 
 ---
 
-## Cómo está organizado: 3 pistas escalonadas
+## Cómo está organizado: 3 ramas independientes
 
-El programa **no es un solo camino largo**. Son tres pistas independientes, cada una con su propio
-certificado y su proyecto final (*capstone*). **Terminar la Pista A ya es un logro completo.**
+El programa **no es un solo camino largo**: son **tres ramas autocontenidas** en [`ramas/`](ramas/).
+Eliges **una** según tu rol — no hay prerrequisitos entre ellas, cada una parte de cero y se
+certifica por separado.
 
-| Pista | Para quién | Duración realista | Qué te llevas |
+| Rama | Para quién | Duración | Qué te llevas |
 |---|---|---|---|
-| **A · Datos sin miedo** | **Todos** los funcionarios. El corazón del bootcamp. | ~6 sem · 4–5 h/sem | Responder preguntas con datos reales, limpiar tablas, consultar con SQL, hacer un gráfico honesto y usar IA con criterio. |
-| **B · Ciencia de datos aplicada** *(opcional)* | Quien quiere modelar y predecir. | ~6 sem · 6–8 h/sem | Entrenar y evaluar modelos de ML, armar pipelines reproducibles. *Esto ya es un paso hacia un rol nuevo.* |
-| **C · IA aplicada al Estado** *(opcional)* | Quien quiere construir con IA generativa. | ~5 sem · 6–8 h/sem | Resolver tareas de texto con LLMs, dar tus propios documentos a un LLM (RAG) y encadenar agentes. |
+| [**R1 · Análisis y Visualización**](ramas/R1-analisis-visualizacion/) | Quien quiere responder preguntas con datos y comunicarlas. **El punto de partida para la mayoría.** | ~10–12 sem | Conseguir, limpiar y cruzar datos reales, SQL, estadística para no engañarse, gráficos honestos y un dashboard. *No incluye ML.* |
+| [**R2 · Científico de Datos**](ramas/R2-cientifico-de-datos/) | Quien quiere modelar y predecir. | ~16–18 sem | El ciclo completo: preparar datos, entrenar y evaluar modelos con honestidad, pipelines reproducibles y despliegue responsable. *Esto ya es un paso hacia un rol nuevo, no solo upskilling del puesto actual.* |
+| [**R3 · IA Aplicada**](ramas/R3-ia-aplicada/) | Quien quiere construir con IA generativa. | ~6–7 sem | Resolver tareas de texto con LLMs, RAG que responde **citando la fuente** y agentes con supervisión humana. Entrada directa con prueba de nivel. |
 
-**Honestidad de cada pista:** la Pista A **no** te convierte en data scientist, y está perfecto:
-te convierte en alguien que ya no le teme a los datos. Las Pistas B y C son para quien quiere más.
+**Honestidad de cada rama:** en la portada de cada una se dice qué te llevas **y qué no**. Terminar
+R1 ya es un logro completo: te convierte en alguien que no le teme a los datos.
 
----
-
-## Prework · Lo mínimo de Python para sobrevivir
-
-No es un curso de programación: es lo justo para llegar rápido a pandas y SQL.
+## Rama R1 · Análisis y Visualización de Datos
 
 | Módulo | Tema |
 |---|---|
-| [P1](P1-setup-y-sintaxis/) | Setup y sintaxis de Python |
-| [P2](P2-colecciones-y-bucles/) | Colecciones y bucles |
-| [P3](P3-funciones-y-archivos/) | Funciones y lectura de archivos |
-| [P4](P4-datos-web-json-apis/) | Datos desde la web: JSON y APIs *(opcional)* |
+| [R1-00](ramas/R1-analisis-visualizacion/R1-00-fundamentos/) | Fundamentos: Python con datos reales |
+| [R1-01](ramas/R1-analisis-visualizacion/R1-01-traer-el-dato/) | Traer el dato: archivos, JSON y APIs |
+| [R1-02](ramas/R1-analisis-visualizacion/R1-02-exploracion-con-pandas/) | Exploración con pandas |
+| [R1-03](ramas/R1-analisis-visualizacion/R1-03-cruzar-y-resumir-tablas/) | Cruzar y resumir tablas |
+| [R1-04](ramas/R1-analisis-visualizacion/R1-04-limpieza-de-datos/) | Limpieza de datos |
+| [R1-05](ramas/R1-analisis-visualizacion/R1-05-sql-para-analisis/) | SQL para análisis |
+| [R1-06](ramas/R1-analisis-visualizacion/R1-06-estadistica-descriptiva/) | Estadística descriptiva (no dejarse engañar) |
+| [R1-07](ramas/R1-analisis-visualizacion/R1-07-visualizacion-exploratoria/) | Visualización exploratoria — ver para entender |
+| [R1-08](ramas/R1-analisis-visualizacion/R1-08-visualizacion-comunicar-etica/) | Visualización para comunicar + ética |
+| [R1-09](ramas/R1-analisis-visualizacion/R1-09-dashboards-ligeros/) | Dashboards ligeros (Gradio) |
+| [R1-CAP](ramas/R1-analisis-visualizacion/R1-CAP-capstone-analisis/) | **Capstone**: informe/dashboard con datos de tu organismo → certificación *Analista de Datos del sector público* |
 
----
-
-## Pista A · Datos sin miedo *(alfabetización — para todos)*
-
-| Sem | Módulo | Tema | Entregable |
-|---|---|---|---|
-| 1 | [A1](A1-exploracion-con-pandas/) | Exploración con pandas | Top 10 organismos por gasto |
-| 2 | [A2](A2-cruzar-y-resumir-tablas/) | Cruzar y resumir tablas (`merge` + `groupby`) | Gasto por sector cruzando dos tablas |
-| 3 | [A3](A3-limpieza-de-datos/) | Limpieza de datos | Dejar un CSV sucio usable |
-| 4 | [A4](A4-sql-fundamentos/) | SQL fundamentos | Responder 3 preguntas con consultas |
-| 5 | [A5](A5-estadistica-descriptiva/) | Estadística descriptiva (no dejarse engañar) | Confirmar/desmentir un titular |
-| 6 | [A6](A6-visualizacion-y-etica/) | Visualización y ética de datos | Un gráfico claro y honesto |
-| 7 | [A7](A7-ia-generativa-y-llms/) | IA como copiloto (LLMs, uso responsable) | Clasificar glosas con un LLM, verificando |
-| — | [Capstone A](A8-capstone/) | **Tu pregunta, tus datos** (dataset provisto + el tuyo) | Proyecto + rúbrica → certificación Capa A |
-
-> A7 (IA generativa) cierra la Capa A como alfabetización de IA para todos, y la Capa C la retoma como base de RAG y agentes.
-
----
-
-## Pista B · Ciencia de datos aplicada *(opcional)*
+## Rama R2 · Científico de Datos
 
 | Módulo | Tema |
 |---|---|
-| [B1](B1-sql-para-features/) | SQL para *features* |
-| [B2](B2-fundamentos-de-ml/) | Fundamentos de Machine Learning |
-| [B3](B3-modelos-de-arboles/) | Modelos basados en árboles |
-| [B4](B4-clasificacion-y-clustering/) | Clasificación y clustering |
-| [B5](B5-pipelines-reproducibles/) | Pipelines reproducibles |
-| [B6](B6-despliegue-de-modelos/) | Despliegue de modelos *(práctico: modelo usable · producción: conceptual)* |
-| [B7](B7-series-temporales/) | Series temporales (pronóstico) |
-| [Capstone B](B8-capstone/) | **Predice y explica**: proyecto predictivo + *model card* + rúbrica |
+| [R2-00](ramas/R2-cientifico-de-datos/R2-00-fundamentos-express/) | Fundamentos express: Python + pandas |
+| [R2-01](ramas/R2-cientifico-de-datos/R2-01-datos-traer-cruzar-limpiar/) | Datos: traer, cruzar, limpiar |
+| [R2-02](ramas/R2-cientifico-de-datos/R2-02-sql-para-features/) | SQL para *features* |
+| [R2-03](ramas/R2-cientifico-de-datos/R2-03-estadistica-para-modelar/) | Estadística para modelar |
+| [R2-04](ramas/R2-cientifico-de-datos/R2-04-fundamentos-de-ml/) | Fundamentos de Machine Learning |
+| [R2-05](ramas/R2-cientifico-de-datos/R2-05-modelos-de-arboles/) | Modelos basados en árboles |
+| [R2-06](ramas/R2-cientifico-de-datos/R2-06-clasificacion-y-clustering/) | Clasificación y clustering |
+| [R2-07](ramas/R2-cientifico-de-datos/R2-07-evaluacion-y-validacion/) | Evaluación y validación (métricas, fuga de datos, CV, fairness) |
+| [R2-08](ramas/R2-cientifico-de-datos/R2-08-pipelines-reproducibles/) | Pipelines reproducibles |
+| [R2-09](ramas/R2-cientifico-de-datos/R2-09-despliegue-de-modelos/) | Despliegue + ficha de modelo + monitoreo |
+| [R2-10](ramas/R2-cientifico-de-datos/R2-10-series-temporales/) | Series temporales *(optativa)* |
+| [R2-CAP](ramas/R2-cientifico-de-datos/R2-CAP-capstone-modelo/) | **Capstone**: modelo predictivo de punta a punta → certificación en ciencia de datos aplicada al sector público |
 
----
-
-## Pista C · IA aplicada al Estado *(opcional)*
+## Rama R3 · IA Aplicada
 
 | Módulo | Tema |
 |---|---|
-| [C1](C1-introduccion-al-nlp/) | Introducción al NLP |
-| [A7](A7-ia-generativa-y-llms/) | IA generativa y LLMs *(compartido con Pista A; aquí se profundiza)* |
-| [C2](C2-rag/) | RAG (Retrieval-Augmented Generation) |
-| [C3](C3-agentes/) | **Agentes y proyecto integrador de IA aplicada** *(cierre)* |
-| [Capstone C](C4-capstone/) | **Tu asistente con IA**: RAG que responde citando la fuente + rúbrica |
+| [R3-00](ramas/R3-ia-aplicada/R3-00-onramp-express-prueba-nivel/) | Onramp express: Python + JSON *(o entra directo con la prueba de nivel)* |
+| [R3-01](ramas/R3-ia-aplicada/R3-01-introduccion-al-nlp/) | Introducción al NLP |
+| [R3-02](ramas/R3-ia-aplicada/R3-02-ia-generativa-y-llms/) | IA generativa y LLMs |
+| [R3-03](ramas/R3-ia-aplicada/R3-03-rag/) | RAG: tu asistente que cita la fuente |
+| [R3-04](ramas/R3-ia-aplicada/R3-04-agentes/) | Agentes (con supervisión humana) |
+| [R3-CAP](ramas/R3-ia-aplicada/R3-CAP-capstone-ia-aplicada/) | **Capstone**: proyecto integrador de IA aplicada → certificación *Especialista en IA aplicada del sector público* |
 
 ---
 
 ## Cómo empezar
 
-1. Abre el módulo por el que partas (Prework → Pista A).
+1. Elige tu rama (¿dudas? parte por **R1**) y abre su primer módulo.
 2. Pulsa **Open in Colab** en el `README` del módulo.
 3. Ejecuta las celdas en orden y completa cada `# TODO`.
 4. Cada ejercicio termina en una **celda de chequeo**: ✅ si está bien, o una pista amable.
 5. El módulo está completo cuando todas las celdas de chequeo muestran ✅.
 
-> **¿Te trancaste?** Es normal y parte del oficio. Lee el error completo, y si no lo entiendes,
-> **pégaselo a la IA junto con tu código** (Gemini/ChatGPT) y pídele que te explique qué significa
-> y cómo arreglarlo — **sin pegar datos personales**.
+**Cada módulo trae una [Guía de Aprendizaje]** (`GUIA_APRENDIZAJE.md` en su carpeta): el mapa del
+módulo con analogías de Excel, pistas progresivas por ejercicio, errores frecuentes y autoevaluación.
 
----
+> **¿Te trancaste?** Es normal y parte del oficio. Tu escalera de ayuda, en orden:
+> 1. La **`GUIA_APRENDIZAJE.md`** del módulo (en su misma carpeta): pistas progresivas 🟢🟡🔴,
+>    errores frecuentes y autoevaluación.
+> 2. **Gemini dentro de Colab** (botón ✨): pégale el error completo junto con tu código y pídele
+>    que te explique qué significa — **sin pegar datos personales**.
+> 3. **[Antigravity como tutor de IA](GUIA_GRAVITY.md)** *(opcional)*: un IDE gratuito de Google
+>    con un asistente que ve todo el curso y, con el modo tutor ([TUTOR_IA.md](TUTOR_IA.md)),
+>    te da pistas en vez de resolverte los ejercicios.
 
-## Estado del programa
+## Certificación y capstone
 
-- ✅ Prework (P1–P4) y Capa A (A1–A7) — construidos, en revisión.
-- ✅ Capa B (B1–B7) — construida, en revisión; **línea ML (B2–B6) sobre datos reales de compras públicas** (`data/process_licitaciones.py` → `compras_ml.csv`).
-- ✅ Capa C (C1–C3) — construida, en revisión.
-- ✅ Módulos renombrados a nomenclatura **capa+módulo**; rutas *Open in Colab* y de descarga corregidas; fuente citada como **ChileCompra**; crudos de `data/` excluidos de Git.
-- ✅ **Sitio web** en MkDocs Material (`docs/`) con despliegue automático a GitHub Pages (`.github/workflows/deploy.yml`).
-- ✅ **Capstones A, B y C** construidos (`A8-capstone/`, `B8-capstone/`, `C4-capstone/`): dataset provisto + scaffold + ejemplo resuelto + rúbrica cada uno. Las **3 capas son terminables**.
-- ✅ **[Recursos/](Recursos/)**: chuleta (Python + pandas + SQL) y glosario (~50 términos). También en el sitio, menú *Recursos*.
-- ✅ **Pulido aplicado:** ejercicio de interpretación auto-verificado en A1/A3/A4/A5/A6; B6 de-escalado a conceptual; fuente "DIPRES" corregida a ChileCompra en todos los notebooks; refuerzo de texto en P1.
-- ✅ **Profundización (opcional)** en toda la Capa A (A1–A7): un `profundiza.ipynb` por módulo (teoría a fondo + 4 ejercicios conceptuales), revisado adversarialmente por un agente experto en datos.
+Cada rama cierra con un **capstone sobre datos de tu propio organismo** (o el dataset provisto),
+evaluado con **rúbrica pública** (está en el README de cada capstone). Al aprobarlo obtienes la
+certificación de la rama; tu **portafolio en GitHub es la credencial real**. Si usas datos de tu
+institución: **anonimiza antes** de subirlos o de pasarlos por un LLM.
+
+## Recursos y mantención
+
+- [**Recursos/**](Recursos/): chuleta de Python + pandas + SQL y glosario (~50 términos).
+- **Verificación automática** ([`notebooks.yml`](.github/workflows/notebooks.yml)): en cada cambio y
+  cada lunes se ejecutan todas las soluciones (`solucion.ipynb` y `profundiza_solucion.ipynb`), y el
+  build falla si una celda de chequeo da ❌. Localmente: `python tools/run_notebooks.py`.
+- **Datos al día** ([`fuentes.yml`](.github/workflows/fuentes.yml)): cada mes se revisa que las
+  fuentes oficiales respondan y si MINEDUC publicó un año nuevo. Para regenerar todo:
+  `python tools/make_datasets.py todo` (ver [data/README.md](data/README.md)).
+- **Los notebooks no se editan a mano**: se generan con `tools/build_<módulo>.py` a partir de los
+  helpers de [`tools/build_helpers.py`](tools/build_helpers.py). Para cambiar un ejercicio, edita su
+  builder, ejecútalo y verifica.
+- **LLM (R3):** `preguntar_llm()` usa Gemini con el SDK `google-genai`. El modelo se define en
+  `build_helpers.GEMINI_MODEL` y cada persona puede cambiarlo con `GEMINI_MODEL`. Sin clave, los
+  notebooks corren igual con respuestas de respaldo.
+- El curso v1 (Prework + Capas A/B/C) se conserva en la rama `curso-v1-legacy`.
 
 ---
 

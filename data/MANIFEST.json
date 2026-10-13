@@ -1,0 +1,191 @@
+[
+  {
+    "archivo": "matricula.csv",
+    "descripcion": "MINEDUC · Resumen de matrícula por establecimiento 2025 (oficial, filtro CEM)",
+    "fuente": "https://datosabiertos.mineduc.cl/wp-content/uploads/2025/11/Resumen_Matricula_EE_2025.rar",
+    "licencia": "Datos abiertos MINEDUC",
+    "filas": 10945,
+    "columnas": [
+      "rbd",
+      "nombre",
+      "dependencia",
+      "rural",
+      "cod_region",
+      "region",
+      "comuna",
+      "mat_total",
+      "mat_hombres",
+      "mat_mujeres",
+      "mat_parvularia",
+      "mat_basica",
+      "mat_especial",
+      "mat_media_hc",
+      "mat_media_tp",
+      "mat_extranjeros",
+      "cursos"
+    ],
+    "sha256": "29ec64207776c40e159b1ad28dd2b796b06a48894607dba9c3966e74fe123776",
+    "generado": "2026-08-30"
+  },
+  {
+    "archivo": "matricula_rbd.csv",
+    "descripcion": "Derivado de MINEDUC 2025: conteos por RBD sin filtro de estado",
+    "fuente": "https://datosabiertos.mineduc.cl/wp-content/uploads/2025/11/Resumen_Matricula_EE_2025.rar",
+    "licencia": "Datos abiertos MINEDUC",
+    "filas": 10949,
+    "columnas": [
+      "rbd",
+      "mat_total",
+      "mat_hombres",
+      "mat_mujeres"
+    ],
+    "sha256": "0069422b2e62983196aad06bbc3e3cfe8eef4863bc2dacb999762d46a7c1e1c4",
+    "generado": "2026-08-30"
+  },
+  {
+    "archivo": "directorio_establecimientos.csv",
+    "descripcion": "Derivado de MINEDUC 2025: directorio de establecimientos funcionando",
+    "fuente": "https://datosabiertos.mineduc.cl/wp-content/uploads/2025/11/Resumen_Matricula_EE_2025.rar",
+    "licencia": "Datos abiertos MINEDUC",
+    "filas": 10945,
+    "columnas": [
+      "rbd",
+      "nombre",
+      "dependencia",
+      "rural",
+      "region",
+      "comuna"
+    ],
+    "sha256": "b53a2f1602c1ec4121ab9dd7c92eea67eed0fffb8db2f4a7b7939bf287fe6003",
+    "generado": "2026-08-30"
+  },
+  {
+    "archivo": "matricula_sucia.csv",
+    "descripcion": "Derivado de matricula.csv con errores inyectados (seed 42) para R1-04",
+    "fuente": "https://datosabiertos.mineduc.cl/wp-content/uploads/2025/11/Resumen_Matricula_EE_2025.rar",
+    "licencia": "Datos abiertos MINEDUC",
+    "filas": 1545,
+    "columnas": [
+      "rbd",
+      "nombre",
+      "dependencia",
+      "rural",
+      "region",
+      "comuna",
+      "mat_total",
+      "mat_hombres",
+      "mat_mujeres"
+    ],
+    "sha256": "c36a1184ecf1d8d2b8107fd5bf6051d1d5e643a3c797a73d6c272e3c94425d9f",
+    "generado": "2026-10-12"
+  },
+  {
+    "archivo": "aire_diario.csv",
+    "descripcion": "SINCA/MMA · PM2.5 diario + meteorología agregada, 14 estaciones, 2020–2025",
+    "fuente": "https://sinca.mma.gob.cl",
+    "licencia": "Datos públicos MMA",
+    "filas": 30674,
+    "columnas": [
+      "fecha",
+      "estacion",
+      "pm25",
+      "temp_media",
+      "temp_min",
+      "temp_max",
+      "humedad_media"
+    ],
+    "sha256": "96c5afb9fc9dbab68263bdfc02793ab7bd42af97075e1cbb2cccb0cb37476a5d",
+    "generado": "2026-08-26"
+  },
+  {
+    "archivo": "aire_nuevos.csv",
+    "descripcion": "SINCA/MMA · mismas estaciones, ene–sep 2026 (datos no vistos)",
+    "fuente": "https://sinca.mma.gob.cl",
+    "licencia": "Datos públicos MMA",
+    "filas": 3808,
+    "columnas": [
+      "fecha",
+      "estacion",
+      "pm25",
+      "temp_media",
+      "temp_min",
+      "temp_max",
+      "humedad_media"
+    ],
+    "sha256": "acbcddd6a823a252362d4f741fd02a980eb12f1a1ddf66831fa0a17617a56d51",
+    "generado": "2026-10-12"
+  },
+  {
+    "archivo": "estaciones.csv",
+    "descripcion": "SINCA/MMA · atributos de las 14 estaciones (JSON del mapa oficial)",
+    "fuente": "https://sinca.mma.gob.cl",
+    "licencia": "Datos públicos MMA",
+    "filas": 14,
+    "columnas": [
+      "estacion",
+      "region_codigo",
+      "comuna",
+      "region",
+      "latitud",
+      "longitud"
+    ],
+    "sha256": "fca9d73d8cb2b6028744565f261023ae1f702eafdfa6c822763126bc6b36b6c4",
+    "generado": "2026-10-12"
+  },
+  {
+    "archivo": "fichas.csv",
+    "descripcion": "ChileAtiende · 245 fichas de trámites con texto completo, 18 temas",
+    "fuente": "https://www.chileatiende.gob.cl",
+    "licencia": "Contenido público del Estado de Chile",
+    "filas": 245,
+    "columnas": [
+      "id",
+      "titulo",
+      "tema",
+      "institucion",
+      "url",
+      "n_palabras",
+      "texto"
+    ],
+    "sha256": "2ec5d08016b84a48c85d4ceec3ac4afa708d834c10e9acae6643d446704ff674",
+    "generado": "2026-10-12"
+  },
+  {
+    "archivo": "reclamos.csv",
+    "descripcion": "SERNAC · muestra 20k de la base de reclamos 2011 (dato HISTÓRICO: SERNAC no publica una base abierta más reciente)",
+    "fuente": "https://datos.gob.cl/uploads/recursos/Reclamos_2011_Data%20Set.csv",
+    "licencia": "datos.gob.cl",
+    "filas": 20000,
+    "columnas": [
+      "comuna",
+      "cod_region",
+      "region",
+      "mercado",
+      "categoria_mercado",
+      "producto",
+      "motivo_legal",
+      "categoria_motivo",
+      "resultado"
+    ],
+    "sha256": "667b06dab53cbd5ef9c87416bd01a82c2de6393792dab11d6a75e0f8d889b7d3",
+    "generado": "2026-08-26"
+  },
+  {
+    "archivo": "sismos.csv",
+    "descripcion": "USGS · catálogo FDSN, sismos M≥4,5 en Chile 2020–2025",
+    "fuente": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2020-01-01&endtime=2025-12-31&minlatitude=-56&maxlatitude=-17&minlongitude=-76&maxlongitude=-66&minmagnitude=4.5&orderby=time-asc",
+    "licencia": "Dominio público (USGS)",
+    "filas": 1601,
+    "columnas": [
+      "fecha",
+      "latitud",
+      "longitud",
+      "profundidad_km",
+      "magnitud",
+      "lugar",
+      "zona"
+    ],
+    "sha256": "85745cee82379172655fe978155ffd40832fef7c341354d22f451cde3cae0447",
+    "generado": "2026-08-26"
+  }
+]

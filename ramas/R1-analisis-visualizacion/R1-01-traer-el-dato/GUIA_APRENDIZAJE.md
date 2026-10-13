@@ -16,7 +16,7 @@ Rama R1 · Analista de Datos · Módulo 1 · Semana 2
 | **Prerrequisitos** | R1-00 completo (variables, listas, diccionarios, bucles) |
 | **Competencia de salida** | Traer datos públicos desde archivos y APIs de forma robusta, aplicando el patrón en vivo o caché |
 | **Entregable** | Las 4 celdas de chequeo deben mostrar ✅ |
-| **Dataset** | `compras_ml.csv` — compras públicas (ChileCompra) + respuestas JSON tipo API |
+| **Dataset** | `matricula.csv` — matrícula oficial 2025 por establecimiento (MINEDUC) + respuestas JSON tipo API |
 
 ---
 
@@ -24,9 +24,9 @@ Rama R1 · Analista de Datos · Módulo 1 · Semana 2
 
 En el Estado, los datos viven en lugares distintos: archivos que te mandan por correo, portales web con descarga directa, sistemas que exponen APIs, bases de datos institucionales. Hoy, para cada fuente, tienes que hacer un proceso manual distinto: descargar, abrir, copiar, pegar.
 
-Este módulo te enseña a **automatizar ese proceso de ingesta**. Aprenderás a escribir funciones que cargan datos desde cualquier fuente en una sola línea, a leer el formato JSON que usan las APIs públicas (como el API de ChileCompra o el SIAF), y a construir código que **no se rompe** cuando la fuente remota falla.
+Este módulo te enseña a **automatizar ese proceso de ingesta**. Aprenderás a escribir funciones que cargan datos desde cualquier fuente en una sola línea, a leer el formato JSON que usan las APIs públicas (como la API de datos.gob.cl, que consultarás en vivo en la profundización), y a construir código que **no se rompe** cuando la fuente remota falla.
 
-El resultado práctico: en vez de descargar manualmente el reporte mensual de compras, tu script lo trae solo, lo procesa y guarda el resumen. Cada mes, un clic.
+El resultado práctico: en vez de descargar manualmente la base de matrícula cada año desde el portal del MINEDUC, tu script la trae solo, la procesa y guarda el resumen regional. Cada año, un clic.
 
 ---
 
@@ -64,7 +64,7 @@ Si respondiste No a alguna, vuelve a R1-00 antes de continuar. Este módulo cons
 
 ### Sección 0 · Preparación del entorno
 
-🎯 **Objetivo:** Cargar el dataset base de compras públicas y tener el entorno listo.
+🎯 **Objetivo:** Cargar el dataset base de matrícula escolar y tener el entorno listo.
 
 💡 **Concepto clave:** Esta celda aplica ya el patrón que aprenderás en la sección 3: primero revisa si el archivo existe localmente, y si no lo baja desde el repositorio. Es la primera vez que ves el patrón "en vivo o caché" en acción, aunque todavía no lo hayas estudiado formalmente.
 
@@ -77,7 +77,7 @@ Si respondiste No a alguna, vuelve a R1-00 antes de continuar. Este módulo cons
 
 ⚠️ **Error frecuente:** Si ves `ConnectionError` o `URLError`, Colab no tiene acceso a internet. Verifica que el runtime esté conectado (menú Runtime → Connect).
 
-✅ **Señal de que entendiste:** Ves la tabla con columnas `monto_total`, `categoria`, `region_comprador`.
+✅ **Señal de que entendiste:** Ves la tabla con columnas `mat_total`, `region`, `dependencia`.
 
 ---
 
@@ -90,12 +90,12 @@ Si respondiste No a alguna, vuelve a R1-00 antes de continuar. Este módulo cons
 🔍 **Qué hace el código:**
 - `def cargar_csv(ruta):` → define la función con un parámetro llamado `ruta`
 - el cuerpo de la función debe contener `return pd.read_csv(ruta)`
-- `datos = cargar_csv("compras_ml.csv")` → llama la función con una ruta concreta
+- `datos = cargar_csv("matricula.csv")` → llama la función con una ruta concreta
 - `datos.shape` → verifica que la tabla tiene el número correcto de filas y columnas
 
 ⚠️ **Error frecuente:** Olvidar la palabra `return`. Una función sin `return` ejecuta el código pero no entrega nada; `datos` quedaría como `None`.
 
-✅ **Señal de que entendiste:** `cargar_csv("compras_ml.csv").shape` devuelve el mismo resultado que `df.shape`.
+✅ **Señal de que entendiste:** `cargar_csv("matricula.csv").shape` devuelve el mismo resultado que `df.shape`.
 
 ---
 
@@ -103,18 +103,18 @@ Si respondiste No a alguna, vuelve a R1-00 antes de continuar. Este módulo cons
 
 🎯 **Objetivo:** Parsear una respuesta JSON y extraer datos estructurados de ella.
 
-💡 **Concepto clave:** **JSON** (JavaScript Object Notation) es el formato en que casi todas las APIs públicas devuelven datos: el API de ChileCompra, el SIAF, el Registro Civil, Datos Abiertos. Es texto que parece un diccionario de Python. `json.loads()` convierte ese texto en objetos Python reales (diccionarios y listas) que puedes recorrer normalmente. En el trabajo del Estado: cuando conectas un sistema con otro (interoperabilidad), el JSON es el idioma común.
+💡 **Concepto clave:** **JSON** (JavaScript Object Notation) es el formato en que casi todas las APIs públicas devuelven datos: datos.gob.cl, ChileAtiende, el Registro Civil. Es texto que parece un diccionario de Python. `json.loads()` convierte ese texto en objetos Python reales (diccionarios y listas) que puedes recorrer normalmente. En el trabajo del Estado: cuando conectas un sistema con otro (interoperabilidad), el JSON es el idioma común.
 
 🔍 **Qué hace el código:**
-- `respuesta` → una cadena de texto que simula la respuesta de una API
+- `respuesta` → una cadena de texto que simula la respuesta de una API con la matrícula de dos comunas
 - `data = json.loads(respuesta)` → convierte el texto en un diccionario Python
 - `data["results"]` → accede a la lista de registros dentro del diccionario
-- `montos = [r["monto"] for r in data["results"]]` → extrae el campo `monto` de cada registro (comprensión de lista)
-- `total = sum(montos)` → suma todos los montos
+- `matriculas = [r["matricula"] for r in data["results"]]` → extrae el campo `matricula` de cada registro (comprensión de lista)
+- `total = sum(matriculas)` → suma las matrículas
 
 ⚠️ **Error frecuente:** Confundir la cadena JSON (`respuesta`, que es texto) con el objeto Python (`data`, que es un diccionario). No puedes hacer `respuesta["results"]` directamente; primero debes pasar por `json.loads()`.
 
-✅ **Señal de que entendiste:** `total` es 1300 (500 + 800) y `len(data["results"])` es 2.
+✅ **Señal de que entendiste:** `total` es 560 (512 de Arica + 48 de Putre) y `len(data["results"])` es 2.
 
 ---
 
@@ -139,19 +139,19 @@ Si respondiste No a alguna, vuelve a R1-00 antes de continuar. Este módulo cons
 
 ### Sección 4 · Guardar el resultado
 
-🎯 **Objetivo:** Agrupar los datos por categoría, calcular el gasto total por cada una y guardar el resumen como CSV.
+🎯 **Objetivo:** Agrupar los datos por región, calcular la matrícula total de cada una y guardar el resumen como CSV.
 
 💡 **Concepto clave:** Después de procesar datos, siempre hay que **persistir el resultado** para compartirlo con otros o reutilizarlo sin tener que reprocesar todo. `to_csv()` guarda un DataFrame en disco. El parámetro `index=False` evita que se escriba la columna de índice numérico que no forma parte de los datos reales. En el Estado: equivale a generar el informe final y guardarlo en la carpeta compartida del equipo.
 
 🔍 **Qué hace el código:**
-- `df.groupby("categoria")["monto_total"].sum()` → agrupa por categoría y suma los montos (tabla dinámica)
-- `.reset_index()` → convierte el resultado en un DataFrame normal con columnas `categoria` y `monto_total`
-- la línea `TODO` debe ser `resumen.to_csv("resumen_categorias.csv", index=False)`
+- `df.groupby("region")["mat_total"].sum()` → agrupa por región y suma las matrículas (tabla dinámica)
+- `.reset_index()` → convierte el resultado en un DataFrame normal con columnas `region` y `mat_total`
+- la línea `TODO` debe ser `resumen.to_csv("resumen_regiones.csv", index=False)`
 - `os.path.exists(...)` → verifica que el archivo efectivamente quedó guardado en disco
 
 ⚠️ **Error frecuente:** Omitir `index=False`. El archivo se guardará con una columna extra de números (0, 1, 2...) que no tiene significado y puede confundir a quien abra el CSV después.
 
-✅ **Señal de que entendiste:** El archivo `resumen_categorias.csv` existe, tiene exactamente tantas filas como categorías únicas hay en el dataset, y no tiene columna de índice.
+✅ **Señal de que entendiste:** El archivo `resumen_regiones.csv` existe, tiene exactamente 16 filas (las 16 regiones de Chile) y no tiene columna de índice.
 
 ---
 
@@ -169,23 +169,23 @@ Si respondiste No a alguna, vuelve a R1-00 antes de continuar. Este módulo cons
 
 **Lógica de la solución:** La función es un envoltorio minimal: recibe el nombre del archivo, se lo pasa a pandas y devuelve el resultado. La utilidad está en que ahora puedes llamar `cargar_csv("cualquier_archivo.csv")` en cualquier parte del código sin repetir la lógica.
 
-**¿Qué significa el ✅?** Que `cargar_csv("compras_ml.csv").shape` coincide con `df.shape`. La función carga exactamente los mismos datos.
+**¿Qué significa el ✅?** Que `cargar_csv("matricula.csv").shape` coincide con `df.shape`. La función carga exactamente los mismos datos.
 
 ---
 
-### Ejercicio 2 — Parsea una respuesta y suma los montos
+### Ejercicio 2 — Parsea una respuesta y suma las matrículas
 
 **Objetivo:** Convertir un texto JSON en objetos Python y extraer valores de él.
 **Habilidad que entrena:** `json.loads()`, acceso a diccionarios anidados, comprensión de lista.
 
 **Pistas progresivas:**
-- 🟢 Pista suave: `data` ya está definido arriba con `json.loads(respuesta)`. Es un diccionario. Dentro tiene una clave `"results"` que contiene una lista de diccionarios, cada uno con un campo `"monto"`.
-- 🟡 Pista media: Para extraer los montos, recorre `data["results"]` con una comprensión de lista y toma `r["monto"]` de cada elemento.
-- 🔴 Pista directa: `montos = [r["monto"] for r in data["results"]]` y `total = sum(montos)`.
+- 🟢 Pista suave: `data` ya está definido arriba con `json.loads(respuesta)`. Es un diccionario. Dentro tiene una clave `"results"` que contiene una lista de diccionarios, cada uno con un campo `"matricula"`.
+- 🟡 Pista media: Para extraer las matrículas, recorre `data["results"]` con una comprensión de lista y toma `r["matricula"]` de cada elemento.
+- 🔴 Pista directa: `matriculas = [r["matricula"] for r in data["results"]]` y `total = sum(matriculas)`.
 
-**Lógica de la solución:** `json.loads` transforma el texto en una estructura Python. Luego navegas igual que con cualquier diccionario: `data["results"]` es la lista, y cada elemento de la lista es un diccionario con claves `"categoria"` y `"monto"`.
+**Lógica de la solución:** `json.loads` transforma el texto en una estructura Python. Luego navegas igual que con cualquier diccionario: `data["results"]` es la lista, y cada elemento de la lista es un diccionario con claves `"comuna"` y `"matricula"`.
 
-**¿Qué significa el ✅?** Que `total` es exactamente 1300 (500 + 800) y que procesaste los dos registros correctamente.
+**¿Qué significa el ✅?** Que `total` es exactamente 560 (512 + 48) y que procesaste los dos registros correctamente.
 
 ---
 
@@ -205,19 +205,23 @@ Si respondiste No a alguna, vuelve a R1-00 antes de continuar. Este módulo cons
 
 ---
 
-### Ejercicio 4 — Guarda un resumen por categoría
+### Ejercicio 4 — Guarda un resumen por región
 
 **Objetivo:** Persistir un resumen agrupado como archivo CSV.
 **Habilidad que entrena:** `groupby`, `reset_index`, `to_csv(index=False)`.
 
 **Pistas progresivas:**
-- 🟢 Pista suave: `resumen` ya está calculado arriba. Solo necesitas guardarlo en disco con el nombre `"resumen_categorias.csv"`.
+- 🟢 Pista suave: `resumen` ya está calculado arriba. Solo necesitas guardarlo en disco con el nombre `"resumen_regiones.csv"`.
 - 🟡 Pista media: Los DataFrames de pandas tienen un método `.to_csv()` que acepta el nombre del archivo. Usa el parámetro `index=False` para no incluir la columna de índice.
-- 🔴 Pista directa: `resumen.to_csv("resumen_categorias.csv", index=False)`.
+- 🔴 Pista directa: `resumen.to_csv("resumen_regiones.csv", index=False)`.
 
-**Lógica de la solución:** `groupby("categoria")["monto_total"].sum()` hace el equivalente de una tabla dinámica. `.reset_index()` convierte el resultado en un DataFrame limpio. `to_csv` lo escribe al disco.
+**Lógica de la solución:** `groupby("region")["mat_total"].sum()` hace el equivalente de una tabla dinámica. `.reset_index()` convierte el resultado en un DataFrame limpio. `to_csv` lo escribe al disco.
 
-**¿Qué significa el ✅?** Que el archivo existe (`existe is True`) y que tiene exactamente tantas filas como categorías únicas. El resumen está guardado y listo para compartir.
+**¿Qué significa el ✅?** Que el archivo existe (`existe is True`) y que tiene exactamente 16 filas, una por región. El resumen está guardado y listo para compartir.
+
+---
+
+> 🔬 **En la profundización** te espera además un cuarto ejercicio especial: consultar **en vivo** la API CKAN de datos.gob.cl — la misma API con la que se encontraron los datasets de este bootcamp — usando el patrón en vivo o caché para que funcione aunque no haya red.
 
 ---
 
@@ -296,6 +300,7 @@ resumen.to_csv("resultado.csv", index=False)
 | **JSON** | Formato de texto para intercambiar datos entre sistemas | XML simplificado; idioma común de las APIs |
 | **`json.loads()`** | Convierte texto JSON en diccionarios/listas Python | Importar datos de un sistema externo |
 | **API** | Interfaz que permite a sistemas intercambiar datos automáticamente | Interoperabilidad entre servicios del Estado |
+| **CKAN** | Software de portales de datos abiertos; su API responde JSON | El motor detrás de datos.gob.cl |
 | **`try/except`** | Estructura para manejar errores sin detener el programa | Plan A y plan B documentados |
 | **Patrón en vivo o caché** | Intenta fuente remota; si falla, usa copia local | Respaldo operacional ante caída de sistema |
 | **`to_csv()`** | Guarda un DataFrame como archivo CSV | Exportar informe a formato compartible |

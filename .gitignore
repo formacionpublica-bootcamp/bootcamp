@@ -1,26 +1,22 @@
-# Datos crudos masivos de ChileCompra (descargar localmente; no versionar)
-/data/02OCConvenioMarco.csv
-/data/02OCLicitacion.csv
-/data/02OCTratoDirecto.csv
-/data/compras_ml.csv
-
-# Artefactos de Python / Jupyter
+# Artefactos de build y entornos (no se versionan)
+site/
+web/
+.venv/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-
-# Sitio MkDocs generado
-/site/
-
-# Sistema
 .DS_Store
 
-# Archivos comprimidos redundantes (módulos ya extraídos)
-*.zip
+# Crudos descargados por tools/make_datasets.py (se regeneran; ver data/README.md)
+data/raw/
+data/rearmado/raw/
 
-# Artefactos de build del sitio web (web/) — se reconstruyen con web/build.sh
-/web/public/
-/web/contents/
-/web/.buildenv/
-/web/.lite/
-/web/.jupyterlite.doit.db
+# Modelos y salidas que crean los notebooks al ejecutarse
+ramas/**/*.joblib
+ramas/**/*.db
+ramas/**/figura_*.png
+ramas/**/predicciones_*.csv
+ramas/**/bitacora_*.jsonl
+
+# Salida intermedia de tools/make_datasets.py (lo publicado vive en data/)
+data/rearmado/

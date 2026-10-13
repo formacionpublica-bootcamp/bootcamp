@@ -1,0 +1,5 @@
+# Solo para regenerar los datasets (tools/make_datasets.py) y los notebooks (tools/build_*.py).
+# Además: `unar` en el PATH para el .rar de MINEDUC (macOS: brew install unar).
+pandas>=2.2,<3
+requests>=2.31
+nbformat>=5.9

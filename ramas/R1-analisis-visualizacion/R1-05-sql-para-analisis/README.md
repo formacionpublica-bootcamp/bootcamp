@@ -1,39 +1,16 @@
-# M5 · SQL fundamentos
+# R1-05 · SQL para análisis
 
-Sexto módulo (tronco común) del **Bootcamp de Datos para Funcionarios Públicos — Formación Pública**.
-Módulo compartido. Modalidad autoguiada, se ejecuta en Google Colab.
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/ramas/R1-analisis-visualizacion/R1-05-sql-para-analisis/leccion.ipynb)
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A4-sql-fundamentos/leccion.ipynb)
+Consultar una base de datos con **SQL** desde Python (SQLite en memoria, `sqlite3` +
+`pandas.to_sql` / `read_sql_query`): `SELECT`/`WHERE`, `ORDER BY`/`LIMIT`, `GROUP BY`/`HAVING`,
+`JOIN` y `LEFT JOIN ... IS NULL` para auditar, y SQL + pandas para interpretar promedio vs mediana.
 
-> Reemplaza `formacionpublica-bootcamp/bootcamp` por la ruta real del repositorio al publicar.
+**Datos.** La matrícula 2025 (MINEDUC) en dos tablas relacionales: `matricula_rbd.csv` (10.949
+conteos por RBD) y `directorio_establecimientos.csv` (10.945 establecimientos oficiales, con
+dependencia, ruralidad, región y comuna) — con 4 RBD huérfanos reales. La profundización usa
+`parques.csv`: 24 parques nacionales de Chile (CONAF / SNASPE).
 
-## ¿Qué vas a aprender?
-A consultar una base de datos con SQL: `SELECT`/`FROM` (elegir columnas), `WHERE` (filtrar filas), `ORDER BY`/`LIMIT` (ordenar y rankear) y funciones de agregación (`COUNT`, `SUM`, `AVG`, `MAX`, `MIN`) con `GROUP BY` (resumir por grupo). Se usa **SQLite** mediante el módulo `sqlite3`, incluido en Python (cero instalación en Colab).
-
-## Datos
-Tema: **medio ambiente**. Listado real de **Parques Nacionales de Chile** (nombre, región, año de declaración, superficie en hectáreas). Fuente: Corporación Nacional Forestal (CONAF) — Sistema Nacional de Áreas Silvestres Protegidas del Estado (SNASPE). Son hechos públicos; se usan 24 parques con datos reales.
-
-## Contenido
-- `leccion.ipynb` — teoría + ejercicios + celdas de chequeo (para el estudiante).
-- `solucion.ipynb` — soluciones de referencia (uso interno).
-- `profundiza.ipynb` — **notebook opcional de profundización teórica** (ver abajo).
-- `profundiza_solucion.ipynb` — solución del profundiza (uso interno).
-- `README.md` — esta presentación.
-
-## Cómo se cursa
-1. Abre `leccion.ipynb` con el botón **Open in Colab**.
-2. Lee y ejecuta cada sección.
-3. Resuelve los cinco ejercicios y ejecuta sus celdas de chequeo hasta ver ✅.
-
-## 🔬 Profundización (opcional)
-¿Quieres entender el *porqué* y no solo el *cómo*? El notebook **`profundiza.ipynb`** va un nivel más
-hondo en teoría: pensar por **conjuntos** vs. fila a fila (el modelo relacional), el **orden lógico de
-ejecución** (`FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY`) y por qué `WHERE` filtra filas pero
-`HAVING` filtra grupos, la **lógica de tres valores del `NULL`** (la trampa clásica de `WHERE x != valor`),
-y por qué existen los **índices** (consultas instantáneas vs. eternas). Con 4 ejercicios conceptuales
-auto-corregidos.
-
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/formacionpublica-bootcamp/bootcamp/blob/main/A4-sql-fundamentos/profundiza.ipynb)
-
-## Licencia
-Contenido bajo **CC BY 4.0**.
+- `leccion.ipynb` — completa los `TODO`; cada ejercicio se autoverifica (✅).
+- `profundiza.ipynb` — opcional 🔬: `LIKE`, subconsultas, `CASE WHEN`, `WHERE` + `HAVING` sobre parques nacionales.
+- [`GUIA_APRENDIZAJE.md`](GUIA_APRENDIZAJE.md) — pistas progresivas, errores frecuentes y autoevaluación.
