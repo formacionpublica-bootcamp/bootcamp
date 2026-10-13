@@ -92,7 +92,7 @@ Si respondiste No a alguna, repasa R1-02 y R1-06 antes de continuar.
 
 🔍 **Qué hace el código:**
 - `grupos = [df[df["dependencia"] == d]["mat_total"]... for d in orden]` → una lista de Series, una por dependencia
-- `ax.boxplot(grupos, labels=[...])` → un boxplot por elemento de la lista
+- `ax.boxplot(grupos, tick_labels=[...])` → un boxplot por elemento de la lista
 
 ✅ **Señal de que entendiste:** Puedes decir qué dependencia tiene la mediana de matrícula más alta sin calcular nada.
 
@@ -143,8 +143,8 @@ Si respondiste No a alguna, repasa R1-02 y R1-06 antes de continuar.
 
 **Pistas progresivas:**
 - 🟢 Pista suave: `grupos` ya es una lista con los datos de cada dependencia. El método recibe esa lista completa.
-- 🟡 Pista media: `ax.boxplot(grupos, labels=nombres)` — un boxplot por grupo, con su etiqueta.
-- 🔴 Pista directa: `ax.boxplot(grupos, labels=["Municipal", "P. subv.", "P. pagado", "SLEP"])`.
+- 🟡 Pista media: `ax.boxplot(grupos, tick_labels=nombres)` — un boxplot por grupo, con su etiqueta.
+- 🔴 Pista directa: `ax.boxplot(grupos, tick_labels=["Municipal", "P. subv.", "P. pagado", "SLEP"])`.
 
 **¿Qué significa el ✅?** Que la figura existe y los 4 grupos están construidos.
 

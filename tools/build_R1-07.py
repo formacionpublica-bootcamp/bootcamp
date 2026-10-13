@@ -45,7 +45,7 @@ assert len(ax.patches) > 0''',
 tope = df["mat_total"].quantile(0.99)
 grupos = [df[df["dependencia"] == d]["mat_total"].clip(upper=tope) for d in orden]
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.boxplot(grupos, labels=["Municipal", "P. subv.", "P. pagado", "SLEP"])
+ax.boxplot(grupos, tick_labels=["Municipal", "P. subv.", "P. pagado", "SLEP"])
 ax.set_ylabel("Matrícula"); ax.set_title("Matrícula por dependencia")
 plt.show()''',
   '''orden = ["Municipal", "Particular subvencionado", "Particular pagado", "Servicio Local de Educación"]
@@ -58,7 +58,7 @@ ax.set_ylabel("Matrícula"); ax.set_title("Matrícula por dependencia")
 plt.show()''',
   '''assert fig.__class__.__name__ == "Figure"
 assert len(grupos) == 4''',
-  "ax.boxplot(grupos, labels=[...]).",
+  "ax.boxplot(grupos, tick_labels=[...]).",
   None),
 
  ("## 3. Dispersión: ¿se relacionan dos variables?",
